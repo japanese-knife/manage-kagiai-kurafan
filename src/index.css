@@ -1,0 +1,50 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply text-neutral-700 bg-white;
+    font-feature-settings: 'palt';
+    letter-spacing: 0.01em;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    @apply text-neutral-900;
+    line-height: 1.4;
+    letter-spacing: -0.01em;
+  }
+
+  p {
+    line-height: 1.7;
+  }
+
+  * {
+    transition-property: color, background-color, border-color, opacity, box-shadow;
+    transition-duration: 150ms;
+    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  }
+}
+
+@layer components {
+  .btn-gradient-animated {
+    background: linear-gradient(90deg, #7dd3c0 0%, #6ec4de 25%, #5fb5eb 50%, #5f6bc8 75%, #6b72c7 100%);
+    background-size: 200% 100%;
+    animation: gradient-shift 3s ease infinite;
+  }
+
+  .btn-gradient-animated:hover {
+    animation: gradient-shift 1.5s ease infinite;
+  }
+}
+
+@keyframes gradient-shift {
+  0%, 100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+}
