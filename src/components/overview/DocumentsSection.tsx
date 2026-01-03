@@ -125,7 +125,7 @@ export default function DocumentsSection({ projectId, readOnly = false }: Docume
                 value={formData.url}
                 onChange={(e) => setFormData({ ...formData, url: e.target.value })}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                placeholder="https:..."
+                placeholder="https..."
               />
             </div>
             <div>
