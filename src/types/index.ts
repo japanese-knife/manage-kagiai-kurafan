@@ -71,6 +71,15 @@ export interface DesignRequirement {
   updated_at: string;
 }
 
+export interface TextContentRequirement {
+  id: string;
+  project_id: string;
+  name: string;
+  url: string;
+  memo: string;
+  created_at: string;
+}
+
 export interface VideoRequirement {
   id: string;
   project_id: string;

@@ -3,6 +3,7 @@ import DocumentsSection from './overview/DocumentsSection';
 import MeetingsSection from './overview/MeetingsSection';
 import ReturnsSection from './overview/ReturnsSection';
 import ImageAssetsSection from './overview/ImageAssetsSection';
+import TextContentRequirementsSection from './overview/TextContentRequirementsSection';
 import DesignRequirementsSection from './overview/DesignRequirementsSection';
 import VideoRequirementsSection from './overview/VideoRequirementsSection';
 
@@ -20,6 +21,7 @@ export default function OverviewTab({ projectId, readOnly = false, sharedView = 
       <MeetingsSection projectId={projectId} readOnly={readOnly} />
       <ReturnsSection projectId={projectId} readOnly={readOnly} />
       <ImageAssetsSection projectId={projectId} readOnly={sharedView ? false : readOnly} />
+      <TextContentRequirementsSection projectId={projectId} readOnly={readOnly} />
       <DesignRequirementsSection projectId={projectId} readOnly={readOnly} />
       <VideoRequirementsSection projectId={projectId} readOnly={readOnly} />
     </div>
