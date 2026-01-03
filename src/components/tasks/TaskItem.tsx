@@ -98,23 +98,17 @@ export default function TaskItem({ task, level = 0, onAddChild, onDelete, onUpda
                 )}
               </div>
               <div className="flex items-center space-x-2 ml-4">
-                {readOnly ? (
-                  <span className={`px-2 py-1 text-xs font-medium rounded ${getStatusColor(task.status)}`}>
-                    {task.status}
-                  </span>
-                ) : (
-                  <select
-                    value={task.status}
-                    onChange={(e) => handleStatusChange(e.target.value)}
-                    className={`px-2 py-1 text-xs font-medium rounded ${getStatusColor(
-                      task.status
-                    )}`}
-                  >
-                    <option value="未着手">未着手</option>
-                    <option value="進行中">進行中</option>
-                    <option value="完了">完了</option>
-                  </select>
-                )}
+                <select
+                  value={task.status}
+                  onChange={(e) => handleStatusChange(e.target.value)}
+                  className={`px-2 py-1 text-xs font-medium rounded cursor-pointer ${getStatusColor(
+                    task.status
+                  )}`}
+                >
+                  <option value="未着手">未着手</option>
+                  <option value="進行中">進行中</option>
+                  <option value="完了">完了</option>
+                </select>
               </div>
             </div>
 

@@ -13,6 +13,26 @@ export default function ProgressBar({ projectId }: ProgressBarProps) {
 
   useEffect(() => {
     loadProgress();
+
+    const channel = supabase
+      .channel(`tasks-${projectId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'tasks',
+          filter: `project_id=eq.${projectId}`,
+        },
+        () => {
+          loadProgress();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, [projectId]);
 
   const loadProgress = async () => {
