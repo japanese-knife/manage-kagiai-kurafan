@@ -259,7 +259,7 @@ export default function Dashboard({ onSelectProject, user, onLogout }: Dashboard
                     </span>
                   </div>
 
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5 md:gap-6">
+                  <div className="grid grid-cols-1 gap-4 sm:gap-5 md:gap-6">
                     {statusProjects.map((project) => {
                       const stats = projectStats.get(project.id);
                       const lastUpdated = new Date(project.updated_at).toLocaleDateString('ja-JP');
