@@ -59,7 +59,7 @@ export default function ProgressBar({ projectId }: ProgressBarProps) {
   return (
     <div className="bg-white rounded-2xl border border-neutral-200/50 p-6 mb-6 shadow-lg">
       <div className="flex items-center justify-between mb-4">
-        <h3 className="text-sm font-semibold text-neutral-900">プロジェクト進捗</h3>
+        <h3 className="text-sm font-semibold text-neutral-900">タスク進捗</h3>
         <span className="text-sm text-neutral-600 font-medium">
           {completedTasks} / {totalTasks} タスク完了
         </span>
