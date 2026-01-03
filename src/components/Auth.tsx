@@ -1,9 +1,8 @@
 import { useState, FormEvent } from 'react';
 import { supabase } from '../lib/supabase';
-import { Lock, Mail, LogIn, UserPlus, FolderKanban } from 'lucide-react';
+import { Lock, Mail, LogIn, FolderKanban } from 'lucide-react';
 
 export default function Auth() {
-  const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -15,21 +14,12 @@ export default function Auth() {
     setLoading(true);
 
     try {
-      if (isLogin) {
-        const { error: signInError } = await supabase.auth.signInWithPassword({
-          email,
-          password,
-        });
+      const { error: signInError } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
 
-        if (signInError) throw signInError;
-      } else {
-        const { error: signUpError } = await supabase.auth.signUp({
-          email,
-          password,
-        });
-
-        if (signUpError) throw signUpError;
-      }
+      if (signInError) throw signInError;
     } catch (err: any) {
       setError(err.message || 'エラーが発生しました');
     } finally {
@@ -48,7 +38,7 @@ export default function Auth() {
             プロジェクト管理
           </h1>
           <p className="text-sm sm:text-base text-neutral-600">
-            {isLogin ? 'アカウントにログイン' : '新しいアカウントを作成'}
+            アカウントにログイン
           </p>
         </div>
 
@@ -87,11 +77,6 @@ export default function Auth() {
                   minLength={6}
                 />
               </div>
-              {!isLogin && (
-                <p className="text-xs text-neutral-500 mt-2">
-                  6文字以上で入力してください
-                </p>
-              )}
             </div>
 
             {error && (
@@ -107,34 +92,14 @@ export default function Auth() {
             >
               {loading ? (
                 <span>処理中...</span>
-              ) : isLogin ? (
+              ) : (
                 <>
                   <LogIn className="w-5 h-5 mr-2" />
                   ログイン
                 </>
-              ) : (
-                <>
-                  <UserPlus className="w-5 h-5 mr-2" />
-                  新規登録
-                </>
               )}
             </button>
           </form>
-
-          <div className="mt-6 text-center">
-            <button
-              type="button"
-              onClick={() => {
-                setIsLogin(!isLogin);
-                setError(null);
-              }}
-              className="text-sm text-primary-600 hover:text-primary-700 font-medium"
-            >
-              {isLogin
-                ? 'アカウントをお持ちでない方はこちら'
-                : 'すでにアカウントをお持ちの方はこちら'}
-            </button>
-          </div>
         </div>
       </div>
     </div>
