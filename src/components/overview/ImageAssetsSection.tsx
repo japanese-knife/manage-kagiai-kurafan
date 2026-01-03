@@ -147,7 +147,7 @@ export default function ImageAssetsSection({ projectId, readOnly = false }: Imag
                 value={formData.url}
                 onChange={(e) => setFormData({ ...formData, url: e.target.value })}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                placeholder="Google ドライブ, ギガファイル便等々"
+                placeholder="Google ドライブ, ギガファイル便..."
               />
             </div>
             <div>
