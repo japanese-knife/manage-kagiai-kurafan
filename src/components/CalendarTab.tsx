@@ -27,6 +27,25 @@ export default function CalendarTab({ projectId }: CalendarTabProps) {
     setTasks(data || []);
   };
 
+  const handleStatusChange = async (taskId: string, newStatus: string) => {
+    await supabase
+      .from('tasks')
+      .update({ status: newStatus, updated_at: new Date().toISOString() })
+      .eq('id', taskId);
+    loadTasks();
+  };
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case '完了':
+        return 'bg-green-100 text-green-700';
+      case '進行中':
+        return 'bg-primary-100 text-primary-700';
+      default:
+        return 'bg-gray-100 text-gray-700';
+    }
+  };
+
   const getTasksForDate = (date: Date): Task[] => {
     const dateStr = date.toISOString().split('T')[0];
     return tasks.filter((task) => task.due_date === dateStr);
@@ -169,7 +188,7 @@ export default function CalendarTab({ projectId }: CalendarTabProps) {
                           ? 'bg-green-100 text-green-700'
                           : task.status === '進行中'
                           ? 'bg-primary-100 text-primary-700'
-                          : 'bg-yellow-100 text-yellow-700'
+                          : 'bg-gray-100 text-gray-700'
                       }`}
                       title={task.title}
                     >
@@ -232,17 +251,17 @@ export default function CalendarTab({ projectId }: CalendarTabProps) {
                             </p>
                           )}
                         </div>
-                        <span
-                          className={`ml-3 px-3 py-1 text-xs font-medium rounded-full whitespace-nowrap ${
-                            task.status === '完了'
-                              ? 'bg-green-100 text-green-700'
-                              : task.status === '進行中'
-                              ? 'bg-primary-100 text-primary-700'
-                              : 'bg-yellow-100 text-yellow-700'
-                          }`}
+                        <select
+                          value={task.status}
+                          onChange={(e) => handleStatusChange(task.id, e.target.value)}
+                          className={`ml-3 px-3 py-1 text-xs font-medium rounded-full whitespace-nowrap cursor-pointer ${getStatusColor(
+                            task.status
+                          )}`}
                         >
-                          {task.status}
-                        </span>
+                          <option value="未着手">未着手</option>
+                          <option value="進行中">進行中</option>
+                          <option value="完了">完了</option>
+                        </select>
                       </div>
                     </div>
                   ))}
