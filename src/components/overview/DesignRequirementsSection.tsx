@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabase';
 import { DesignRequirement } from '../../types';
-import { Palette, Plus, Edit2, ChevronDown, ChevronUp } from 'lucide-react';
+import { Palette, Plus, Edit2, Trash2, ExternalLink, ChevronDown, ChevronUp } from 'lucide-react';
 import { useAccordionState } from '../../hooks/useAccordionState';
 
 interface DesignRequirementsSectionProps {
@@ -10,49 +10,35 @@ interface DesignRequirementsSectionProps {
 }
 
 export default function DesignRequirementsSection({ projectId, readOnly = false }: DesignRequirementsSectionProps) {
-  const [requirement, setRequirement] = useState<DesignRequirement | null>(null);
-  const [isEditing, setIsEditing] = useState(false);
-  const [formData, setFormData] = useState({
-    design_tone: '',
-    colors: '',
-    fonts: '',
-    ng_items: '',
-    reference_urls: '',
-  });
+  const [items, setItems] = useState<DesignRequirement[]>([]);
+  const [isAdding, setIsAdding] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [formData, setFormData] = useState({ name: '', url: '', memo: '' });
   const { isExpanded, toggleExpanded, setExpandedWithSave } = useAccordionState(projectId, 'design_requirements', true);
 
   useEffect(() => {
-    loadRequirement();
+    loadItems();
   }, [projectId]);
 
-  const loadRequirement = async () => {
+  const loadItems = async () => {
     const { data } = await supabase
       .from('design_requirements')
       .select('*')
       .eq('project_id', projectId)
-      .maybeSingle();
+      .order('created_at', { ascending: true });
 
-    if (data) {
-      setRequirement(data);
-      setFormData({
-        design_tone: data.design_tone,
-        colors: data.colors,
-        fonts: data.fonts,
-        ng_items: data.ng_items,
-        reference_urls: data.reference_urls,
-      });
-    }
+    setItems(data || []);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     try {
-      if (requirement) {
+      if (editingId) {
         await supabase
           .from('design_requirements')
-          .update({ ...formData, updated_at: new Date().toISOString() })
-          .eq('id', requirement.id);
+          .update(formData)
+          .eq('id', editingId);
       } else {
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) return;
@@ -66,25 +52,26 @@ export default function DesignRequirementsSection({ projectId, readOnly = false 
           });
       }
 
-      setIsEditing(false);
-      loadRequirement();
+      setFormData({ name: '', url: '', memo: '' });
+      setIsAdding(false);
+      setEditingId(null);
+      loadItems();
     } catch (error) {
-      console.error('Error saving design requirement:', error);
+      console.error('デザイン要項保存エラー:', error);
     }
   };
 
-  const startEditing = () => {
-    if (!isExpanded) setExpandedWithSave(true);
-    if (requirement) {
-      setFormData({
-        design_tone: requirement.design_tone,
-        colors: requirement.colors,
-        fonts: requirement.fonts,
-        ng_items: requirement.ng_items,
-        reference_urls: requirement.reference_urls,
-      });
+  const handleEdit = (item: DesignRequirement) => {
+    setFormData({ name: item.name, url: item.url, memo: item.memo });
+    setEditingId(item.id);
+    setIsAdding(true);
+  };
+
+  const handleDelete = async (id: string) => {
+    if (confirm('削除してもよろしいですか?')) {
+      await supabase.from('design_requirements').delete().eq('id', id);
+      loadItems();
     }
-    setIsEditing(true);
   };
 
   return (
@@ -104,161 +91,123 @@ export default function DesignRequirementsSection({ projectId, readOnly = false 
         </button>
         {!readOnly && (
           <button
-            onClick={startEditing}
+            onClick={() => {
+              if (!isExpanded) setExpandedWithSave(true);
+              setIsAdding(!isAdding);
+            }}
             className="flex items-center justify-center px-3 py-1.5 text-sm btn-gradient-animated text-white rounded-lg transition-colors"
           >
-            {requirement ? (
-              <>
-                <Edit2 className="w-4 h-4 mr-1" />
-                編集
-              </>
-            ) : (
-              <>
-                <Plus className="w-4 h-4 mr-1" />
-                追加
-              </>
-            )}
+            <Plus className="w-4 h-4 mr-1" />
+            追加
           </button>
         )}
       </div>
 
       {isExpanded && (
         <>
-          {isEditing ? (
-        <form onSubmit={handleSubmit} className="bg-gray-50 p-4 rounded-lg">
+          {isAdding && (
+            <form onSubmit={handleSubmit} className="bg-gray-50 p-4 rounded-lg mb-4">
+              <div className="space-y-3">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    名前 *
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={formData.name}
+                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    placeholder="例: デザインガイドライン、カラーパレット"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    URL
+                  </label>
+                  <input
+                    type="url"
+                    value={formData.url}
+                    onChange={(e) => setFormData({ ...formData, url: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    placeholder="Figma、Googleドキュメント..."
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    メモ
+                  </label>
+                  <textarea
+                    value={formData.memo}
+                    onChange={(e) => setFormData({ ...formData, memo: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    rows={2}
+                    placeholder="デザインの方向性、注意点など"
+                  />
+                </div>
+                <div className="flex space-x-2">
+                  <button
+                    type="submit"
+                    className="px-4 py-2 btn-gradient-animated text-white rounded-lg"
+                  >
+                    {editingId ? '更新' : '追加'}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsAdding(false);
+                      setEditingId(null);
+                      setFormData({ name: '', url: '', memo: '' });
+                    }}
+                    className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300"
+                  >
+                    キャンセル
+                  </button>
+                </div>
+              </div>
+            </form>
+          )}
+
           <div className="space-y-3">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                デザイントーン
-              </label>
-              <input
-                type="text"
-                value={formData.design_tone}
-                onChange={(e) => setFormData({ ...formData, design_tone: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                placeholder="例: モダン、シンプル、ナチュラル"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                使用カラー
-              </label>
-              <input
-                type="text"
-                value={formData.colors}
-                onChange={(e) => setFormData({ ...formData, colors: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                placeholder="例: #3B82F6, #10B981"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                フォント
-              </label>
-              <input
-                type="text"
-                value={formData.fonts}
-                onChange={(e) => setFormData({ ...formData, fonts: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                placeholder="例: Noto Sans JP, Roboto"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                NG事項
-              </label>
-              <textarea
-                value={formData.ng_items}
-                onChange={(e) => setFormData({ ...formData, ng_items: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                rows={3}
-                placeholder="避けるべきデザイン要素"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                参考URL
-              </label>
-              <textarea
-                value={formData.reference_urls}
-                onChange={(e) =>
-                  setFormData({ ...formData, reference_urls: e.target.value })
-                }
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                rows={3}
-                placeholder="参考にしたいサイトのURL（1行に1つ）"
-              />
-            </div>
-            <div className="flex space-x-2">
-              <button
-                type="submit"
-                className="px-4 py-2 btn-gradient-animated text-white rounded-lg"
+            {items.map((item) => (
+              <div
+                key={item.id}
+                className="bg-gray-50 p-4 rounded-lg flex items-start justify-between"
               >
-                保存
-              </button>
-              <button
-                type="button"
-                onClick={() => setIsEditing(false)}
-                className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300"
-              >
-                キャンセル
-              </button>
-            </div>
-          </div>
-        </form>
-          ) : requirement ? (
-        <div className="bg-gray-50 p-4 rounded-lg space-y-3">
-          {requirement.design_tone && (
-            <div>
-              <h4 className="text-sm font-medium text-gray-700 mb-1">デザイントーン</h4>
-              <p className="text-sm text-gray-900">{requirement.design_tone}</p>
-            </div>
-          )}
-          {requirement.colors && (
-            <div>
-              <h4 className="text-sm font-medium text-gray-700 mb-1">使用カラー</h4>
-              <p className="text-sm text-gray-900">{requirement.colors}</p>
-            </div>
-          )}
-          {requirement.fonts && (
-            <div>
-              <h4 className="text-sm font-medium text-gray-700 mb-1">フォント</h4>
-              <p className="text-sm text-gray-900">{requirement.fonts}</p>
-            </div>
-          )}
-          {requirement.ng_items && (
-            <div>
-              <h4 className="text-sm font-medium text-gray-700 mb-1">NG事項</h4>
-              <p className="text-sm text-gray-900 whitespace-pre-wrap">
-                {requirement.ng_items}
-              </p>
-            </div>
-          )}
-          {requirement.reference_urls && (
-            <div>
-              <h4 className="text-sm font-medium text-gray-700 mb-1">参考URL</h4>
-              <div className="text-sm text-gray-900 space-y-1">
-                {requirement.reference_urls.split('\n').map((url, index) => (
-                  <div key={index}>
-                    <a
-                      href={url}
+                <div className="flex-1">
+                  <h3 className="font-semibold text-gray-900 mb-1">{item.name}</h3>
+                  {item.url && (
+                    
+                      href={item.url}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-primary-600 hover:underline"
+                      className="text-sm text-primary-600 hover:underline flex items-center mb-1"
                     >
-                      {url}
+                      <ExternalLink className="w-3 h-3 mr-1" />
+                      リンクを開く
                     </a>
+                  )}
+                  {item.memo && <p className="text-sm text-gray-600">{item.memo}</p>}
+                </div>
+                {!readOnly && (
+                  <div className="flex space-x-2">
+                    <button
+                      onClick={() => handleEdit(item)}
+                      className="p-1 text-gray-500 hover:text-primary-600"
+                    >
+                      <Edit2 className="w-4 h-4" />
+                    </button>
+                    <button
+                      onClick={() => handleDelete(item.id)}
+                      className="p-1 text-gray-500 hover:text-red-600"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
                   </div>
-                ))}
+                )}
               </div>
-            </div>
-          )}
-        </div>
-          ) : (
-            <div className="text-center py-8 text-gray-500">
-              デザイン要項が設定されていません
-            </div>
-          )}
+            ))}
+          </div>
         </>
       )}
     </section>
