@@ -252,20 +252,22 @@ export default function Dashboard({ onSelectProject, user, onLogout }: Dashboard
         .order('created_at', { ascending: true });
 
       if (!projectNotesError && projectNotes && projectNotes.length > 0) {
-        const newProjectNotes = projectNotes.map(note => ({
-          project_id: newProject.id,
-          content: note.content,
-          user_id: user.id,
-        }));
+  for (const note of projectNotes) {
+    const { error: projectNoteInsertError } = await supabase
+      .from('project_notes')
+      .insert({
+        project_id: newProject.id,
+        content: note.content,
+        user_id: user.id,
+      });
 
-        const { error: projectNoteInsertError } = await supabase
-          .from('project_notes')
-          .insert(newProjectNotes);
-
-        if (projectNoteInsertError) {
-          console.error('プロジェクトメモ複製エラー:', projectNoteInsertError);
-        }
-      }
+    if (projectNoteInsertError) {
+      console.error('プロジェクトメモ複製エラー:', projectNoteInsertError);
+    }
+    
+    await new Promise(resolve => setTimeout(resolve, 10));
+  }
+}
 
       // スケジュールを取得して複製
       const { data: schedules, error: schedulesError } = await supabase
