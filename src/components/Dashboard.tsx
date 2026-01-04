@@ -275,21 +275,24 @@ export default function Dashboard({ onSelectProject, user, onLogout }: Dashboard
         .order('created_at', { ascending: true });
 
       if (!schedulesError && schedules && schedules.length > 0) {
-        const newSchedules = schedules.map(schedule => ({
-          project_id: newProject.id,
-          content: schedule.content,
-          milestone: schedule.milestone,
-          user_id: user.id,
-        }));
+  for (const schedule of schedules) {
+    const { error: scheduleInsertError } = await supabase
+      .from('schedules')
+      .insert({
+        project_id: newProject.id,
+        content: schedule.content,
+        milestone: schedule.milestone,
+        user_id: user.id,
+      });
 
-        const { error: scheduleInsertError } = await supabase
-          .from('schedules')
-          .insert(newSchedules);
-
-        if (scheduleInsertError) {
-          console.error('スケジュール複製エラー:', scheduleInsertError);
-        }
-      }
+    if (scheduleInsertError) {
+      console.error('スケジュール複製エラー:', scheduleInsertError);
+    }
+    
+    // 順序を確実に保持するため少し待機
+    await new Promise(resolve => setTimeout(resolve, 10));
+  }
+}
 
       // 資料一覧を取得して複製
       const { data: documents, error: documentsError } = await supabase
