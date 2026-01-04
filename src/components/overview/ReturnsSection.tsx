@@ -31,6 +31,7 @@ export default function ReturnsSection({ projectId, readOnly = false }: ReturnsS
       .select('*')
       .eq('project_id', projectId)
       .order('created_at', { ascending: true });
+      .order('id', { ascending: true });
 
     setReturns(data || []);
   };
