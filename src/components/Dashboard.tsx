@@ -430,7 +430,8 @@ export default function Dashboard({ onSelectProject, user, onLogout }: Dashboard
                               </>
                             )}
 
-                            <div className="space-y-4 mt-5">
+                            {editingProjectId !== project.id && (
+                              <div className="space-y-4 mt-5">
                               {stats && stats.totalTasks > 0 && (
                                 <>
                                   <div className="flex items-center justify-between text-sm">
