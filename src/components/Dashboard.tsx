@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { User } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabase';
 import { Project, Task, ProjectStatus } from '../types';
-import { FolderKanban, Plus, ArrowRight, Calendar, CheckSquare, LogOut } from 'lucide-react';
+import { FolderKanban, Plus, ArrowRight, Calendar, CheckSquare, LogOut, Trash2, Edit2 } from 'lucide-react';
 
 interface DashboardProps {
   onSelectProject: (project: Project) => void;
