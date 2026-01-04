@@ -12,6 +12,7 @@ import OverviewTab from './components/OverviewTab';
 import TasksTab from './components/TasksTab';
 import CalendarTab from './components/CalendarTab';
 import { ArrowLeft, LogOut } from 'lucide-react';
+import Footer from './components/Footer';
 
 function App() {
   const [user, setUser] = useState<User | null>(null);
