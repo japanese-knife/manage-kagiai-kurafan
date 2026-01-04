@@ -403,22 +403,24 @@ export default function Dashboard({ onSelectProject, user, onLogout }: Dashboard
         .order('created_at', { ascending: true });
 
       if (!designReqError && designRequirements && designRequirements.length > 0) {
-        const newDesignRequirements = designRequirements.map(req => ({
-          project_id: newProject.id,
-          name: req.name,
-          url: req.url,
-          memo: req.memo,
-          user_id: user.id,
-        }));
+  for (const req of designRequirements) {
+    const { error: designReqInsertError } = await supabase
+      .from('design_requirements')
+      .insert({
+        project_id: newProject.id,
+        name: req.name,
+        url: req.url,
+        memo: req.memo,
+        user_id: user.id,
+      });
 
-        const { error: designReqInsertError } = await supabase
-          .from('design_requirements')
-          .insert(newDesignRequirements);
-
-        if (designReqInsertError) {
-          console.error('ページデザイン要項複製エラー:', designReqInsertError);
-        }
-      }
+    if (designReqInsertError) {
+      console.error('ページデザイン要項複製エラー:', designReqInsertError);
+    }
+    
+    await new Promise(resolve => setTimeout(resolve, 10));
+  }
+}
 
       // 掲載文章要項を取得して複製
       console.log('掲載文章要項を複製中...');
