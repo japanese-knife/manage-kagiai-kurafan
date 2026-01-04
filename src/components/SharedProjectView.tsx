@@ -122,7 +122,7 @@ export default function SharedProjectView({ shareToken }: SharedProjectViewProps
           {activeTab === 'tasks' && <TasksTab projectId={project.id} readOnly />}
           {activeTab === 'calendar' && <CalendarTab projectId={project.id} />}
         </div>
-      </main>
-    </div>
-  );
+      <Footer />
+  </div>
+);
 }
