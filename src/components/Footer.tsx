@@ -74,7 +74,7 @@ export default function Footer() {
               className="h-10 sm:h-12 w-auto mb-4"
             />
             <p className="text-xs text-neutral-500">
-              プロジェクト管理システム
+              PJ管理システム
             </p>
           </div>
         </div>
