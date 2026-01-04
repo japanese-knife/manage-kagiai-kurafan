@@ -7,7 +7,6 @@ import TabNavigation from './TabNavigation';
 import OverviewTab from './OverviewTab';
 import TasksTab from './TasksTab';
 import CalendarTab from './CalendarTab';
-import Footer from './Footer';
 
 interface SharedProjectViewProps {
   shareToken: string;
@@ -77,8 +76,8 @@ export default function SharedProjectView({ shareToken }: SharedProjectViewProps
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 flex flex-col">
-      <header className="bg-white/80 backdrop-blur-sm border-b border-neutral-200/50">
+    <div className="min-h-screen bg-neutral-50">
+      <header className="bg-white border-b border-neutral-200/80">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8 lg:px-12 py-4 sm:py-5 md:py-6">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 sm:gap-4">
             <div className="flex items-center justify-center order-1 sm:order-2">
@@ -113,7 +112,7 @@ export default function SharedProjectView({ shareToken }: SharedProjectViewProps
         </div>
       </header>
 
-      <main className="flex-1 max-w-7xl mx-auto px-4 sm:px-6 md:px-8 lg:px-12 py-6 sm:py-8 md:py-12 w-full">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8 lg:px-12 py-4 sm:py-6 md:py-8">
         <ProgressBar projectId={project.id} />
         <TabNavigation activeTab={activeTab} onTabChange={setActiveTab} />
 
@@ -123,7 +122,6 @@ export default function SharedProjectView({ shareToken }: SharedProjectViewProps
           {activeTab === 'calendar' && <CalendarTab projectId={project.id} />}
         </div>
       </main>
-     <Footer />
     </div>
   );
 }
