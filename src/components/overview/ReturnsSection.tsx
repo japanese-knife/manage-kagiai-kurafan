@@ -30,7 +30,7 @@ export default function ReturnsSection({ projectId, readOnly = false }: ReturnsS
       .from('returns')
       .select('*')
       .eq('project_id', projectId)
-      .order('created_at', { ascending: false });
+      .order('created_at', { ascending: true });
 
     setReturns(data || []);
   };
