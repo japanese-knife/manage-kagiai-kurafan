@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { User } from '@supabase/supabase-js';
-import { Project, TabType } from './types';
-import { supabase } from './lib/supabase';
+import { Project, TabType } from '../types';
+import { supabase } from '../lib/supabase';
 import Auth from './components/Auth';
 import Dashboard from './components/Dashboard';
 import SharedProjectView from './components/SharedProjectView';
