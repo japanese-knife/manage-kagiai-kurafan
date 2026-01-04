@@ -434,25 +434,27 @@ export default function Dashboard({ onSelectProject, user, onLogout }: Dashboard
         console.error('掲載文章要項取得エラー:', textContentReqError);
         errors.push(`掲載文章要項: ${textContentReqError.message}`);
       } else if (textContentRequirements && textContentRequirements.length > 0) {
-        console.log(`${textContentRequirements.length}件の掲載文章要項を複製`);
-        const newTextContentRequirements = textContentRequirements.map(req => ({
-          project_id: newProject.id,
-          name: req.name,
-          url: req.url,
-          memo: req.memo,
-          user_id: user.id,
-        }));
+  console.log(`${textContentRequirements.length}件の掲載文章要項を複製`);
+  for (const req of textContentRequirements) {
+    const { error: textContentReqInsertError } = await supabase
+      .from('text_content_requirements')
+      .insert({
+        project_id: newProject.id,
+        name: req.name,
+        url: req.url,
+        memo: req.memo,
+        user_id: user.id,
+      });
 
-        const { error: textContentReqInsertError } = await supabase
-          .from('text_content_requirements')
-          .insert(newTextContentRequirements);
-
-        if (textContentReqInsertError) {
-          console.error('掲載文章要項挿入エラー:', textContentReqInsertError);
-          errors.push(`掲載文章要項挿入: ${textContentReqInsertError.message}`);
-        } else {
-          console.log('掲載文章要項の複製が完了しました');
-        }
+    if (textContentReqInsertError) {
+      console.error('掲載文章要項挿入エラー:', textContentReqInsertError);
+      errors.push(`掲載文章要項挿入: ${textContentReqInsertError.message}`);
+    }
+    
+    await new Promise(resolve => setTimeout(resolve, 10));
+  }
+  console.log('掲載文章要項の複製が完了しました');
+}
       } else {
         console.log('掲載文章要項なし');
       }
