@@ -355,7 +355,7 @@ export default function Dashboard({ onSelectProject, user, onLogout }: Dashboard
     
     await new Promise(resolve => setTimeout(resolve, 10));
   }
-}
+
       } else {
         console.log('打ち合わせ内容なし');
       }
