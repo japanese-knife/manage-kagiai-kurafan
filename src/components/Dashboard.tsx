@@ -137,7 +137,7 @@ export default function Dashboard({ onSelectProject, user, onLogout }: Dashboard
   const handleDuplicateProject = async (project: Project, e: React.MouseEvent) => {
     e.stopPropagation();
     
-    if (!confirm(`「${project.name}」を複製しますか？タスク、サブタスク、メモなどすべての要素が複製されます。`)) {
+    if (!confirm(`「${project.name}」を複製しますか？タスク、サブタスク、メモ、スケジュール、各種要項などすべての要素が複製されます。`)) {
       return;
     }
 
@@ -259,6 +259,80 @@ export default function Dashboard({ onSelectProject, user, onLogout }: Dashboard
 
         if (projectNoteInsertError) {
           console.error('プロジェクトメモ複製エラー:', projectNoteInsertError);
+        }
+      }
+
+      // スケジュールを取得して複製
+      const { data: schedules, error: schedulesError } = await supabase
+        .from('schedules')
+        .select('*')
+        .eq('project_id', project.id)
+        .order('created_at', { ascending: true });
+
+      if (!schedulesError && schedules && schedules.length > 0) {
+        const newSchedules = schedules.map(schedule => ({
+          project_id: newProject.id,
+          content: schedule.content,
+          milestone: schedule.milestone,
+          user_id: user.id,
+        }));
+
+        const { error: scheduleInsertError } = await supabase
+          .from('schedules')
+          .insert(newSchedules);
+
+        if (scheduleInsertError) {
+          console.error('スケジュール複製エラー:', scheduleInsertError);
+        }
+      }
+
+      // ページデザイン要項を取得して複製
+      const { data: designRequirements, error: designReqError } = await supabase
+        .from('design_requirements')
+        .select('*')
+        .eq('project_id', project.id)
+        .order('created_at', { ascending: true });
+
+      if (!designReqError && designRequirements && designRequirements.length > 0) {
+        const newDesignRequirements = designRequirements.map(req => ({
+          project_id: newProject.id,
+          name: req.name,
+          url: req.url,
+          memo: req.memo,
+          user_id: user.id,
+        }));
+
+        const { error: designReqInsertError } = await supabase
+          .from('design_requirements')
+          .insert(newDesignRequirements);
+
+        if (designReqInsertError) {
+          console.error('ページデザイン要項複製エラー:', designReqInsertError);
+        }
+      }
+
+      // 掲載文章要項を取得して複製
+      const { data: textContentRequirements, error: textContentReqError } = await supabase
+        .from('text_content_requirements')
+        .select('*')
+        .eq('project_id', project.id)
+        .order('created_at', { ascending: true });
+
+      if (!textContentReqError && textContentRequirements && textContentRequirements.length > 0) {
+        const newTextContentRequirements = textContentRequirements.map(req => ({
+          project_id: newProject.id,
+          name: req.name,
+          url: req.url,
+          memo: req.memo,
+          user_id: user.id,
+        }));
+
+        const { error: textContentReqInsertError } = await supabase
+          .from('text_content_requirements')
+          .insert(newTextContentRequirements);
+
+        if (textContentReqInsertError) {
+          console.error('掲載文章要項複製エラー:', textContentReqInsertError);
         }
       }
 
