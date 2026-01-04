@@ -11,7 +11,6 @@ import TabNavigation from './components/TabNavigation';
 import OverviewTab from './components/OverviewTab';
 import TasksTab from './components/TasksTab';
 import CalendarTab from './components/CalendarTab';
-import Footer from './components/Footer';
 import { ArrowLeft, LogOut } from 'lucide-react';
 
 function App() {
@@ -68,14 +67,7 @@ function App() {
   };
 
   if (shareToken) {
-    return (
-      <div className="flex flex-col min-h-screen">
-        <div className="flex-1">
-          <SharedProjectView shareToken={shareToken} />
-        </div>
-        <Footer />
-      </div>
-    );
+    return <SharedProjectView shareToken={shareToken} />;
   }
 
   if (loading) {
@@ -90,29 +82,15 @@ function App() {
   }
 
   if (!user) {
-    return (
-      <div className="flex flex-col min-h-screen">
-        <div className="flex-1">
-          <Auth />
-        </div>
-        <Footer />
-      </div>
-    );
+    return <Auth />;
   }
 
   if (!selectedProject) {
-    return (
-      <div className="flex flex-col min-h-screen">
-        <div className="flex-1">
-          <Dashboard onSelectProject={handleSelectProject} user={user} onLogout={handleLogout} />
-        </div>
-        <Footer />
-      </div>
-    );
+    return <Dashboard onSelectProject={handleSelectProject} user={user} onLogout={handleLogout} />;
   }
 
   return (
-    <div className="flex flex-col min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
       <header className="bg-white/80 backdrop-blur-sm border-b border-neutral-200/50">
         <div className="max-w-7xl mx-auto px-6 sm:px-8 lg:px-12 py-6">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between w-full sm:relative gap-4 sm:gap-0">
@@ -156,7 +134,7 @@ function App() {
         </div>
       </header>
 
-      <main className="flex-1 max-w-7xl mx-auto px-6 sm:px-8 lg:px-12 py-8 w-full">
+      <main className="max-w-7xl mx-auto px-6 sm:px-8 lg:px-12 py-8">
         <ProgressBar projectId={selectedProject.id} />
         <TabNavigation activeTab={activeTab} onTabChange={setActiveTab} />
 
@@ -172,8 +150,6 @@ function App() {
           )}
         </div>
       </main>
-
-      <Footer />
     </div>
   );
 }
