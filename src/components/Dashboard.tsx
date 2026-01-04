@@ -331,7 +331,10 @@ export default function Dashboard({ onSelectProject, user, onLogout }: Dashboard
         console.log(`${meetings.length}件の打ち合わせ内容を複製`);
         const newMeetings = meetings.map(meeting => ({
           project_id: newProject.id,
-          content: meeting.content,
+          date: meeting.date,
+          participants: meeting.participants,
+          summary: meeting.summary,
+          decisions: meeting.decisions,
           user_id: user.id,
         }));
 
@@ -362,7 +365,10 @@ export default function Dashboard({ onSelectProject, user, onLogout }: Dashboard
         console.log(`${returns.length}件のリターン内容を複製`);
         const newReturns = returns.map(ret => ({
           project_id: newProject.id,
-          content: ret.content,
+          name: ret.name,
+          price_range: ret.price_range,
+          description: ret.description,
+          status: ret.status,
           user_id: user.id,
         }));
 
@@ -451,9 +457,11 @@ export default function Dashboard({ onSelectProject, user, onLogout }: Dashboard
         console.log(`${videoRequirements.length}件の掲載動画要項を複製`);
         const newVideoRequirements = videoRequirements.map(req => ({
           project_id: newProject.id,
-          name: req.name,
-          url: req.url,
-          memo: req.memo,
+          video_type: req.video_type,
+          duration: req.duration,
+          required_cuts: req.required_cuts,
+          has_narration: req.has_narration,
+          reference_url: req.reference_url,
           user_id: user.id,
         }));
 
@@ -469,37 +477,38 @@ export default function Dashboard({ onSelectProject, user, onLogout }: Dashboard
         console.log('掲載動画要項なし');
       }
 
-      // 画像要項を取得して複製
-      console.log('画像要項を複製中...');
-      const { data: imageRequirements, error: imageReqError } = await supabase
-        .from('image_requirements')
+      // 画像アセットを取得して複製
+      console.log('画像アセットを複製中...');
+      const { data: imageAssets, error: imageAssetsError } = await supabase
+        .from('image_assets')
         .select('*')
         .eq('project_id', project.id)
         .order('created_at', { ascending: true });
 
-      if (imageReqError) {
-        console.error('画像要項取得エラー:', imageReqError);
-        errors.push(`画像要項: ${imageReqError.message}`);
-      } else if (imageRequirements && imageRequirements.length > 0) {
-        console.log(`${imageRequirements.length}件の画像要項を複製`);
-        const newImageRequirements = imageRequirements.map(req => ({
+      if (imageAssetsError) {
+        console.error('画像アセット取得エラー:', imageAssetsError);
+        errors.push(`画像アセット: ${imageAssetsError.message}`);
+      } else if (imageAssets && imageAssets.length > 0) {
+        console.log(`${imageAssets.length}件の画像アセットを複製`);
+        const newImageAssets = imageAssets.map(asset => ({
           project_id: newProject.id,
-          name: req.name,
-          url: req.url,
-          memo: req.memo,
+          name: asset.name,
+          purpose: asset.purpose,
+          url: asset.url,
+          status: asset.status,
           user_id: user.id,
         }));
 
-        const { error: imageReqInsertError } = await supabase
-          .from('image_requirements')
-          .insert(newImageRequirements);
+        const { error: imageAssetsInsertError } = await supabase
+          .from('image_assets')
+          .insert(newImageAssets);
 
-        if (imageReqInsertError) {
-          console.error('画像要項挿入エラー:', imageReqInsertError);
-          errors.push(`画像要項挿入: ${imageReqInsertError.message}`);
+        if (imageAssetsInsertError) {
+          console.error('画像アセット挿入エラー:', imageAssetsInsertError);
+          errors.push(`画像アセット挿入: ${imageAssetsInsertError.message}`);
         }
       } else {
-        console.log('画像要項なし');
+        console.log('画像アセットなし');
       }
 
       // エラーがあった場合は警告を表示、なければ成功メッセージ
