@@ -1,9 +1,8 @@
 import { useState, useEffect } from 'react';
 import { User } from '@supabase/supabase-js';
-import { Project, TabType } from './types';
-import { supabase } from './lib/supabase';
-import Auth from './components/Auth';
-import Dashboard from './components/Dashboard';
+import { supabase } from '../lib/supabase';           // ✅ 正しい
+import { Project, Task, ProjectStatus } from '../types';
+import { FolderKanban, Plus, ArrowRight, Calendar, CheckSquare, LogOut } from 'lucide-react';
 import SharedProjectView from './components/SharedProjectView';
 import ShareButton from './components/ShareButton';
 import ProgressBar from './components/ProgressBar';
