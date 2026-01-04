@@ -456,7 +456,7 @@ export default function Dashboard({ onSelectProject, user, onLogout }: Dashboard
     await new Promise(resolve => setTimeout(resolve, 10));
   }
   console.log('掲載文章要項の複製が完了しました');
-}
+
       } else {
         console.log('掲載文章要項なし');
       }
