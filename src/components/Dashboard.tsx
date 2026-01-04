@@ -370,24 +370,27 @@ export default function Dashboard({ onSelectProject, user, onLogout }: Dashboard
         console.error('リターン内容取得エラー:', returnsError);
         errors.push(`リターン内容: ${returnsError.message}`);
       } else if (returns && returns.length > 0) {
-        console.log(`${returns.length}件のリターン内容を複製`);
-        const newReturns = returns.map(ret => ({
-          project_id: newProject.id,
-          name: ret.name,
-          price_range: ret.price_range,
-          description: ret.description,
-          status: ret.status,
-          user_id: user.id,
-        }));
+  console.log(`${returns.length}件のリターン内容を複製`);
+  for (const ret of returns) {
+    const { error: returnInsertError } = await supabase
+      .from('returns')
+      .insert({
+        project_id: newProject.id,
+        name: ret.name,
+        price_range: ret.price_range,
+        description: ret.description,
+        status: ret.status,
+        user_id: user.id,
+      });
 
-        const { error: returnInsertError } = await supabase
-          .from('returns')
-          .insert(newReturns);
-
-        if (returnInsertError) {
-          console.error('リターン内容挿入エラー:', returnInsertError);
-          errors.push(`リターン内容挿入: ${returnInsertError.message}`);
-        }
+    if (returnInsertError) {
+      console.error('リターン内容挿入エラー:', returnInsertError);
+      errors.push(`リターン内容挿入: ${returnInsertError.message}`);
+    }
+    
+    await new Promise(resolve => setTimeout(resolve, 10));
+  }
+}
       } else {
         console.log('リターン内容なし');
       }
