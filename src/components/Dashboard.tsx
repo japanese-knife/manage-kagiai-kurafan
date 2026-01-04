@@ -229,7 +229,7 @@ export default function Dashboard({ onSelectProject, user, onLogout }: Dashboard
         </div>
       </header>
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8 lg:px-12 py-6 sm:py-8 md:py-12">
+      <main className="flex-1 max-w-7xl mx-auto px-4 sm:px-6 md:px-8 lg:px-12 py-6 sm:py-8 md:py-12 w-full">
         {showCreateForm && (
           <div className="bg-white rounded-2xl border border-neutral-200/50 p-4 sm:p-6 md:p-8 mb-6 sm:mb-8 md:mb-10 shadow-lg">
             <h2 className="text-base sm:text-lg font-semibold text-neutral-900 mb-4 sm:mb-6">
