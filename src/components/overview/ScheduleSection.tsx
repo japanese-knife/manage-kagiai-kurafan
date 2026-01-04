@@ -177,8 +177,8 @@ export default function ScheduleSection({ projectId, readOnly = false }: Schedul
                 <div className="flex justify-between items-start">
                   <div className="flex-1">
                     {schedule.content && (
-                      <p className="text-neutral-700 mb-2 leading-relaxed">{schedule.content}</p>
-                    )}
+  <p className="text-neutral-700 mb-2 leading-relaxed whitespace-pre-wrap">{schedule.content}</p>
+)}
                     {schedule.milestone && (
                       <p className="text-sm font-semibold text-primary-600">
                         {schedule.milestone}
