@@ -1,6 +1,6 @@
 export default function Footer() {
   return (
-    <footer className="relative mt-auto border-t border-neutral-200/50 bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50/40 backdrop-blur-sm">
+    <footer className="relative mt-auto border-t border-neutral-200/50 bg-white to-indigo-50/40 backdrop-blur-sm">
       {/* 装飾的な背景要素 */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute -top-24 -right-24 w-96 h-96 bg-primary-100/20 rounded-full blur-3xl"></div>
