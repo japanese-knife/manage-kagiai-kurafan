@@ -137,7 +137,7 @@ export default function Dashboard({ onSelectProject, user, onLogout }: Dashboard
   const handleDuplicateProject = async (project: Project, e: React.MouseEvent) => {
     e.stopPropagation();
     
-    if (!confirm(`「${project.name}」を複製しますか？`)) {
+    if (!confirm(`「${project.name}」を複製しますか？タスク、サブタスク、メモなどすべての要素が複製されます。`)) {
       return;
     }
 
@@ -160,27 +160,106 @@ export default function Dashboard({ onSelectProject, user, onLogout }: Dashboard
       const { data: tasks, error: tasksError } = await supabase
         .from('tasks')
         .select('*')
-        .eq('project_id', project.id);
+        .eq('project_id', project.id)
+        .order('created_at', { ascending: true });
 
       if (tasksError) throw tasksError;
 
-      // タスクがある場合は複製
+      // タスクIDのマッピング（元のタスクID → 新しいタスクID）
+      const taskIdMap = new Map<string, string>();
+
+      // タスクを複製
       if (tasks && tasks.length > 0) {
-        const newTasks = tasks.map(task => ({
+        for (const task of tasks) {
+          const { data: newTask, error: taskInsertError } = await supabase
+            .from('tasks')
+            .insert({
+              project_id: newProject.id,
+              title: task.title,
+              description: task.description,
+              status: task.status,
+              priority: task.priority,
+              due_date: task.due_date,
+              user_id: user.id,
+            })
+            .select()
+            .single();
+
+          if (taskInsertError) throw taskInsertError;
+
+          // 元のタスクIDと新しいタスクIDをマッピング
+          taskIdMap.set(task.id, newTask.id);
+
+          // サブタスクを取得して複製
+          const { data: subtasks, error: subtasksError } = await supabase
+            .from('subtasks')
+            .select('*')
+            .eq('task_id', task.id)
+            .order('created_at', { ascending: true });
+
+          if (!subtasksError && subtasks && subtasks.length > 0) {
+            const newSubtasks = subtasks.map(subtask => ({
+              task_id: newTask.id,
+              title: subtask.title,
+              completed: subtask.completed,
+              user_id: user.id,
+            }));
+
+            const { error: subtaskInsertError } = await supabase
+              .from('subtasks')
+              .insert(newSubtasks);
+
+            if (subtaskInsertError) {
+              console.error('サブタスク複製エラー:', subtaskInsertError);
+            }
+          }
+
+          // タスクメモを取得して複製
+          const { data: notes, error: notesError } = await supabase
+            .from('task_notes')
+            .select('*')
+            .eq('task_id', task.id)
+            .order('created_at', { ascending: true });
+
+          if (!notesError && notes && notes.length > 0) {
+            const newNotes = notes.map(note => ({
+              task_id: newTask.id,
+              content: note.content,
+              user_id: user.id,
+            }));
+
+            const { error: noteInsertError } = await supabase
+              .from('task_notes')
+              .insert(newNotes);
+
+            if (noteInsertError) {
+              console.error('メモ複製エラー:', noteInsertError);
+            }
+          }
+        }
+      }
+
+      // プロジェクトメモを取得して複製
+      const { data: projectNotes, error: projectNotesError } = await supabase
+        .from('project_notes')
+        .select('*')
+        .eq('project_id', project.id)
+        .order('created_at', { ascending: true });
+
+      if (!projectNotesError && projectNotes && projectNotes.length > 0) {
+        const newProjectNotes = projectNotes.map(note => ({
           project_id: newProject.id,
-          title: task.title,
-          description: task.description,
-          status: task.status,
-          priority: task.priority,
-          due_date: task.due_date,
+          content: note.content,
           user_id: user.id,
         }));
 
-        const { error: insertError } = await supabase
-          .from('tasks')
-          .insert(newTasks);
+        const { error: projectNoteInsertError } = await supabase
+          .from('project_notes')
+          .insert(newProjectNotes);
 
-        if (insertError) throw insertError;
+        if (projectNoteInsertError) {
+          console.error('プロジェクトメモ複製エラー:', projectNoteInsertError);
+        }
       }
 
       alert('プロジェクトを複製しました');
