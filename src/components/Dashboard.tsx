@@ -392,7 +392,7 @@ export default function Dashboard({ onSelectProject, user, onLogout }: Dashboard
     
     await new Promise(resolve => setTimeout(resolve, 10));
   }
-}
+
       } else {
         console.log('リターン内容なし');
       }
