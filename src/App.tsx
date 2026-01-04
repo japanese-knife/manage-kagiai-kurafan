@@ -151,7 +151,6 @@ function App() {
           )}
         </div>
       </main>
-    </div>
     <Footer />
     </div>
   );
