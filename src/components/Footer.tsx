@@ -74,7 +74,7 @@ export default function Footer() {
               </p>
             </div>
             <p className="text-xs text-neutral-500 pt-2">
-              © {new Date().getFullYear()} RE-IDEA Corporation. All rights reserved.
+              © {new Date().getFullYear()} RE-IDEA Co.,Ltd. All rights reserved.
             </p>
           </div>
         </div>
