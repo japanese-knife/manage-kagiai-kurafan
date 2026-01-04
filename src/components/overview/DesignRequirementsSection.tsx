@@ -26,6 +26,7 @@ export default function DesignRequirementsSection({ projectId, readOnly = false 
       .select('*')
       .eq('project_id', projectId)
       .order('created_at', { ascending: true });
+      .order('id', { ascending: true });
 
     setItems(data || []);
   };
