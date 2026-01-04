@@ -17,19 +17,42 @@ export default function TaskForm({ projectId, parentId, task, onSave, onCancel }
     status: task?.status || '未着手',
     due_date: task?.due_date || '',
   });
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    if (isSubmitting) return;
+    setIsSubmitting(true);
+
     try {
       if (task) {
-        await supabase
+        // タスク更新
+        const { error } = await supabase
           .from('tasks')
-          .update({ ...formData, updated_at: new Date().toISOString() })
+          .update({ 
+            title: formData.title,
+            description: formData.description,
+            status: formData.status,
+            due_date: formData.due_date || null,
+            updated_at: new Date().toISOString() 
+          })
           .eq('id', task.id);
+
+        if (error) {
+          console.error('タスク更新エラー:', error);
+          alert(`更新に失敗しました: ${error.message}`);
+          setIsSubmitting(false);
+          return;
+        }
       } else {
+        // タスク新規作成
         const { data: { user } } = await supabase.auth.getUser();
-        if (!user) return;
+        if (!user) {
+          alert('ユーザー情報が取得できませんでした');
+          setIsSubmitting(false);
+          return;
+        }
 
         const { data: maxOrder } = await supabase
           .from('tasks')
@@ -41,19 +64,30 @@ export default function TaskForm({ projectId, parentId, task, onSave, onCancel }
 
         const nextOrder = maxOrder ? maxOrder.order_index + 1 : 0;
 
-        await supabase.from('tasks').insert({
-          ...formData,
+        const { error } = await supabase.from('tasks').insert({
+          title: formData.title,
+          description: formData.description,
+          status: formData.status,
           project_id: projectId,
           parent_id: parentId,
           order_index: nextOrder,
           due_date: formData.due_date || null,
           user_id: user.id,
         });
+
+        if (error) {
+          console.error('タスク作成エラー:', error);
+          alert(`作成に失敗しました: ${error.message}`);
+          setIsSubmitting(false);
+          return;
+        }
       }
 
       onSave();
     } catch (error) {
       console.error('タスク保存エラー:', error);
+      alert('予期しないエラーが発生しました');
+      setIsSubmitting(false);
     }
   };
 
@@ -71,6 +105,7 @@ export default function TaskForm({ projectId, parentId, task, onSave, onCancel }
             onChange={(e) => setFormData({ ...formData, title: e.target.value })}
             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
             placeholder="タスク名を入力"
+            disabled={isSubmitting}
           />
         </div>
         <div>
@@ -83,6 +118,7 @@ export default function TaskForm({ projectId, parentId, task, onSave, onCancel }
             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
             rows={2}
             placeholder="タスクの詳細"
+            disabled={isSubmitting}
           />
         </div>
         <div className="grid grid-cols-2 gap-3">
@@ -94,6 +130,7 @@ export default function TaskForm({ projectId, parentId, task, onSave, onCancel }
               value={formData.status}
               onChange={(e) => setFormData({ ...formData, status: e.target.value })}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+              disabled={isSubmitting}
             >
               <option value="未着手">未着手</option>
               <option value="進行中">進行中</option>
@@ -109,20 +146,23 @@ export default function TaskForm({ projectId, parentId, task, onSave, onCancel }
               value={formData.due_date}
               onChange={(e) => setFormData({ ...formData, due_date: e.target.value })}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+              disabled={isSubmitting}
             />
           </div>
         </div>
         <div className="flex space-x-2">
           <button
             type="submit"
-            className="px-4 py-2 btn-gradient-animated text-white rounded-lg shadow-soft-lg"
+            disabled={isSubmitting}
+            className="px-4 py-2 btn-gradient-animated text-white rounded-lg shadow-soft-lg disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {task ? '更新' : '追加'}
+            {isSubmitting ? '処理中...' : (task ? '更新' : '追加')}
           </button>
           <button
             type="button"
             onClick={onCancel}
-            className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300"
+            disabled={isSubmitting}
+            className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             キャンセル
           </button>
