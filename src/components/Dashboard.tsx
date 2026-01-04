@@ -437,6 +437,8 @@ export default function Dashboard({ onSelectProject, user, onLogout }: Dashboard
         if (textContentReqInsertError) {
           console.error('掲載文章要項挿入エラー:', textContentReqInsertError);
           errors.push(`掲載文章要項挿入: ${textContentReqInsertError.message}`);
+        } else {
+          console.log('掲載文章要項の複製が完了しました');
         }
       } else {
         console.log('掲載文章要項なし');
