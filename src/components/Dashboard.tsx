@@ -184,7 +184,7 @@ export default function Dashboard({ onSelectProject, user, onLogout }: Dashboard
                   value={newProjectName}
                   onChange={(e) => setNewProjectName(e.target.value)}
                   className="w-full px-4 py-3 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-100 focus:border-primary-500 bg-white"
-                  placeholder="例: 株式会社RE-IDEA様_"
+                  placeholder="例: 株式会社RE-IDEA様"
                 />
               </div>
               <div>
