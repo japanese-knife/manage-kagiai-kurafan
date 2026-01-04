@@ -3,6 +3,7 @@ import { User } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabase';
 import { Project, Task, ProjectStatus } from '../types';
 import { FolderKanban, Plus, ArrowRight, Calendar, CheckSquare, LogOut } from 'lucide-react';
+import Footer from './Footer';
 
 interface DashboardProps {
   onSelectProject: (project: Project) => void;
