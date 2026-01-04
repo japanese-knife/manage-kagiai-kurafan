@@ -7,6 +7,7 @@ import TabNavigation from './TabNavigation';
 import OverviewTab from './OverviewTab';
 import TasksTab from './TasksTab';
 import CalendarTab from './CalendarTab';
+import Footer from './Footer';
 
 interface SharedProjectViewProps {
   shareToken: string;
