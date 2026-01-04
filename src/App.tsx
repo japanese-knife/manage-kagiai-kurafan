@@ -151,8 +151,9 @@ function App() {
           )}
         </div>
       </main>
-    </div>
-  );
+      <Footer />
+  </div>
+);
 }
 
 export default App;
