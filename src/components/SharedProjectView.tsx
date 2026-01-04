@@ -113,7 +113,7 @@ export default function SharedProjectView({ shareToken }: SharedProjectViewProps
         </div>
       </header>
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8 lg:px-12 py-4 sm:py-6 md:py-8">
+      <main className="flex-1 max-w-7xl mx-auto px-4 sm:px-6 md:px-8 lg:px-12 py-6 sm:py-8 md:py-12 w-full">
         <ProgressBar projectId={project.id} />
         <TabNavigation activeTab={activeTab} onTabChange={setActiveTab} />
 
