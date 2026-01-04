@@ -208,6 +208,7 @@ export default function DesignRequirementsSection({ projectId, readOnly = false 
               </div>
             ))}
           </div>
+        </>
       )}
     </section>
   );
