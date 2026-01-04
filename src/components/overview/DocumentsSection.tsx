@@ -25,7 +25,7 @@ export default function DocumentsSection({ projectId, readOnly = false }: Docume
       .from('documents')
       .select('*')
       .eq('project_id', projectId)
-      .order('created_at', { ascending: true });
+      .order('created_at', { ascending: true })
       .order('id', { ascending: true });
 
     setDocuments(data || []);
