@@ -187,6 +187,7 @@ export default function DesignRequirementsSection({ projectId, readOnly = false 
                       リンクを開く
                     </a>
                   )}
+                  )}
                   {item.memo && <p className="text-sm text-gray-600">{item.memo}</p>}
                 </div>
                 {!readOnly && (
