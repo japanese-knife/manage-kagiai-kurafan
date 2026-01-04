@@ -479,6 +479,7 @@ export default function Dashboard({ onSelectProject, user, onLogout }: Dashboard
           </div>
         )}
       </main>
+    <Footer />
     </div>
   );
 }
