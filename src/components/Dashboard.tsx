@@ -431,49 +431,50 @@ export default function Dashboard({ onSelectProject, user, onLogout }: Dashboard
                             )}
 
                             {editingProjectId !== project.id && (
+                              {editingProjectId !== project.id && (
                               <div className="space-y-4 mt-5">
-                              {stats && stats.totalTasks > 0 && (
-                                <>
-                                  <div className="flex items-center justify-between text-sm">
-                                    <span className="text-neutral-600 font-medium">進捗率</span>
-                                    <span className="font-semibold text-primary-600">
-                                      {stats.progress}%
-                                    </span>
-                                  </div>
-                                  <div className="w-full bg-neutral-100 rounded-full h-2 overflow-hidden">
-                                    <div
-                                      className="bg-gradient-to-r from-primary-600 to-primary-500 h-2 rounded-full transition-all duration-300"
-                                      style={{ width: `${stats.progress}%` }}
-                                    />
-                                  </div>
-                                  <div className="flex items-center text-sm text-neutral-600">
-                                    <CheckSquare className="w-4 h-4 mr-2 text-neutral-500" />
-                                    {stats.completedTasks} / {stats.totalTasks} タスク完了
-                                  </div>
-                                </>
-                              )}
+                                {stats && stats.totalTasks > 0 && (
+                                  <>
+                                    <div className="flex items-center justify-between text-sm">
+                                      <span className="text-neutral-600 font-medium">進捗率</span>
+                                      <span className="font-semibold text-primary-600">
+                                        {stats.progress}%
+                                      </span>
+                                    </div>
+                                    <div className="w-full bg-neutral-100 rounded-full h-2 overflow-hidden">
+                                      <div
+                                        className="bg-gradient-to-r from-primary-600 to-primary-500 h-2 rounded-full transition-all duration-300"
+                                        style={{ width: `${stats.progress}%` }}
+                                      />
+                                    </div>
+                                    <div className="flex items-center text-sm text-neutral-600">
+                                      <CheckSquare className="w-4 h-4 mr-2 text-neutral-500" />
+                                      {stats.completedTasks} / {stats.totalTasks} タスク完了
+                                    </div>
+                                  </>
+                                )}
 
-                              {(!stats || stats.totalTasks === 0) && (
-                                <div className="text-sm text-neutral-500">
-                                  タスクがまだありません
-                                </div>
-                              )}
+                                {(!stats || stats.totalTasks === 0) && (
+                                  <div className="text-sm text-neutral-500">
+                                    タスクがまだありません
+                                  </div>
+                                )}
 
-                              <div className="pt-4 border-t border-neutral-100 flex items-center justify-between">
-                                <div className="flex items-center text-xs text-neutral-500">
-                                  <Calendar className="w-3.5 h-3.5 mr-2" />
-                                  {lastUpdated}
-                                </div>
-                                <div className="text-xs text-primary-600 font-medium flex items-center group-hover:translate-x-0.5 transition-transform">
-                                  詳細
-                                  <ArrowRight className="w-3.5 h-3.5 ml-1" />
+                                <div className="pt-4 border-t border-neutral-100 flex items-center justify-between">
+                                  <div className="flex items-center text-xs text-neutral-500">
+                                    <Calendar className="w-3.5 h-3.5 mr-2" />
+                                    {lastUpdated}
+                                  </div>
+                                  <div 
+                                    className="text-xs text-primary-600 font-medium flex items-center group-hover:translate-x-0.5 transition-transform"
+                                    onClick={() => onSelectProject(project)}
+                                  >
+                                    詳細
+                                    <ArrowRight className="w-3.5 h-3.5 ml-1" />
+                                  </div>
                                 </div>
                               </div>
-                            </div>
-                          </div>
                             )}
-                          </div>
-                        </div>
                           </div>
                         </div>
                       );
