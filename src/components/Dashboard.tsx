@@ -141,6 +141,8 @@ export default function Dashboard({ onSelectProject, user, onLogout }: Dashboard
       return;
     }
 
+    const errors: string[] = [];
+
     try {
       // プロジェクトを複製
       const { data: newProject, error: projectError } = await supabase
@@ -154,7 +156,10 @@ export default function Dashboard({ onSelectProject, user, onLogout }: Dashboard
         .select()
         .single();
 
-      if (projectError) throw projectError;
+      if (projectError) {
+        console.error('プロジェクト作成エラー:', projectError);
+        throw projectError;
+      }
 
       // 元のプロジェクトのタスクを取得
       const { data: tasks, error: tasksError } = await supabase
@@ -312,13 +317,18 @@ export default function Dashboard({ onSelectProject, user, onLogout }: Dashboard
       }
 
       // 打ち合わせ内容を取得して複製
+      console.log('打ち合わせ内容を複製中...');
       const { data: meetings, error: meetingsError } = await supabase
         .from('meetings')
         .select('*')
         .eq('project_id', project.id)
         .order('created_at', { ascending: true });
 
-      if (!meetingsError && meetings && meetings.length > 0) {
+      if (meetingsError) {
+        console.error('打ち合わせ内容取得エラー:', meetingsError);
+        errors.push(`打ち合わせ内容: ${meetingsError.message}`);
+      } else if (meetings && meetings.length > 0) {
+        console.log(`${meetings.length}件の打ち合わせ内容を複製`);
         const newMeetings = meetings.map(meeting => ({
           project_id: newProject.id,
           content: meeting.content,
@@ -330,18 +340,26 @@ export default function Dashboard({ onSelectProject, user, onLogout }: Dashboard
           .insert(newMeetings);
 
         if (meetingInsertError) {
-          console.error('打ち合わせ内容複製エラー:', meetingInsertError);
+          console.error('打ち合わせ内容挿入エラー:', meetingInsertError);
+          errors.push(`打ち合わせ内容挿入: ${meetingInsertError.message}`);
         }
+      } else {
+        console.log('打ち合わせ内容なし');
       }
 
       // リターン内容を取得して複製
+      console.log('リターン内容を複製中...');
       const { data: returns, error: returnsError } = await supabase
         .from('returns')
         .select('*')
         .eq('project_id', project.id)
         .order('created_at', { ascending: true });
 
-      if (!returnsError && returns && returns.length > 0) {
+      if (returnsError) {
+        console.error('リターン内容取得エラー:', returnsError);
+        errors.push(`リターン内容: ${returnsError.message}`);
+      } else if (returns && returns.length > 0) {
+        console.log(`${returns.length}件のリターン内容を複製`);
         const newReturns = returns.map(ret => ({
           project_id: newProject.id,
           content: ret.content,
@@ -353,8 +371,11 @@ export default function Dashboard({ onSelectProject, user, onLogout }: Dashboard
           .insert(newReturns);
 
         if (returnInsertError) {
-          console.error('リターン内容複製エラー:', returnInsertError);
+          console.error('リターン内容挿入エラー:', returnInsertError);
+          errors.push(`リターン内容挿入: ${returnInsertError.message}`);
         }
+      } else {
+        console.log('リターン内容なし');
       }
 
       // ページデザイン要項を取得して複製
@@ -383,13 +404,18 @@ export default function Dashboard({ onSelectProject, user, onLogout }: Dashboard
       }
 
       // 掲載文章要項を取得して複製
+      console.log('掲載文章要項を複製中...');
       const { data: textContentRequirements, error: textContentReqError } = await supabase
         .from('text_content_requirements')
         .select('*')
         .eq('project_id', project.id)
         .order('created_at', { ascending: true });
 
-      if (!textContentReqError && textContentRequirements && textContentRequirements.length > 0) {
+      if (textContentReqError) {
+        console.error('掲載文章要項取得エラー:', textContentReqError);
+        errors.push(`掲載文章要項: ${textContentReqError.message}`);
+      } else if (textContentRequirements && textContentRequirements.length > 0) {
+        console.log(`${textContentRequirements.length}件の掲載文章要項を複製`);
         const newTextContentRequirements = textContentRequirements.map(req => ({
           project_id: newProject.id,
           name: req.name,
@@ -403,18 +429,26 @@ export default function Dashboard({ onSelectProject, user, onLogout }: Dashboard
           .insert(newTextContentRequirements);
 
         if (textContentReqInsertError) {
-          console.error('掲載文章要項複製エラー:', textContentReqInsertError);
+          console.error('掲載文章要項挿入エラー:', textContentReqInsertError);
+          errors.push(`掲載文章要項挿入: ${textContentReqInsertError.message}`);
         }
+      } else {
+        console.log('掲載文章要項なし');
       }
 
       // 掲載動画要項を取得して複製
+      console.log('掲載動画要項を複製中...');
       const { data: videoRequirements, error: videoReqError } = await supabase
         .from('video_requirements')
         .select('*')
         .eq('project_id', project.id)
         .order('created_at', { ascending: true });
 
-      if (!videoReqError && videoRequirements && videoRequirements.length > 0) {
+      if (videoReqError) {
+        console.error('掲載動画要項取得エラー:', videoReqError);
+        errors.push(`掲載動画要項: ${videoReqError.message}`);
+      } else if (videoRequirements && videoRequirements.length > 0) {
+        console.log(`${videoRequirements.length}件の掲載動画要項を複製`);
         const newVideoRequirements = videoRequirements.map(req => ({
           project_id: newProject.id,
           name: req.name,
@@ -428,18 +462,26 @@ export default function Dashboard({ onSelectProject, user, onLogout }: Dashboard
           .insert(newVideoRequirements);
 
         if (videoReqInsertError) {
-          console.error('掲載動画要項複製エラー:', videoReqInsertError);
+          console.error('掲載動画要項挿入エラー:', videoReqInsertError);
+          errors.push(`掲載動画要項挿入: ${videoReqInsertError.message}`);
         }
+      } else {
+        console.log('掲載動画要項なし');
       }
 
       // 画像要項を取得して複製
+      console.log('画像要項を複製中...');
       const { data: imageRequirements, error: imageReqError } = await supabase
         .from('image_requirements')
         .select('*')
         .eq('project_id', project.id)
         .order('created_at', { ascending: true });
 
-      if (!imageReqError && imageRequirements && imageRequirements.length > 0) {
+      if (imageReqError) {
+        console.error('画像要項取得エラー:', imageReqError);
+        errors.push(`画像要項: ${imageReqError.message}`);
+      } else if (imageRequirements && imageRequirements.length > 0) {
+        console.log(`${imageRequirements.length}件の画像要項を複製`);
         const newImageRequirements = imageRequirements.map(req => ({
           project_id: newProject.id,
           name: req.name,
@@ -453,15 +495,26 @@ export default function Dashboard({ onSelectProject, user, onLogout }: Dashboard
           .insert(newImageRequirements);
 
         if (imageReqInsertError) {
-          console.error('画像要項複製エラー:', imageReqInsertError);
+          console.error('画像要項挿入エラー:', imageReqInsertError);
+          errors.push(`画像要項挿入: ${imageReqInsertError.message}`);
         }
+      } else {
+        console.log('画像要項なし');
       }
 
-      alert('プロジェクトを複製しました');
+      // エラーがあった場合は警告を表示、なければ成功メッセージ
+      if (errors.length > 0) {
+        const errorMessage = `プロジェクトは複製されましたが、一部のセクションで問題が発生しました:\n\n${errors.join('\n')}`;
+        alert(errorMessage);
+        console.error('複製時のエラー一覧:', errors);
+      } else {
+        alert('プロジェクトを複製しました');
+      }
+      
       loadProjects();
     } catch (error) {
       console.error('プロジェクト複製エラー:', error);
-      alert('プロジェクトの複製に失敗しました');
+      alert('プロジェクトの複製に失敗しました。詳細はコンソールを確認してください。');
     }
   };
   
@@ -822,4 +875,3 @@ export default function Dashboard({ onSelectProject, user, onLogout }: Dashboard
       <Footer />
     </div>
   );
-}
