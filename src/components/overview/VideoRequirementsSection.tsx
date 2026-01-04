@@ -32,6 +32,7 @@ export default function VideoRequirementsSection({ projectId, readOnly = false }
       .select('*')
       .eq('project_id', projectId)
       .order('created_at', { ascending: true });
+      .order('id', { ascending: true });
 
     setRequirements(data || []);
   };
