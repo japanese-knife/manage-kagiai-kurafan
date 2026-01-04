@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabase';
 import { Return } from '../../types';
-import { Gift, Plus, Edit2, Trash2, ChevronDown, ChevronUp } from 'lucide-react';
+import { Gift, Plus, Edit2, Trash2, ChevronDown, ChevronUp, Copy } from 'lucide-react';
 import { useAccordionState } from '../../hooks/useAccordionState';
 
 interface ReturnsSectionProps {
@@ -70,6 +70,26 @@ export default function ReturnsSection({ projectId, readOnly = false }: ReturnsS
     });
     setEditingId(returnItem.id);
     setIsAdding(true);
+  };
+
+  const handleDuplicate = async (returnItem: Return) => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      await supabase.from('returns').insert({
+        name: `${returnItem.name} (コピー)`,
+        price_range: returnItem.price_range,
+        description: returnItem.description,
+        status: returnItem.status,
+        project_id: projectId,
+        user_id: user.id
+      });
+
+      loadReturns();
+    } catch (error) {
+      console.error('Error duplicating return:', error);
+    }
   };
 
   const handleDelete = async (id: string) => {
@@ -211,14 +231,23 @@ export default function ReturnsSection({ projectId, readOnly = false }: ReturnsS
                 {!readOnly && (
                   <>
                     <button
+                      onClick={() => handleDuplicate(returnItem)}
+                      className="p-1 text-gray-500 hover:text-blue-600"
+                      title="複製"
+                    >
+                      <Copy className="w-4 h-4" />
+                    </button>
+                    <button
                       onClick={() => handleEdit(returnItem)}
                       className="p-1 text-gray-500 hover:text-primary-600"
+                      title="編集"
                     >
                       <Edit2 className="w-4 h-4" />
                     </button>
                     <button
                       onClick={() => handleDelete(returnItem.id)}
                       className="p-1 text-gray-500 hover:text-red-600"
+                      title="削除"
                     >
                       <Trash2 className="w-4 h-4" />
                     </button>
