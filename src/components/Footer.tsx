@@ -74,7 +74,7 @@ export default function Footer() {
               className="h-10 sm:h-12 w-auto mb-4"
             />
             <p className="text-xs text-neutral-500">
-              PJ管理システム
+              日本企業の海外進出を、私たちが徹底的にサポートいたします。海外クラウドファンディングで新たな可能性を切り開きましょう。
             </p>
           </div>
         </div>
