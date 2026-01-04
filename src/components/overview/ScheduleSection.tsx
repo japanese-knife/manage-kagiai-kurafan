@@ -27,7 +27,7 @@ export default function ScheduleSection({ projectId, readOnly = false }: Schedul
       .from('schedules')
       .select('*')
       .eq('project_id', projectId)
-      .order('created_at', { ascending: false });
+      .order('created_at', { ascending: true });
 
     setSchedules(data || []);
   };
