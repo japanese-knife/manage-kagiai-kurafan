@@ -45,32 +45,47 @@ export default function Footer() {
               rel="noopener noreferrer"
               className="text-neutral-600 hover:text-primary-600 transition-colors duration-200 font-medium"
             >
-              公式サイト
+              海外クラファン.com
             </a>
             <span className="text-neutral-300">•</span>
             <a
-              href="https://kaigai-kurafan.com/service"
+              href="https://re-idea-corp.com"
               target="_blank"
               rel="noopener noreferrer"
               className="text-neutral-600 hover:text-primary-600 transition-colors duration-200 font-medium"
             >
-              サービス案内
+              コーポレートサイト
             </a>
             <span className="text-neutral-300">•</span>
             <a
-              href="https://kaigai-kurafan.com/contact"
+              href="https://kaigai-kurafan.com/privacy-policy"
               target="_blank"
               rel="noopener noreferrer"
               className="text-neutral-600 hover:text-primary-600 transition-colors duration-200 font-medium"
             >
-              お問い合わせ
+              プライバシーポリシー
             </a>
+          </div>
+
+          {/* 会社情報 */}
+          <div className="space-y-2 text-xs sm:text-sm text-neutral-600">
+            <p className="font-semibold text-neutral-700">株式会社RE-IDEA</p>
+            <p>〒151-0051 東京都渋谷区千駄ヶ谷1-30-10-4F</p>
+            <p>
+              Email:{' '}
+              <a
+                href="mailto:info@re-idea.jp"
+                className="text-primary-600 hover:text-primary-700 transition-colors duration-200"
+              >
+                info@re-idea.jp
+              </a>
+            </p>
           </div>
 
           {/* コピーライト */}
           <div className="pt-6 border-t border-neutral-200/50 w-full max-w-4xl">
             <p className="text-xs sm:text-sm text-neutral-500">
-              © {new Date().getFullYear()} 海外クラファン.com All rights reserved.
+              © {new Date().getFullYear()} RE-IDEA Corporation. All rights reserved.
             </p>
           </div>
         </div>
