@@ -27,7 +27,6 @@ export default function ScheduleSection({ projectId, readOnly = false }: Schedul
       .from('schedules')
       .select('*')
       .eq('project_id', projectId)
-      .order('sort_order', { ascending: true })
       .order('created_at', { ascending: true });
 
     setSchedules(data || []);
@@ -51,7 +50,7 @@ export default function ScheduleSection({ projectId, readOnly = false }: Schedul
 
     try {
       if (editingId) {
-        // 編集時はsort_orderを保持して更新
+        // 編集時は更新のみで、created_atは変更しない
         await supabase
           .from('schedules')
           .update({
@@ -63,24 +62,9 @@ export default function ScheduleSection({ projectId, readOnly = false }: Schedul
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) return;
 
-        // 新規追加時は最大のsort_orderを取得して+1
-        const { data: maxData } = await supabase
-          .from('schedules')
-          .select('sort_order')
-          .eq('project_id', projectId)
-          .order('sort_order', { ascending: false })
-          .limit(1);
-
-        const nextSortOrder = maxData && maxData[0] ? maxData[0].sort_order + 1 : 1;
-
         await supabase
           .from('schedules')
-          .insert({ 
-            ...formData, 
-            project_id: projectId, 
-            user_id: user.id,
-            sort_order: nextSortOrder
-          });
+          .insert({ ...formData, project_id: projectId, user_id: user.id });
       }
 
       setFormData({ content: '', milestone: '' });
