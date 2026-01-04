@@ -137,7 +137,7 @@ export default function Dashboard({ onSelectProject, user, onLogout }: Dashboard
   const handleDuplicateProject = async (project: Project, e: React.MouseEvent) => {
     e.stopPropagation();
     
-    if (!confirm(`「${project.name}」を複製しますか？タスク、サブタスク、メモ、スケジュール、各種要項などすべての要素が複製されます。`)) {
+    if (!confirm(`「${project.name}」を複製しますか？全てのセクション内容（タスク、資料、打ち合わせ、リターン、各種要項など）が複製されます。`)) {
       return;
     }
 
@@ -286,6 +286,77 @@ export default function Dashboard({ onSelectProject, user, onLogout }: Dashboard
         }
       }
 
+      // 資料一覧を取得して複製
+      const { data: documents, error: documentsError } = await supabase
+        .from('documents')
+        .select('*')
+        .eq('project_id', project.id)
+        .order('created_at', { ascending: true });
+
+      if (!documentsError && documents && documents.length > 0) {
+        const newDocuments = documents.map(doc => ({
+          project_id: newProject.id,
+          name: doc.name,
+          url: doc.url,
+          memo: doc.memo,
+          user_id: user.id,
+        }));
+
+        const { error: documentInsertError } = await supabase
+          .from('documents')
+          .insert(newDocuments);
+
+        if (documentInsertError) {
+          console.error('資料一覧複製エラー:', documentInsertError);
+        }
+      }
+
+      // 打ち合わせ内容を取得して複製
+      const { data: meetings, error: meetingsError } = await supabase
+        .from('meetings')
+        .select('*')
+        .eq('project_id', project.id)
+        .order('created_at', { ascending: true });
+
+      if (!meetingsError && meetings && meetings.length > 0) {
+        const newMeetings = meetings.map(meeting => ({
+          project_id: newProject.id,
+          content: meeting.content,
+          user_id: user.id,
+        }));
+
+        const { error: meetingInsertError } = await supabase
+          .from('meetings')
+          .insert(newMeetings);
+
+        if (meetingInsertError) {
+          console.error('打ち合わせ内容複製エラー:', meetingInsertError);
+        }
+      }
+
+      // リターン内容を取得して複製
+      const { data: returns, error: returnsError } = await supabase
+        .from('returns')
+        .select('*')
+        .eq('project_id', project.id)
+        .order('created_at', { ascending: true });
+
+      if (!returnsError && returns && returns.length > 0) {
+        const newReturns = returns.map(ret => ({
+          project_id: newProject.id,
+          content: ret.content,
+          user_id: user.id,
+        }));
+
+        const { error: returnInsertError } = await supabase
+          .from('returns')
+          .insert(newReturns);
+
+        if (returnInsertError) {
+          console.error('リターン内容複製エラー:', returnInsertError);
+        }
+      }
+
       // ページデザイン要項を取得して複製
       const { data: designRequirements, error: designReqError } = await supabase
         .from('design_requirements')
@@ -333,6 +404,56 @@ export default function Dashboard({ onSelectProject, user, onLogout }: Dashboard
 
         if (textContentReqInsertError) {
           console.error('掲載文章要項複製エラー:', textContentReqInsertError);
+        }
+      }
+
+      // 掲載動画要項を取得して複製
+      const { data: videoRequirements, error: videoReqError } = await supabase
+        .from('video_requirements')
+        .select('*')
+        .eq('project_id', project.id)
+        .order('created_at', { ascending: true });
+
+      if (!videoReqError && videoRequirements && videoRequirements.length > 0) {
+        const newVideoRequirements = videoRequirements.map(req => ({
+          project_id: newProject.id,
+          name: req.name,
+          url: req.url,
+          memo: req.memo,
+          user_id: user.id,
+        }));
+
+        const { error: videoReqInsertError } = await supabase
+          .from('video_requirements')
+          .insert(newVideoRequirements);
+
+        if (videoReqInsertError) {
+          console.error('掲載動画要項複製エラー:', videoReqInsertError);
+        }
+      }
+
+      // 画像要項を取得して複製
+      const { data: imageRequirements, error: imageReqError } = await supabase
+        .from('image_requirements')
+        .select('*')
+        .eq('project_id', project.id)
+        .order('created_at', { ascending: true });
+
+      if (!imageReqError && imageRequirements && imageRequirements.length > 0) {
+        const newImageRequirements = imageRequirements.map(req => ({
+          project_id: newProject.id,
+          name: req.name,
+          url: req.url,
+          memo: req.memo,
+          user_id: user.id,
+        }));
+
+        const { error: imageReqInsertError } = await supabase
+          .from('image_requirements')
+          .insert(newImageRequirements);
+
+        if (imageReqInsertError) {
+          console.error('画像要項複製エラー:', imageReqInsertError);
         }
       }
 
