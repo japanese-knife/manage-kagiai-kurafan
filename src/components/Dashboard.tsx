@@ -201,7 +201,7 @@ export default function Dashboard({ onSelectProject, user, onLogout }: Dashboard
               </div>
               <div>
                 <h1 className="text-lg sm:text-xl md:text-2xl font-semibold text-neutral-900 tracking-tight">
-                  PJ管理
+                  PJ管理システム
                 </h1>
                 <p className="text-xs sm:text-sm text-neutral-500 mt-1 sm:mt-1.5">
                   {projects.length}件のプロジェクト
