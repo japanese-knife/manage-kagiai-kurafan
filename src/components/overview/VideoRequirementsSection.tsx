@@ -32,27 +32,7 @@ export default function VideoRequirementsSection({ projectId, readOnly = false }
       .select('*')
       .eq('project_id', projectId)
       .order('created_at', { ascending: true });
-    [plugin:vite:react-babel] /home/project/src/components/overview/VideoRequirementsSection.tsx: Unexpected token (35:6)
-  38 |   };
-/home/project/src/components/overview/VideoRequirementsSection.tsx:35:6
-33 |        .eq('project_id', projectId)
-34 |        .order('created_at', { ascending: true });
-35 |        .order('id', { ascending: true });
-   |        ^
-36 |  
-37 |      setRequirements(data || []);
-    at constructor (file:///home/project/node_modules/@babel/parser/lib/index.js#cjs:362:19)
-    at TypeScriptParserMixin.raise (file:///home/project/node_modules/@babel/parser/lib/index.js#cjs:3259:19)
-    at TypeScriptParserMixin.unexpected (file:///home/project/node_modules/@babel/parser/lib/index.js#cjs:3279:16)
-    at TypeScriptParserMixin.parseExprAtom (file:///home/project/node_modules/@babel/parser/lib/index.js#cjs:10969:16)
-    at TypeScriptParserMixin.parseExprAtom (file:///home/project/node_modules/@babel/parser/lib/index.js#cjs:6811:20)
-    at TypeScriptParserMixin.parseExprSubscripts (file:///home/project/node_modules/@babel/parser/lib/index.js#cjs:10591:23)
-    at TypeScriptParserMixin.parseUpdate (file:///home/project/node_modules/@babel/parser/lib/index.js#cjs:10576:21)
-    at TypeScriptParserMixin.parseMaybeUnary (file:///home/project/node_modules/@babel/parser/lib/index.js#cjs:10556:23)
-    at TypeScriptParserMixin.parseMaybeUnary (file:///home/project/node_modules/@babel/parser/lib/index.js#cjs:9483:18)
-    at TypeScriptParserMixin.parseMaybeUnaryOrPrivate (file:///home/project/node_modules/@babel/parser/lib/index.js#cjs:10410:61
-
-
+      
     setRequirements(data || []);
   };
 
