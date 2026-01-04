@@ -32,30 +32,51 @@ export default function TextContentRequirementsSection({ projectId, readOnly = f
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  e.preventDefault();
 
-    try {
-      if (editingId) {
-        await supabase.from('text_content_requirements').update(formData).eq('id', editingId);
-      } else {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user) return;
+  try {
+    if (editingId) {
+      const { error } = await supabase
+        .from('text_content_requirements')
+        .update(formData)
+        .eq('id', editingId);
+      
+      if (error) {
+        console.error('更新エラー:', error);
+        alert(`更新に失敗しました: ${error.message}`);
+        return;
+      }
+    } else {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        alert('ユーザー情報が取得できませんでした');
+        return;
+      }
 
-        await supabase.from('text_content_requirements').insert({
+      const { error } = await supabase
+        .from('text_content_requirements')
+        .insert({
           ...formData,
           project_id: projectId,
           user_id: user.id
         });
+      
+      if (error) {
+        console.error('追加エラー:', error);
+        alert(`追加に失敗しました: ${error.message}`);
+        return;
       }
-
-      setFormData({ name: '', url: '', memo: '' });
-      setIsAdding(false);
-      setEditingId(null);
-      loadItems();
-    } catch (error) {
-      console.error('Error saving text content requirement:', error);
     }
-  };
+
+    setFormData({ name: '', url: '', memo: '' });
+    setIsAdding(false);
+    setEditingId(null);
+    await loadItems();
+  } catch (error) {
+    console.error('Error saving text content requirement:', error);
+    alert('予期しないエラーが発生しました');
+  }
+};
 
   const handleEdit = (item: TextContentRequirement) => {
     setFormData({ name: item.name, url: item.url, memo: item.memo });
