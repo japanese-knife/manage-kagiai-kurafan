@@ -1,6 +1,7 @@
 import { useState, FormEvent } from 'react';
 import { supabase } from '../lib/supabase';
 import { Lock, Mail, LogIn, FolderKanban } from 'lucide-react';
+import Footer from './Footer';
 
 export default function Auth() {
   const [email, setEmail] = useState('');
