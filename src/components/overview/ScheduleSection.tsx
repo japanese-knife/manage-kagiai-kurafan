@@ -27,6 +27,7 @@ export default function ScheduleSection({ projectId, readOnly = false }: Schedul
       .from('schedules')
       .select('*')
       .eq('project_id', projectId)
+      .order('sort_order', { ascending: true })
       .order('created_at', { ascending: true });
 
     setSchedules(data || []);
@@ -46,37 +47,50 @@ export default function ScheduleSection({ projectId, readOnly = false }: Schedul
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
-  e.preventDefault();
+    e.preventDefault();
 
-  try {
-    if (editingId) {
-      // 編集時は、既存のスケジュールのcreated_atを保持して更新
-      const existingSchedule = schedules.find(s => s.id === editingId);
-      await supabase
-        .from('schedules')
-        .update({
-          content: formData.content,
-          milestone: formData.milestone,
-          created_at: existingSchedule?.created_at // created_atを明示的に保持
-        })
-        .eq('id', editingId);
-    } else {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
+    try {
+      if (editingId) {
+        // 編集時はsort_orderを保持して更新
+        await supabase
+          .from('schedules')
+          .update({
+            content: formData.content,
+            milestone: formData.milestone
+          })
+          .eq('id', editingId);
+      } else {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return;
 
-      await supabase
-        .from('schedules')
-        .insert({ ...formData, project_id: projectId, user_id: user.id });
+        // 新規追加時は最大のsort_orderを取得して+1
+        const { data: maxData } = await supabase
+          .from('schedules')
+          .select('sort_order')
+          .eq('project_id', projectId)
+          .order('sort_order', { ascending: false })
+          .limit(1);
+
+        const nextSortOrder = maxData && maxData[0] ? maxData[0].sort_order + 1 : 1;
+
+        await supabase
+          .from('schedules')
+          .insert({ 
+            ...formData, 
+            project_id: projectId, 
+            user_id: user.id,
+            sort_order: nextSortOrder
+          });
+      }
+
+      setFormData({ content: '', milestone: '' });
+      setIsAdding(false);
+      setEditingId(null);
+      loadSchedules();
+    } catch (error) {
+      console.error('スケジュール保存エラー:', error);
     }
-
-    setFormData({ content: '', milestone: '' });
-    setIsAdding(false);
-    setEditingId(null);
-    loadSchedules();
-  } catch (error) {
-    console.error('スケジュール保存エラー:', error);
-  }
-};
+  };
 
   const handleEdit = (schedule: Schedule) => {
     setFormData({ content: schedule.content, milestone: schedule.milestone });
