@@ -471,16 +471,6 @@ export default function Dashboard({ onSelectProject, user, onLogout }: Dashboard
                                     >
                                       <Trash2 className="w-4 h-4" />
                                     </button>
-                                    <button
-                                      onClick={(e) => {
-                                        e.stopPropagation();
-                                        handleDeleteProject(project.id);
-                                      }}
-                                      className="p-1.5 text-neutral-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                                      title="削除"
-                                    >
-                                      <Trash2 className="w-4 h-4" />
-                                    </button>
                                     <select
                                       value={project.status}
                                       onChange={(e) => {
