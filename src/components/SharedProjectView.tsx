@@ -60,7 +60,7 @@ export default function SharedProjectView({ shareToken }: SharedProjectViewProps
 
   if (error || !project) {
     return (
-      <div className="min-h-screen bg-neutral-50 flex items-center justify-center px-4">
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 flex items-center justify-center px-4">
         <div className="text-center max-w-md">
           <div className="w-16 h-16 bg-neutral-100 rounded-2xl flex items-center justify-center mx-auto mb-6">
             <Lock className="w-8 h-8 text-neutral-400" />
