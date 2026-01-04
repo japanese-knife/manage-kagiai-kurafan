@@ -46,35 +46,37 @@ export default function ScheduleSection({ projectId, readOnly = false }: Schedul
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  e.preventDefault();
 
-    try {
-      if (editingId) {
-        // 編集時は更新のみで、created_atは変更しない
-        await supabase
-          .from('schedules')
-          .update({
-            content: formData.content,
-            milestone: formData.milestone
-          })
-          .eq('id', editingId);
-      } else {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user) return;
+  try {
+    if (editingId) {
+      // 編集時は、既存のスケジュールのcreated_atを保持して更新
+      const existingSchedule = schedules.find(s => s.id === editingId);
+      await supabase
+        .from('schedules')
+        .update({
+          content: formData.content,
+          milestone: formData.milestone,
+          created_at: existingSchedule?.created_at // created_atを明示的に保持
+        })
+        .eq('id', editingId);
+    } else {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
 
-        await supabase
-          .from('schedules')
-          .insert({ ...formData, project_id: projectId, user_id: user.id });
-      }
-
-      setFormData({ content: '', milestone: '' });
-      setIsAdding(false);
-      setEditingId(null);
-      loadSchedules();
-    } catch (error) {
-      console.error('スケジュール保存エラー:', error);
+      await supabase
+        .from('schedules')
+        .insert({ ...formData, project_id: projectId, user_id: user.id });
     }
-  };
+
+    setFormData({ content: '', milestone: '' });
+    setIsAdding(false);
+    setEditingId(null);
+    loadSchedules();
+  } catch (error) {
+    console.error('スケジュール保存エラー:', error);
+  }
+};
 
   const handleEdit = (schedule: Schedule) => {
     setFormData({ content: schedule.content, milestone: schedule.milestone });
