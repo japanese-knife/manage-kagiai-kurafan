@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { User } from '@supabase/supabase-js';
-import { Project, TabType } from '../types';
-import { supabase } from '../lib/supabase';
+import { Project, TabType } from './types';
+import { supabase } from './lib/supabase';
 import Auth from './components/Auth';
 import Dashboard from './components/Dashboard';
 import SharedProjectView from './components/SharedProjectView';
@@ -13,9 +13,6 @@ import TasksTab from './components/TasksTab';
 import CalendarTab from './components/CalendarTab';
 import Footer from './components/Footer';
 import { ArrowLeft, LogOut } from 'lucide-react';
-
-// Note: Dashboard.tsxとSharedProjectView.tsxの min-h-screen を削除し、
-// 親コンポーネントで flex-1 を使用することでフッターを最下部に固定します
 
 function App() {
   const [user, setUser] = useState<User | null>(null);
