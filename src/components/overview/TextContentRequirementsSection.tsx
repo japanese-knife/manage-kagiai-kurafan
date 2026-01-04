@@ -25,7 +25,7 @@ export default function TextContentRequirementsSection({ projectId, readOnly = f
       .from('text_content_requirements')
       .select('*')
       .eq('project_id', projectId)
-      .order('created_at', { ascending: false });
+      .order('created_at', { ascending: true });
 
     setItems(data || []);
   };
