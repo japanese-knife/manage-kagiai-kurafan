@@ -77,7 +77,7 @@ export default function SharedProjectView({ shareToken }: SharedProjectViewProps
   }
 
   return (
-    <div className="min-h-screen bg-neutral-50">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
       <header className="bg-white border-b border-neutral-200/80">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8 lg:px-12 py-4 sm:py-5 md:py-6">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 sm:gap-4">
