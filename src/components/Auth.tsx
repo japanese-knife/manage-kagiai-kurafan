@@ -35,7 +35,7 @@ export default function Auth() {
             <FolderKanban className="w-7 h-7 sm:w-8 sm:h-8 text-white" />
           </div>
           <h1 className="text-2xl sm:text-3xl font-semibold text-neutral-900 mb-2">
-            PJ管理
+            PJ管理システム
           </h1>
           <p className="text-sm sm:text-base text-neutral-600">
             アカウントにログイン
