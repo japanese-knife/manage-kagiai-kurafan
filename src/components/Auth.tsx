@@ -30,7 +30,7 @@ export default function Auth() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 flex flex-col">
-      <div className="max-w-md w-full">
+      <div className="flex-1 flex items-center justify-center px-4 py-8">
         <div className="text-center mb-6 sm:mb-8 md:mb-10">
           <div className="inline-flex items-center justify-center w-14 h-14 sm:w-16 sm:h-16 bg-primary-600 rounded-2xl mb-3 sm:mb-4">
             <FolderKanban className="w-7 h-7 sm:w-8 sm:h-8 text-white" />
