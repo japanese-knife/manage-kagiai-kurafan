@@ -113,6 +113,64 @@ export default function Dashboard({ onSelectProject, user, onLogout }: Dashboard
     }
   };
 
+  const handleDeleteProject = async (projectId: string) => {
+    if (!confirm('このプロジェクトを削除してもよろしいですか？関連するタスクもすべて削除されます。')) {
+      return;
+    }
+
+    try {
+      // タスクは外部キー制約で自動削除されるため、プロジェクトのみ削除
+      const { error } = await supabase
+        .from('projects')
+        .delete()
+        .eq('id', projectId);
+
+      if (error) throw error;
+
+      loadProjects();
+    } catch (error) {
+      console.error('プロジェクト削除エラー:', error);
+      alert('プロジェクトの削除に失敗しました');
+    }
+  };
+
+  const handleStartEdit = (project: Project) => {
+    setEditingProjectId(project.id);
+    setEditProjectName(project.name);
+    setEditProjectDescription(project.description || '');
+  };
+
+  const handleCancelEdit = () => {
+    setEditingProjectId(null);
+    setEditProjectName('');
+    setEditProjectDescription('');
+  };
+
+  const handleUpdateProject = async (projectId: string) => {
+    if (!editProjectName.trim()) return;
+
+    try {
+      const { error } = await supabase
+        .from('projects')
+        .update({
+          name: editProjectName,
+          description: editProjectDescription,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', projectId);
+
+      if (error) throw error;
+
+      setEditingProjectId(null);
+      setEditProjectName('');
+      setEditProjectDescription('');
+      loadProjects();
+    } catch (error) {
+      console.error('プロジェクト更新エラー:', error);
+      alert('プロジェクトの更新に失敗しました');
+    }
+  };
+  
   const getProjectsByStatus = (status: ProjectStatus): Project[] => {
     return projects.filter((p) => p.status === status);
   };
