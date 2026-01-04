@@ -452,6 +452,10 @@ export default function Dashboard({ onSelectProject, user, onLogout }: Dashboard
                                   </div>
                                 </>
                               )}
+                                </div>
+                            )}
+                          </div>
+                        </div>
 
                               {(!stats || stats.totalTasks === 0) && (
                                 <div className="text-sm text-neutral-500">
