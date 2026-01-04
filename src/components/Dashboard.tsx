@@ -455,6 +455,23 @@ export default function Dashboard({ onSelectProject, user, onLogout }: Dashboard
                                       <Edit2 className="w-4 h-4" />
                                     </button>
                                     <button
+                                      onClick={(e) => handleDuplicateProject(project, e)}
+                                      className="p-1.5 text-neutral-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                                      title="複製"
+                                    >
+                                      <Copy className="w-4 h-4" />
+                                    </button>
+                                    <button
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleDeleteProject(project.id);
+                                      }}
+                                      className="p-1.5 text-neutral-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                                      title="削除"
+                                    >
+                                      <Trash2 className="w-4 h-4" />
+                                    </button>
+                                    <button
                                       onClick={(e) => {
                                         e.stopPropagation();
                                         handleDeleteProject(project.id);
