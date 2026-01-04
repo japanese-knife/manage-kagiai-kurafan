@@ -494,7 +494,7 @@ export default function Dashboard({ onSelectProject, user, onLogout }: Dashboard
     
     await new Promise(resolve => setTimeout(resolve, 10));
   }
-}
+
       } else {
         console.log('掲載動画要項なし');
       }
