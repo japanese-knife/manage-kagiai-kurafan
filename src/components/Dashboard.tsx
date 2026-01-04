@@ -120,7 +120,6 @@ export default function Dashboard({ onSelectProject, user, onLogout }: Dashboard
     }
 
     try {
-      // タスクは外部キー制約で自動削除されるため、プロジェクトのみ削除
       const { error } = await supabase
         .from('projects')
         .delete()
@@ -328,11 +327,15 @@ export default function Dashboard({ onSelectProject, user, onLogout }: Dashboard
                       return (
                         <div
                           key={project.id}
-                          className="bg-white rounded-2xl border border-neutral-200/50 hover:border-primary-300 hover:shadow-xl transition-all group"
+                          className="bg-white rounded-2xl border border-neutral-200/50 hover:border-primary-300 hover:shadow-xl transition-all group cursor-pointer"
+                          onClick={() => onSelectProject(project)}
                         >
                           <div className="p-6">
                             {editingProjectId === project.id ? (
-                              <div className="space-y-4">
+                              <div 
+                                className="space-y-4"
+                                onClick={(e) => e.stopPropagation()}
+                              >
                                 <div>
                                   <label className="block text-sm font-medium text-neutral-700 mb-2">
                                     プロジェクト名
@@ -373,10 +376,7 @@ export default function Dashboard({ onSelectProject, user, onLogout }: Dashboard
                             ) : (
                               <>
                                 <div className="flex items-start justify-between mb-4">
-                                  <div
-                                    className="flex-1 cursor-pointer"
-                                    onClick={() => onSelectProject(project)}
-                                  >
+                                  <div className="flex-1">
                                     <h3 className="text-base font-semibold text-neutral-900 mb-2 group-hover:text-primary-600 transition-colors">
                                       {project.name}
                                     </h3>
@@ -481,7 +481,7 @@ export default function Dashboard({ onSelectProject, user, onLogout }: Dashboard
           </div>
         )}
       </main>
-    <Footer />
-  </div>
-);
+      <Footer />
+    </div>
+  );
 }
