@@ -124,7 +124,7 @@ export default function Dashboard({ onSelectProject, user, onLogout }: Dashboard
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 flex flex-col">
       <header className="bg-white/80 backdrop-blur-sm border-b border-neutral-200/50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8 lg:px-12 py-6 sm:py-8 md:py-10">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between w-full sm:relative gap-4 sm:gap-0">
@@ -168,7 +168,7 @@ export default function Dashboard({ onSelectProject, user, onLogout }: Dashboard
         </div>
       </header>
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8 lg:px-12 py-6 sm:py-8 md:py-12">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8 lg:px-12 py-6 sm:py-8 md:py-12 flex-1">
         {showCreateForm && (
           <div className="bg-white rounded-2xl border border-neutral-200/50 p-4 sm:p-6 md:p-8 mb-6 sm:mb-8 md:mb-10 shadow-lg">
             <h2 className="text-base sm:text-lg font-semibold text-neutral-900 mb-4 sm:mb-6">
@@ -353,7 +353,8 @@ export default function Dashboard({ onSelectProject, user, onLogout }: Dashboard
           </div>
         )}
       </main>
-    <Footer />
-  </div>
-);
+
+      <Footer />
+    </div>
+  );
 }
