@@ -509,25 +509,27 @@ export default function Dashboard({ onSelectProject, user, onLogout }: Dashboard
         console.error('画像アセット取得エラー:', imageAssetsError);
         errors.push(`画像アセット: ${imageAssetsError.message}`);
       } else if (imageAssets && imageAssets.length > 0) {
-        console.log(`${imageAssets.length}件の画像アセットを複製`);
-        const newImageAssets = imageAssets.map(asset => ({
-          project_id: newProject.id,
-          name: asset.name,
-          purpose: asset.purpose,
-          url: asset.url,
-          status: asset.status,
-          user_id: user.id,
-        }));
+  console.log(`${imageAssets.length}件の画像アセットを複製`);
+  for (const asset of imageAssets) {
+    const { error: imageAssetsInsertError } = await supabase
+      .from('image_assets')
+      .insert({
+        project_id: newProject.id,
+        name: asset.name,
+        purpose: asset.purpose,
+        url: asset.url,
+        status: asset.status,
+        user_id: user.id,
+      });
 
-        const { error: imageAssetsInsertError } = await supabase
-          .from('image_assets')
-          .insert(newImageAssets);
-
-        if (imageAssetsInsertError) {
-          console.error('画像アセット挿入エラー:', imageAssetsInsertError);
-          errors.push(`画像アセット挿入: ${imageAssetsInsertError.message}`);
-        }
-      } else {
+    if (imageAssetsInsertError) {
+      console.error('画像アセット挿入エラー:', imageAssetsInsertError);
+      errors.push(`画像アセット挿入: ${imageAssetsInsertError.message}`);
+    }
+    
+    await new Promise(resolve => setTimeout(resolve, 10));
+  }
+} else {
         console.log('画像アセットなし');
       }
 
