@@ -302,22 +302,24 @@ export default function Dashboard({ onSelectProject, user, onLogout }: Dashboard
         .order('created_at', { ascending: true });
 
       if (!documentsError && documents && documents.length > 0) {
-        const newDocuments = documents.map(doc => ({
-          project_id: newProject.id,
-          name: doc.name,
-          url: doc.url,
-          memo: doc.memo,
-          user_id: user.id,
-        }));
+  for (const doc of documents) {
+    const { error: documentInsertError } = await supabase
+      .from('documents')
+      .insert({
+        project_id: newProject.id,
+        name: doc.name,
+        url: doc.url,
+        memo: doc.memo,
+        user_id: user.id,
+      });
 
-        const { error: documentInsertError } = await supabase
-          .from('documents')
-          .insert(newDocuments);
-
-        if (documentInsertError) {
-          console.error('資料一覧複製エラー:', documentInsertError);
-        }
-      }
+    if (documentInsertError) {
+      console.error('資料一覧複製エラー:', documentInsertError);
+    }
+    
+    await new Promise(resolve => setTimeout(resolve, 10));
+  }
+}
 
       // 打ち合わせ内容を取得して複製
       console.log('打ち合わせ内容を複製中...');
