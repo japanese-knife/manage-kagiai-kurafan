@@ -327,41 +327,108 @@ export default function Dashboard({ onSelectProject, user, onLogout }: Dashboard
                       return (
                         <div
                           key={project.id}
-                          onClick={() => onSelectProject(project)}
-                          className="bg-white rounded-2xl border border-neutral-200/50 hover:border-primary-300 hover:shadow-xl transition-all group cursor-pointer"
+                          className="bg-white rounded-2xl border border-neutral-200/50 hover:border-primary-300 hover:shadow-xl transition-all group"
                         >
                           <div className="p-6">
-                            <div className="flex items-start justify-between mb-4">
-                              <div className="flex-1">
-                                <h3 className="text-base font-semibold text-neutral-900 mb-2 group-hover:text-primary-600 transition-colors">
-                                  {project.name}
-                                </h3>
-                                {project.description && (
-                                  <p className="text-sm text-neutral-600 line-clamp-2 leading-relaxed">
-                                    {project.description}
-                                  </p>
-                                )}
+                            {editingProjectId === project.id ? (
+                              <div className="space-y-4">
+                                <div>
+                                  <label className="block text-sm font-medium text-neutral-700 mb-2">
+                                    プロジェクト名
+                                  </label>
+                                  <input
+                                    type="text"
+                                    value={editProjectName}
+                                    onChange={(e) => setEditProjectName(e.target.value)}
+                                    className="w-full px-3 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-100 focus:border-primary-500"
+                                  />
+                                </div>
+                                <div>
+                                  <label className="block text-sm font-medium text-neutral-700 mb-2">
+                                    説明
+                                  </label>
+                                  <textarea
+                                    value={editProjectDescription}
+                                    onChange={(e) => setEditProjectDescription(e.target.value)}
+                                    className="w-full px-3 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-100 focus:border-primary-500 resize-none"
+                                    rows={2}
+                                  />
+                                </div>
+                                <div className="flex gap-2">
+                                  <button
+                                    onClick={() => handleUpdateProject(project.id)}
+                                    className="flex-1 px-4 py-2 bg-primary-600 text-white text-sm font-medium rounded-lg hover:bg-primary-700"
+                                  >
+                                    保存
+                                  </button>
+                                  <button
+                                    onClick={handleCancelEdit}
+                                    className="flex-1 px-4 py-2 bg-white border border-neutral-300 text-neutral-700 text-sm font-medium rounded-lg hover:bg-neutral-50"
+                                  >
+                                    キャンセル
+                                  </button>
+                                </div>
                               </div>
-                              <select
-                                value={project.status}
-                                onChange={(e) => {
-                                  e.stopPropagation();
-                                  handleStatusChange(project.id, e.target.value as ProjectStatus);
-                                }}
-                                onClick={(e) => e.stopPropagation()}
-                                className={`ml-3 px-3 py-1 text-xs font-medium rounded-full border-0 cursor-pointer ${
-                                  project.status === '完了'
-                                    ? 'bg-green-50 text-green-700'
-                                    : project.status === '保留'
-                                    ? 'bg-yellow-50 text-yellow-700'
-                                    : 'bg-primary-50 text-primary-700'
-                                }`}
-                              >
-                                <option value="進行中">進行中</option>
-                                <option value="保留">保留</option>
-                                <option value="完了">完了</option>
-                              </select>
-                            </div>
+                            ) : (
+                              <>
+                                <div className="flex items-start justify-between mb-4">
+                                  <div
+                                    className="flex-1 cursor-pointer"
+                                    onClick={() => onSelectProject(project)}
+                                  >
+                                    <h3 className="text-base font-semibold text-neutral-900 mb-2 group-hover:text-primary-600 transition-colors">
+                                      {project.name}
+                                    </h3>
+                                    {project.description && (
+                                      <p className="text-sm text-neutral-600 line-clamp-2 leading-relaxed">
+                                        {project.description}
+                                      </p>
+                                    )}
+                                  </div>
+                                  <div className="flex items-center gap-2 ml-3">
+                                    <button
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleStartEdit(project);
+                                      }}
+                                      className="p-1.5 text-neutral-500 hover:text-primary-600 hover:bg-primary-50 rounded-lg transition-colors"
+                                      title="編集"
+                                    >
+                                      <Edit2 className="w-4 h-4" />
+                                    </button>
+                                    <button
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleDeleteProject(project.id);
+                                      }}
+                                      className="p-1.5 text-neutral-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                                      title="削除"
+                                    >
+                                      <Trash2 className="w-4 h-4" />
+                                    </button>
+                                    <select
+                                      value={project.status}
+                                      onChange={(e) => {
+                                        e.stopPropagation();
+                                        handleStatusChange(project.id, e.target.value as ProjectStatus);
+                                      }}
+                                      onClick={(e) => e.stopPropagation()}
+                                      className={`px-3 py-1 text-xs font-medium rounded-full border-0 cursor-pointer ${
+                                        project.status === '完了'
+                                          ? 'bg-green-50 text-green-700'
+                                          : project.status === '保留'
+                                          ? 'bg-yellow-50 text-yellow-700'
+                                          : 'bg-primary-50 text-primary-700'
+                                      }`}
+                                    >
+                                      <option value="進行中">進行中</option>
+                                      <option value="保留">保留</option>
+                                      <option value="完了">完了</option>
+                                    </select>
+                                  </div>
+                                </div>
+                              </>
+                            )}
 
                             <div className="space-y-4 mt-5">
                               {stats && stats.totalTasks > 0 && (
