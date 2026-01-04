@@ -134,6 +134,63 @@ export default function Dashboard({ onSelectProject, user, onLogout }: Dashboard
     }
   };
 
+  const handleDuplicateProject = async (project: Project, e: React.MouseEvent) => {
+    e.stopPropagation();
+    
+    if (!confirm(`「${project.name}」を複製しますか？`)) {
+      return;
+    }
+
+    try {
+      // プロジェクトを複製
+      const { data: newProject, error: projectError } = await supabase
+        .from('projects')
+        .insert({
+          name: `${project.name}のコピー`,
+          description: project.description,
+          status: project.status,
+          user_id: user.id,
+        })
+        .select()
+        .single();
+
+      if (projectError) throw projectError;
+
+      // 元のプロジェクトのタスクを取得
+      const { data: tasks, error: tasksError } = await supabase
+        .from('tasks')
+        .select('*')
+        .eq('project_id', project.id);
+
+      if (tasksError) throw tasksError;
+
+      // タスクがある場合は複製
+      if (tasks && tasks.length > 0) {
+        const newTasks = tasks.map(task => ({
+          project_id: newProject.id,
+          title: task.title,
+          description: task.description,
+          status: task.status,
+          priority: task.priority,
+          due_date: task.due_date,
+          user_id: user.id,
+        }));
+
+        const { error: insertError } = await supabase
+          .from('tasks')
+          .insert(newTasks);
+
+        if (insertError) throw insertError;
+      }
+
+      alert('プロジェクトを複製しました');
+      loadProjects();
+    } catch (error) {
+      console.error('プロジェクト複製エラー:', error);
+      alert('プロジェクトの複製に失敗しました');
+    }
+  };
+  
   const handleStartEdit = (project: Project) => {
     setEditingProjectId(project.id);
     setEditProjectName(project.name);
