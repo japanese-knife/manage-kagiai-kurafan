@@ -30,7 +30,7 @@ export default function MeetingsSection({ projectId, readOnly = false }: Meeting
       .from('meetings')
       .select('*')
       .eq('project_id', projectId)
-      .order('date', { ascending: false });
+      .order('date', { ascending: true });
 
     setMeetings(data || []);
   };
