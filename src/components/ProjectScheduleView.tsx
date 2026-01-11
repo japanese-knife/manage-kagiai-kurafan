@@ -48,15 +48,26 @@ export default function ProjectScheduleView({ user, activeBrandTab }: ProjectSch
   }, [editingCell]);
 
   const generateDates = () => {
-    const today = new Date();
-    const datesArray: Date[] = [];
+  const today = new Date();
+  const datesArray: Date[] = [];
+  
+  if (viewType === 'monthly') {
+    // 月次表示: 当年の12ヶ月を生成
+    const currentYear = today.getFullYear();
+    for (let month = 0; month < 12; month++) {
+      const date = new Date(currentYear, month, 1);
+      datesArray.push(date);
+    }
+  } else {
+    // 日次表示: -5日から+30日
     for (let i = -5; i <= 30; i++) {
       const date = new Date(today);
       date.setDate(today.getDate() + i);
       datesArray.push(date);
     }
-    setDates(datesArray);
-  };
+  }
+  setDates(datesArray);
+};
 
   const loadProjects = async () => {
     try {
