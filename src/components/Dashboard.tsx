@@ -784,7 +784,6 @@ export default function Dashboard({ onSelectProject, user, onLogout }: Dashboard
           </div>
         )}
 
-        {/* スケジュールタブの内容 */}
 {/* スケジュールタブの内容 */}
 {activeTab === 'schedule' && (
   <div className="space-y-8">
