@@ -115,35 +115,37 @@ export default function ProjectScheduleView({ user, activeBrandTab, viewType }: 
   }
 }, [activeBrandTab]);
 
-  const loadSchedules = async () => {
-    try {
-      const projectIds = projects.map(p => p.id);
-      const { data, error } = await supabase
-        .from('project_schedules')
-        .select('*')
-        .in('project_id', projectIds);
+  const loadSchedules = useCallback(async () => {
+  if (projects.length === 0) return;
+  
+  try {
+    const projectIds = projects.map(p => p.id);
+    const { data, error } = await supabase
+      .from('project_schedules')
+      .select('*')
+      .in('project_id', projectIds);
 
-      if (error) throw error;
+    if (error) throw error;
 
-      const scheduleMap = new Map<string, ScheduleCell>();
-      (data || []).forEach((schedule) => {
-        const key = `${schedule.project_id}-${schedule.date}`;
-        const bgColor = schedule.background_color || '#ffffff';
-        const autoTextColor = getTextColorForBackground(bgColor);
-        scheduleMap.set(key, {
-          projectId: schedule.project_id,
-          date: schedule.date,
-          content: schedule.content || '',
-          backgroundColor: bgColor,
-          textColor: schedule.text_color || autoTextColor,
-        });
+    const scheduleMap = new Map<string, ScheduleCell>();
+    (data || []).forEach((schedule) => {
+      const key = `${schedule.project_id}-${schedule.date}`;
+      const bgColor = schedule.background_color || '#ffffff';
+      const autoTextColor = getTextColorForBackground(bgColor);
+      scheduleMap.set(key, {
+        projectId: schedule.project_id,
+        date: schedule.date,
+        content: schedule.content || '',
+        backgroundColor: bgColor,
+        textColor: schedule.text_color || autoTextColor,
       });
+    });
 
-      setSchedules(scheduleMap);
-    } catch (error) {
-      console.error('スケジュール読み込みエラー:', error);
-    }
-  };
+    setSchedules(scheduleMap);
+  } catch (error) {
+    console.error('スケジュール読み込みエラー:', error);
+  }
+}, [projects]);
 
   const getCellKey = (projectId: string, date: Date): string => {
     return `${projectId}-${date.toISOString().split('T')[0]}`;
