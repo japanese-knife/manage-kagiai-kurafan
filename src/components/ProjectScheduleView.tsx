@@ -805,13 +805,15 @@ onClick={(e) => handleCellClick(project.id, date, e)}
 
       <div className="p-3 border-t border-neutral-200 bg-neutral-50 text-xs text-neutral-600">
         <div className="flex flex-wrap gap-x-4 gap-y-1">
-          <span>• ダブルクリックで編集</span>
-          <span>• 右クリックで色選択</span>
-          <span>• 矢印キーで移動</span>
-          <span>• Enterで編集開始</span>
-          <span>• Ctrl+C でコピー</span>
-          <span>• Ctrl+V でペースト</span>
-        </div>
+  <span>• ダブルクリックで編集</span>
+  <span>• 右クリックで色選択</span>
+  <span>• 矢印キーで移動</span>
+  <span>• Enterで編集開始</span>
+  <span>• Ctrl+クリックで複数選択</span>
+  <span>• Shiftで範囲選択</span>
+  <span>• Ctrl+C でコピー</span>
+  <span>• Ctrl+V でペースト</span>
+</div>
       </div>
     </div>
   );
