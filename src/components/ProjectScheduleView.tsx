@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { User } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabase';
 import { Project, BrandType } from '../types';
-import { Calendar, Copy, Download, Upload } from 'lucide-react';
+import { Calendar, Copy, Download } from 'lucide-react';
 
 interface ProjectScheduleViewProps {
   user: User;
@@ -23,6 +23,8 @@ export default function ProjectScheduleView({ user, activeBrandTab }: ProjectSch
   const [selectedCell, setSelectedCell] = useState<{ projectId: string; date: string } | null>(null);
   const [editingCell, setEditingCell] = useState<{ projectId: string; date: string } | null>(null);
   const [editValue, setEditValue] = useState('');
+  const [showColorPicker, setShowColorPicker] = useState<{ projectId: string; date: string } | null>(null);
+  const [selectedColor, setSelectedColor] = useState('#ffffff');
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -67,9 +69,6 @@ export default function ProjectScheduleView({ user, activeBrandTab }: ProjectSch
       console.error('プロジェクト読み込みエラー:', error);
     }
   };
-
-  const [showColorPicker, setShowColorPicker] = useState<{ projectId: string; date: string } | null>(null);
-  const [selectedColor, setSelectedColor] = useState('#ffffff');
 
   const loadSchedules = async () => {
     try {
@@ -157,25 +156,25 @@ export default function ProjectScheduleView({ user, activeBrandTab }: ProjectSch
   };
 
   const handleKeyDown = (e: React.KeyboardEvent, projectId: string, dateIndex: number) => {
-  if (editingCell) {
-    if (e.key === 'Enter') {
-      handleCellBlur();
-    } else if (e.key === 'Escape') {
-      setEditingCell(null);
-      setEditValue('');
+    if (editingCell) {
+      if (e.key === 'Enter') {
+        handleCellBlur();
+      } else if (e.key === 'Escape') {
+        setEditingCell(null);
+        setEditValue('');
+      }
+      return;
     }
-    return;
-  }
 
-  // コピー機能（Ctrl+C または Cmd+C）
-  if ((e.ctrlKey || e.metaKey) && e.key === 'c') {
-    e.preventDefault();
-    handleCopy();
-    return;
-  }
+    // コピー機能（Ctrl+C または Cmd+C）
+    if ((e.ctrlKey || e.metaKey) && e.key === 'c') {
+      e.preventDefault();
+      handleCopy();
+      return;
+    }
 
-  // セル間の移動
-  if (!selectedCell) return;
+    // セル間の移動
+    if (!selectedCell) return;
 
     const projectIndex = projects.findIndex(p => p.id === selectedCell.projectId);
     
@@ -230,43 +229,74 @@ export default function ProjectScheduleView({ user, activeBrandTab }: ProjectSch
   };
 
   const handleCopy = async () => {
-  if (!selectedCell) return;
+    if (!selectedCell) return;
 
-  const key = `${selectedCell.projectId}-${selectedCell.date}`;
-  const cell = schedules.get(key);
-  if (cell?.content) {
-    try {
-      await navigator.clipboard.writeText(cell.content);
-    } catch (error) {
-      console.error('コピーエラー:', error);
+    const key = `${selectedCell.projectId}-${selectedCell.date}`;
+    const cell = schedules.get(key);
+    if (cell?.content) {
+      try {
+        await navigator.clipboard.writeText(cell.content);
+      } catch (error) {
+        console.error('コピーエラー:', error);
+      }
     }
-  }
-};
+  };
 
   const handlePaste = async (e: React.ClipboardEvent, projectId: string, date: Date) => {
-  e.preventDefault();
-  const pastedText = e.clipboardData.getData('text');
-  const dateStr = date.toISOString().split('T')[0];
-  const key = `${projectId}-${dateStr}`;
-  const existingCell = schedules.get(key);
+    e.preventDefault();
+    const pastedText = e.clipboardData.getData('text');
+    const dateStr = date.toISOString().split('T')[0];
+    const key = `${projectId}-${dateStr}`;
+    const existingCell = schedules.get(key);
 
-  try {
-    const { error } = await supabase
-      .from('project_schedules')
-      .upsert({
-        project_id: projectId,
-        date: dateStr,
-        content: pastedText,
-        background_color: existingCell?.backgroundColor || '#ffffff',
-        user_id: user.id,
-      });
+    try {
+      const { error } = await supabase
+        .from('project_schedules')
+        .upsert({
+          project_id: projectId,
+          date: dateStr,
+          content: pastedText,
+          background_color: existingCell?.backgroundColor || '#ffffff',
+          user_id: user.id,
+        });
 
-    if (error) throw error;
-    await loadSchedules();
-  } catch (error) {
-    console.error('ペーストエラー:', error);
-  }
-};
+      if (error) throw error;
+      await loadSchedules();
+    } catch (error) {
+      console.error('ペーストエラー:', error);
+    }
+  };
+
+  const handleColorChange = async (projectId: string, date: Date, color: string) => {
+    const dateStr = date.toISOString().split('T')[0];
+    const key = `${projectId}-${dateStr}`;
+    const existingCell = schedules.get(key);
+
+    try {
+      const { error } = await supabase
+        .from('project_schedules')
+        .upsert({
+          project_id: projectId,
+          date: dateStr,
+          content: existingCell?.content || '',
+          background_color: color,
+          user_id: user.id,
+        });
+
+      if (error) throw error;
+      await loadSchedules();
+      setShowColorPicker(null);
+    } catch (error) {
+      console.error('色変更エラー:', error);
+    }
+  };
+
+  const predefinedColors = [
+    '#ffffff', '#fef3c7', '#fecaca', '#fed7aa', '#d9f99d', 
+    '#bbf7d0', '#bfdbfe', '#ddd6fe', '#f5d0fe', '#fecdd3',
+    '#f3f4f6', '#fde68a', '#fca5a5', '#fdba74', '#bef264',
+    '#86efac', '#93c5fd', '#c4b5fd', '#f0abfc', '#fb7185'
+  ];
 
   const getWeekday = (date: Date): string => {
     const weekdays = ['日', '月', '火', '水', '木', '金', '土'];
@@ -379,7 +409,7 @@ export default function ProjectScheduleView({ user, activeBrandTab }: ProjectSch
                   return (
                     <td
                       key={dateIndex}
-                      className={`border border-neutral-200 p-0 cursor-cell ${
+                      className={`border border-neutral-200 p-0 cursor-cell relative ${
                         isSelected ? 'ring-2 ring-primary-500 ring-inset' : ''
                       }`}
                       style={{ backgroundColor: cell?.backgroundColor || '#ffffff' }}
@@ -387,6 +417,11 @@ export default function ProjectScheduleView({ user, activeBrandTab }: ProjectSch
                       onDoubleClick={() => handleCellDoubleClick(project.id, date)}
                       onPaste={(e) => handlePaste(e, project.id, date)}
                       onKeyDown={(e) => handleKeyDown(e, project.id, dateIndex)}
+                      onContextMenu={(e) => {
+                        e.preventDefault();
+                        setShowColorPicker({ projectId: project.id, date: dateStr });
+                        setSelectedColor(cell?.backgroundColor || '#ffffff');
+                      }}
                       tabIndex={0}
                     >
                       {isEditing ? (
@@ -407,9 +442,35 @@ export default function ProjectScheduleView({ user, activeBrandTab }: ProjectSch
                           className="w-full h-full px-2 py-1 border-0 focus:outline-none text-center"
                         />
                       ) : (
-                        <div className="px-2 py-1 min-h-[32px] flex items-center justify-center text-center">
-                          {cell?.content || ''}
-                        </div>
+                        <>
+                          <div className="px-2 py-1 min-h-[32px] flex items-center justify-center text-center">
+                            {cell?.content || ''}
+                          </div>
+                          {showColorPicker?.projectId === project.id && showColorPicker?.date === dateStr && (
+                            <div
+                              className="absolute z-50 bg-white border border-neutral-300 rounded-lg shadow-xl p-3 top-full left-0 mt-1"
+                              onClick={(e) => e.stopPropagation()}
+                            >
+                              <div className="grid grid-cols-5 gap-2 mb-2">
+                                {predefinedColors.map((color) => (
+                                  <button
+                                    key={color}
+                                    onClick={() => handleColorChange(project.id, date, color)}
+                                    className="w-8 h-8 rounded border-2 border-neutral-300 hover:border-primary-500 transition-colors"
+                                    style={{ backgroundColor: color }}
+                                    title={color}
+                                  />
+                                ))}
+                              </div>
+                              <button
+                                onClick={() => setShowColorPicker(null)}
+                                className="w-full px-3 py-1.5 text-xs bg-neutral-100 hover:bg-neutral-200 rounded transition-colors"
+                              >
+                                閉じる
+                              </button>
+                            </div>
+                          )}
+                        </>
                       )}
                     </td>
                   );
@@ -423,6 +484,7 @@ export default function ProjectScheduleView({ user, activeBrandTab }: ProjectSch
       <div className="p-3 border-t border-neutral-200 bg-neutral-50 text-xs text-neutral-600">
         <div className="flex flex-wrap gap-x-4 gap-y-1">
           <span>• ダブルクリックで編集</span>
+          <span>• 右クリックで色選択</span>
           <span>• 矢印キーで移動</span>
           <span>• Enterで編集開始</span>
           <span>• Ctrl+C でコピー</span>
