@@ -687,7 +687,9 @@ const handleRangeSelection = (endProjectId: string, endDate: string) => {
                   const key = getCellKey(project.id, date);
                   const cell = schedules.get(key);
                   const dateStr = date.toISOString().split('T')[0];
-                  const isSelected = selectedCell?.projectId === project.id && selectedCell?.date === dateStr;
+                  const cellKey = `${project.id}-${dateStr}`;
+const isSelected = selectedCells.has(cellKey);
+const isPrimarySelected = selectedCell?.projectId === project.id && selectedCell?.date === dateStr;
                   const isEditing = editingCell?.projectId === project.id && editingCell?.date === dateStr;
 
                   return (
