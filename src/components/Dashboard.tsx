@@ -83,17 +83,21 @@ export default function Dashboard({ onSelectProject, user, onLogout }: Dashboard
     if (!newCreatorName.trim()) return;
 
     try {
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from('creators')
         .insert({
           name: newCreatorName,
           user_id: user.id,
-        });
+        })
+        .select()
+        .single();
 
       if (error) throw error;
 
       setNewCreatorName('');
       setShowCreateCreatorForm(false);
+      setSelectedCreatorId(data.id);
+      setShowCreateCategoryForm(true);
       loadCreators();
     } catch (error) {
       console.error('クリエイター作成エラー:', error);
