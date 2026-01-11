@@ -553,21 +553,23 @@ export default function ProjectScheduleView({ user, activeBrandTab, viewType }: 
 
                   return (
                     <td
-                      key={dateIndex}
-                      className={`border border-neutral-200 p-0 cursor-cell relative ${
-                        isSelected ? 'ring-2 ring-primary-500 ring-inset' : ''
-                      }`}
-                      onClick={() => handleCellClick(project.id, date)}
-                      onDoubleClick={() => handleCellDoubleClick(project.id, date)}
-                      onPaste={(e) => handlePaste(e, project.id, date)}
-                      onKeyDown={(e) => handleKeyDown(e, project.id, dateIndex)}
-                      onContextMenu={(e) => {
-                        e.preventDefault();
-                        setShowColorPicker({ projectId: project.id, date: dateStr });
-                        setSelectedColor(cell?.backgroundColor || '#ffffff');
-                      }}
-                      tabIndex={0}
-                    >
+  key={dateIndex}
+  className={`p-0 cursor-cell relative ${
+    isSelected 
+      ? 'border-4 border-primary-600 shadow-lg' 
+      : 'border border-neutral-200'
+  }`}
+  onClick={() => handleCellClick(project.id, date)}
+  onDoubleClick={() => handleCellDoubleClick(project.id, date)}
+  onPaste={(e) => handlePaste(e, project.id, date)}
+  onKeyDown={(e) => handleKeyDown(e, project.id, dateIndex)}
+  onContextMenu={(e) => {
+    e.preventDefault();
+    setShowColorPicker({ projectId: project.id, date: dateStr });
+    setSelectedColor(cell?.backgroundColor || '#ffffff');
+  }}
+  tabIndex={0}
+>
                       {/* 背景色レイヤー */}
                       <div 
                         className="absolute inset-0 z-0"
