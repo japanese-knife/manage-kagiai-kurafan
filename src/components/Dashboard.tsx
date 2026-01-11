@@ -474,33 +474,26 @@ const loadProjects = async () => {
         .order('created_at', { ascending: true });
 
       if (textContentReqError) {
-        console.error('掲載文章要項取得エラー:', textContentReqError);
-        errors.push(`掲載文章要項: ${textContentReqError.message}`);
-      } else if (textContentRequirements && textContentRequirements.length > 0) {
-  console.log(`${textContentRequirements.length}件の掲載文章要項を複製`);
-  for (const req of textContentRequirements) {
-    const { error: textContentReqInsertError } = await supabase
-      .from('text_content_requirements')
-      .insert({
-        project_id: newProject.id,
-        name: req.name,
-        url: req.url,
-        memo: req.memo,
-        user_id: user.id,
-      });
+  console.error('掲載文章要項取得エラー:', textContentReqError);
+  errors.push(`掲載文章要項: ${textContentReqError.message}`);
+} else if (textContentRequirements && textContentRequirements.length > 0) {
+  const newTextReqs = textContentRequirements.map(req => ({
+    project_id: newProject.id,
+    name: req.name,
+    url: req.url,
+    memo: req.memo,
+    user_id: user.id,
+  }));
 
-    if (textContentReqInsertError) {
-      console.error('掲載文章要項挿入エラー:', textContentReqInsertError);
-      errors.push(`掲載文章要項挿入: ${textContentReqInsertError.message}`);
-    }
-    
-    await new Promise(resolve => setTimeout(resolve, 10));
+  const { error: textContentReqInsertError } = await supabase
+    .from('text_content_requirements')
+    .insert(newTextReqs);
+
+  if (textContentReqInsertError) {
+    console.error('掲載文章要項挿入エラー:', textContentReqInsertError);
+    errors.push(`掲載文章要項: ${textContentReqInsertError.message}`);
   }
-  console.log('掲載文章要項の複製が完了しました');
-
-      } else {
-        console.log('掲載文章要項なし');
-      }
+}
 
       // 掲載動画要項を取得して複製
       console.log('掲載動画要項を複製中...');
