@@ -512,15 +512,23 @@ if (e.key === 'Escape' && !editingCell) {
 
   const handleColorChange = async (projectId: string, date: Date, color: string, textColor: string) => {
   const dateStr = date.toISOString().split('T')[0];
+  const clickedCellKey = `${projectId}-${dateStr}`;
   
-  // 複数セル選択時はすべてのセルの色を変更
-  const targetCells = selectedCells.size > 0 ? Array.from(selectedCells) : [`${projectId}-${dateStr}`];
+  // 複数セル選択時はすべてのセルの色を変更、未選択の場合はクリックしたセルのみ
+  const targetCells = selectedCells.size > 0 && selectedCells.has(clickedCellKey) 
+    ? Array.from(selectedCells) 
+    : [clickedCellKey];
 
   try {
     const updatedSchedules = new Map(schedules);
     
     for (const cellKey of targetCells) {
-      const [targetProjectId, targetDateStr] = cellKey.split('-');
+      // cellKeyの形式を確認してパース
+      const parts = cellKey.split('-');
+      // 日付部分は最後の3つ（YYYY-MM-DD）
+      const targetDateStr = parts.slice(-3).join('-');
+      const targetProjectId = parts.slice(0, -3).join('-');
+      
       const existingCell = schedules.get(cellKey);
       
       const updateData: any = {
@@ -538,7 +546,10 @@ if (e.key === 'Escape' && !editingCell) {
           onConflict: 'project_id,date'
         });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Supabaseエラー詳細:', error);
+        throw error;
+      }
       
       // ローカルステートを更新
       updatedSchedules.set(cellKey, {
@@ -554,7 +565,7 @@ if (e.key === 'Escape' && !editingCell) {
     setShowColorPicker(null);
   } catch (error) {
     console.error('色変更エラー:', error);
-    alert('色の変更に失敗しました');
+    alert(`色の変更に失敗しました: ${error instanceof Error ? error.message : '不明なエラー'}`);
   }
 };
 
