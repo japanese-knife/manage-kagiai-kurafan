@@ -416,29 +416,35 @@ export default function ProjectScheduleView({ user, activeBrandTab, viewType }: 
   };
 
   const exportToCSV = () => {
-    let csv = '事業者名,商品';
-    dates.forEach(date => {
+  let csv = '事業者名,商品';
+  dates.forEach(date => {
+    if (viewType === 'monthly') {
+      csv += `,${date.getFullYear()}年${date.getMonth() + 1}月`;
+    } else {
       csv += `,${date.getMonth() + 1}/${date.getDate()}`;
+    }
+  });
+  csv += '\n';
+
+  projects.forEach(project => {
+    csv += `${project.name},`;
+    dates.forEach(date => {
+      const key = getCellKey(project.id, date);
+      const cell = schedules.get(key);
+      const content = cell?.content || '';
+      csv += `"${content.replace(/"/g, '""')}",`;
     });
     csv += '\n';
+  });
 
-    projects.forEach(project => {
-      csv += `${project.name},`;
-      dates.forEach(date => {
-        const key = getCellKey(project.id, date);
-        const cell = schedules.get(key);
-        const content = cell?.content || '';
-        csv += `"${content.replace(/"/g, '""')}",`;
-      });
-      csv += '\n';
-    });
-
-    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-    const link = document.createElement('a');
-    link.href = URL.createObjectURL(blob);
-    link.download = `schedule_${activeBrandTab}_${new Date().toISOString().split('T')[0]}.csv`;
-    link.click();
-  };
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  const link = document.createElement('a');
+  link.href = URL.createObjectURL(blob);
+  const brandName = activeBrandTab === 'all' ? 'all_projects' : activeBrandTab;
+  const viewTypeName = viewType === 'monthly' ? 'monthly' : 'daily';
+  link.download = `schedule_${brandName}_${viewTypeName}_${new Date().toISOString().split('T')[0]}.csv`;
+  link.click();
+};
 
   if (projects.length === 0) {
     return (
