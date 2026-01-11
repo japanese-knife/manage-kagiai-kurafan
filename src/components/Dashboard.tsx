@@ -38,93 +38,43 @@ export default function Dashboard({ onSelectProject, user, onLogout }: Dashboard
     loadProjects();
   }, []);
 
-  // タイムアウト付きPromiseヘルパー
-const withTimeout = <T,>(promise: Promise<T>, timeoutMs: number = 10000): Promise<T> => {
-  return Promise.race([
-    promise,
-    new Promise<T>((_, reject) =>
-      setTimeout(() => reject(new Error(`Timeout after ${timeoutMs}ms`)), timeoutMs)
-    )
-  ]);
-};
-
-// タイムアウトヘルパーをコンポーネント外に追加
-const withTimeout = <T,>(promise: Promise<T>, timeoutMs: number = 10000): Promise<T> => {
-  return Promise.race([
-    promise,
-    new Promise<T>((_, reject) =>
-      setTimeout(() => reject(new Error(`Timeout after ${timeoutMs}ms`)), timeoutMs)
-    )
-  ]);
-};
-
-// export default function Dashboard の中
-const loadProjects = async () => {
-  try {
-    const { data: projectsData, error: projectsError } = await withTimeout(
-      supabase
+  const loadProjects = async () => {
+    try {
+      const { data: projectsData, error: projectsError } = await supabase
         .from('projects')
         .select('*')
-        .order('updated_at', { ascending: false }),
-      10000
-    );
+        .order('updated_at', { ascending: false });
 
-    if (projectsError) throw projectsError;
+      if (projectsError) throw projectsError;
 
-    setProjects(projectsData || []);
+      setProjects(projectsData || []);
 
-    const projectIds = (projectsData || []).map(p => p.id);
+      const statsMap = new Map<string, ProjectStats>();
+      for (const project of projectsData || []) {
+        const { data: tasksData } = await supabase
+          .from('tasks')
+          .select('status')
+          .eq('project_id', project.id);
 
-    if (projectIds.length === 0) {
-      setProjectStats(new Map());
-      return;
-    }
+        const total = tasksData?.length || 0;
+        const completed = tasksData?.filter((t: Task) => t.status === '完了').length || 0;
+        const progress = total > 0 ? Math.round((completed / total) * 100) : 0;
 
-    const { data: allTasksData, error: tasksError } = await withTimeout(
-      supabase
-        .from('tasks')
-        .select('id, project_id, status')
-        .in('project_id', projectIds),
-      10000
-    );
-
-    if (tasksError) {
-      console.error('タスク取得エラー:', tasksError);
-      setProjectStats(new Map());
-      return;
-    }
-
-    const tasksByProject = new Map<string, typeof allTasksData>();
-    (allTasksData || []).forEach(task => {
-      if (!tasksByProject.has(task.project_id)) {
-        tasksByProject.set(task.project_id, []);
+        statsMap.set(project.id, {
+          projectId: project.id,
+          totalTasks: total,
+          completedTasks: completed,
+          progress,
+        });
       }
-      tasksByProject.get(task.project_id)!.push(task);
-    });
 
-    const statsMap = new Map<string, ProjectStats>();
-    (projectsData || []).forEach(project => {
-      const tasks = tasksByProject.get(project.id) || [];
-      const total = tasks.length;
-      const completed = tasks.filter(t => t.status === '完了').length;
-      const progress = total > 0 ? Math.round((completed / total) * 100) : 0;
-
-      statsMap.set(project.id, {
-        projectId: project.id,
-        totalTasks: total,
-        completedTasks: completed,
-        progress,
-      });
-    });
-
-    setProjectStats(statsMap);
-  } catch (error) {
-    console.error('プロジェクト読み込みエラー:', error);
-    setProjectStats(new Map());
-  } finally {
-    setLoading(false);
-  }
-};
+      setProjectStats(statsMap);
+    } catch (error) {
+      console.error('プロジェクト読み込みエラー:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleCreateProject = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -310,19 +260,20 @@ const loadProjects = async () => {
         .order('created_at', { ascending: true });
 
       if (!projectNotesError && projectNotes && projectNotes.length > 0) {
-  const newNotes = projectNotes.map(note => ({
-    project_id: newProject.id,
-    content: note.content,
-    user_id: user.id,
-  }));
+  for (const note of projectNotes) {
+    const { error: projectNoteInsertError } = await supabase
+      .from('project_notes')
+      .insert({
+        project_id: newProject.id,
+        content: note.content,
+        user_id: user.id,
+      });
 
-  const { error: projectNoteInsertError } = await supabase
-    .from('project_notes')
-    .insert(newNotes);
-
-  if (projectNoteInsertError) {
-    console.error('プロジェクトメモ複製エラー:', projectNoteInsertError);
-    errors.push(`プロジェクトメモ: ${projectNoteInsertError.message}`);
+    if (projectNoteInsertError) {
+      console.error('プロジェクトメモ複製エラー:', projectNoteInsertError);
+    }
+    
+    await new Promise(resolve => setTimeout(resolve, 10));
   }
 }
 
@@ -334,20 +285,22 @@ const loadProjects = async () => {
         .order('created_at', { ascending: true });
 
       if (!schedulesError && schedules && schedules.length > 0) {
-  const newSchedules = schedules.map(schedule => ({
-    project_id: newProject.id,
-    content: schedule.content,
-    milestone: schedule.milestone,
-    user_id: user.id,
-  }));
+  for (const schedule of schedules) {
+    const { error: scheduleInsertError } = await supabase
+      .from('schedules')
+      .insert({
+        project_id: newProject.id,
+        content: schedule.content,
+        milestone: schedule.milestone,
+        user_id: user.id,
+      });
 
-  const { error: scheduleInsertError } = await supabase
-    .from('schedules')
-    .insert(newSchedules);
-
-  if (scheduleInsertError) {
-    console.error('スケジュール複製エラー:', scheduleInsertError);
-    errors.push(`スケジュール: ${scheduleInsertError.message}`);
+    if (scheduleInsertError) {
+      console.error('スケジュール複製エラー:', scheduleInsertError);
+    }
+    
+    // 順序を確実に保持するため少し待機
+    await new Promise(resolve => setTimeout(resolve, 10));
   }
 }
 
@@ -359,21 +312,22 @@ const loadProjects = async () => {
         .order('created_at', { ascending: true });
 
       if (!documentsError && documents && documents.length > 0) {
-  const newDocuments = documents.map(doc => ({
-    project_id: newProject.id,
-    name: doc.name,
-    url: doc.url,
-    memo: doc.memo,
-    user_id: user.id,
-  }));
+  for (const doc of documents) {
+    const { error: documentInsertError } = await supabase
+      .from('documents')
+      .insert({
+        project_id: newProject.id,
+        name: doc.name,
+        url: doc.url,
+        memo: doc.memo,
+        user_id: user.id,
+      });
 
-  const { error: documentInsertError } = await supabase
-    .from('documents')
-    .insert(newDocuments);
-
-  if (documentInsertError) {
-    console.error('資料一覧複製エラー:', documentInsertError);
-    errors.push(`資料一覧: ${documentInsertError.message}`);
+    if (documentInsertError) {
+      console.error('資料一覧複製エラー:', documentInsertError);
+    }
+    
+    await new Promise(resolve => setTimeout(resolve, 10));
   }
 }
 
@@ -386,27 +340,33 @@ const loadProjects = async () => {
         .order('created_at', { ascending: true });
 
       if (meetingsError) {
-  console.error('打ち合わせ内容取得エラー:', meetingsError);
-  errors.push(`打ち合わせ内容: ${meetingsError.message}`);
-} else if (meetings && meetings.length > 0) {
-  const newMeetings = meetings.map(meeting => ({
-    project_id: newProject.id,
-    date: meeting.date,
-    participants: meeting.participants,
-    summary: meeting.summary,
-    decisions: meeting.decisions,
-    user_id: user.id,
-  }));
+        console.error('打ち合わせ内容取得エラー:', meetingsError);
+        errors.push(`打ち合わせ内容: ${meetingsError.message}`);
+      } else if (meetings && meetings.length > 0) {
+  console.log(`${meetings.length}件の打ち合わせ内容を複製`);
+  for (const meeting of meetings) {
+    const { error: meetingInsertError } = await supabase
+      .from('meetings')
+      .insert({
+        project_id: newProject.id,
+        date: meeting.date,
+        participants: meeting.participants,
+        summary: meeting.summary,
+        decisions: meeting.decisions,
+        user_id: user.id,
+      });
 
-  const { error: meetingInsertError } = await supabase
-    .from('meetings')
-    .insert(newMeetings);
-
-  if (meetingInsertError) {
-    console.error('打ち合わせ内容挿入エラー:', meetingInsertError);
-    errors.push(`打ち合わせ内容: ${meetingInsertError.message}`);
+    if (meetingInsertError) {
+      console.error('打ち合わせ内容挿入エラー:', meetingInsertError);
+      errors.push(`打ち合わせ内容挿入: ${meetingInsertError.message}`);
+    }
+    
+    await new Promise(resolve => setTimeout(resolve, 10));
   }
-}
+
+      } else {
+        console.log('打ち合わせ内容なし');
+      }
 
       // リターン内容を取得して複製
       console.log('リターン内容を複製中...');
@@ -417,27 +377,33 @@ const loadProjects = async () => {
         .order('created_at', { ascending: true });
 
       if (returnsError) {
-  console.error('リターン内容取得エラー:', returnsError);
-  errors.push(`リターン内容: ${returnsError.message}`);
-} else if (returns && returns.length > 0) {
-  const newReturns = returns.map(ret => ({
-    project_id: newProject.id,
-    name: ret.name,
-    price_range: ret.price_range,
-    description: ret.description,
-    status: ret.status,
-    user_id: user.id,
-  }));
+        console.error('リターン内容取得エラー:', returnsError);
+        errors.push(`リターン内容: ${returnsError.message}`);
+      } else if (returns && returns.length > 0) {
+  console.log(`${returns.length}件のリターン内容を複製`);
+  for (const ret of returns) {
+    const { error: returnInsertError } = await supabase
+      .from('returns')
+      .insert({
+        project_id: newProject.id,
+        name: ret.name,
+        price_range: ret.price_range,
+        description: ret.description,
+        status: ret.status,
+        user_id: user.id,
+      });
 
-  const { error: returnInsertError } = await supabase
-    .from('returns')
-    .insert(newReturns);
-
-  if (returnInsertError) {
-    console.error('リターン内容挿入エラー:', returnInsertError);
-    errors.push(`リターン内容: ${returnInsertError.message}`);
+    if (returnInsertError) {
+      console.error('リターン内容挿入エラー:', returnInsertError);
+      errors.push(`リターン内容挿入: ${returnInsertError.message}`);
+    }
+    
+    await new Promise(resolve => setTimeout(resolve, 10));
   }
-}
+
+      } else {
+        console.log('リターン内容なし');
+      }
 
       // ページデザイン要項を取得して複製
       const { data: designRequirements, error: designReqError } = await supabase
@@ -447,21 +413,22 @@ const loadProjects = async () => {
         .order('created_at', { ascending: true });
 
       if (!designReqError && designRequirements && designRequirements.length > 0) {
-  const newDesignReqs = designRequirements.map(req => ({
-    project_id: newProject.id,
-    name: req.name,
-    url: req.url,
-    memo: req.memo,
-    user_id: user.id,
-  }));
+  for (const req of designRequirements) {
+    const { error: designReqInsertError } = await supabase
+      .from('design_requirements')
+      .insert({
+        project_id: newProject.id,
+        name: req.name,
+        url: req.url,
+        memo: req.memo,
+        user_id: user.id,
+      });
 
-  const { error: designReqInsertError } = await supabase
-    .from('design_requirements')
-    .insert(newDesignReqs);
-
-  if (designReqInsertError) {
-    console.error('ページデザイン要項複製エラー:', designReqInsertError);
-    errors.push(`ページデザイン要項: ${designReqInsertError.message}`);
+    if (designReqInsertError) {
+      console.error('ページデザイン要項複製エラー:', designReqInsertError);
+    }
+    
+    await new Promise(resolve => setTimeout(resolve, 10));
   }
 }
 
@@ -474,26 +441,33 @@ const loadProjects = async () => {
         .order('created_at', { ascending: true });
 
       if (textContentReqError) {
-  console.error('掲載文章要項取得エラー:', textContentReqError);
-  errors.push(`掲載文章要項: ${textContentReqError.message}`);
-} else if (textContentRequirements && textContentRequirements.length > 0) {
-  const newTextReqs = textContentRequirements.map(req => ({
-    project_id: newProject.id,
-    name: req.name,
-    url: req.url,
-    memo: req.memo,
-    user_id: user.id,
-  }));
+        console.error('掲載文章要項取得エラー:', textContentReqError);
+        errors.push(`掲載文章要項: ${textContentReqError.message}`);
+      } else if (textContentRequirements && textContentRequirements.length > 0) {
+  console.log(`${textContentRequirements.length}件の掲載文章要項を複製`);
+  for (const req of textContentRequirements) {
+    const { error: textContentReqInsertError } = await supabase
+      .from('text_content_requirements')
+      .insert({
+        project_id: newProject.id,
+        name: req.name,
+        url: req.url,
+        memo: req.memo,
+        user_id: user.id,
+      });
 
-  const { error: textContentReqInsertError } = await supabase
-    .from('text_content_requirements')
-    .insert(newTextReqs);
-
-  if (textContentReqInsertError) {
-    console.error('掲載文章要項挿入エラー:', textContentReqInsertError);
-    errors.push(`掲載文章要項: ${textContentReqInsertError.message}`);
+    if (textContentReqInsertError) {
+      console.error('掲載文章要項挿入エラー:', textContentReqInsertError);
+      errors.push(`掲載文章要項挿入: ${textContentReqInsertError.message}`);
+    }
+    
+    await new Promise(resolve => setTimeout(resolve, 10));
   }
-}
+  console.log('掲載文章要項の複製が完了しました');
+
+      } else {
+        console.log('掲載文章要項なし');
+      }
 
       // 掲載動画要項を取得して複製
       console.log('掲載動画要項を複製中...');
@@ -504,28 +478,34 @@ const loadProjects = async () => {
         .order('created_at', { ascending: true });
 
       if (videoReqError) {
-  console.error('掲載動画要項取得エラー:', videoReqError);
-  errors.push(`掲載動画要項: ${videoReqError.message}`);
-} else if (videoRequirements && videoRequirements.length > 0) {
-  const newVideoReqs = videoRequirements.map(req => ({
-    project_id: newProject.id,
-    video_type: req.video_type,
-    duration: req.duration,
-    required_cuts: req.required_cuts,
-    has_narration: req.has_narration,
-    reference_url: req.reference_url,
-    user_id: user.id,
-  }));
+        console.error('掲載動画要項取得エラー:', videoReqError);
+        errors.push(`掲載動画要項: ${videoReqError.message}`);
+      } else if (videoRequirements && videoRequirements.length > 0) {
+  console.log(`${videoRequirements.length}件の掲載動画要項を複製`);
+  for (const req of videoRequirements) {
+    const { error: videoReqInsertError } = await supabase
+      .from('video_requirements')
+      .insert({
+        project_id: newProject.id,
+        video_type: req.video_type,
+        duration: req.duration,
+        required_cuts: req.required_cuts,
+        has_narration: req.has_narration,
+        reference_url: req.reference_url,
+        user_id: user.id,
+      });
 
-  const { error: videoReqInsertError } = await supabase
-    .from('video_requirements')
-    .insert(newVideoReqs);
-
-  if (videoReqInsertError) {
-    console.error('掲載動画要項挿入エラー:', videoReqInsertError);
-    errors.push(`掲載動画要項: ${videoReqInsertError.message}`);
+    if (videoReqInsertError) {
+      console.error('掲載動画要項挿入エラー:', videoReqInsertError);
+      errors.push(`掲載動画要項挿入: ${videoReqInsertError.message}`);
+    }
+    
+    await new Promise(resolve => setTimeout(resolve, 10));
   }
-}
+
+      } else {
+        console.log('掲載動画要項なし');
+      }
 
       // 画像アセットを取得して複製
       console.log('画像アセットを複製中...');
@@ -536,27 +516,32 @@ const loadProjects = async () => {
         .order('created_at', { ascending: true });
 
       if (imageAssetsError) {
-  console.error('画像アセット取得エラー:', imageAssetsError);
-  errors.push(`画像アセット: ${imageAssetsError.message}`);
-} else if (imageAssets && imageAssets.length > 0) {
-  const newImageAssets = imageAssets.map(asset => ({
-    project_id: newProject.id,
-    name: asset.name,
-    purpose: asset.purpose,
-    url: asset.url,
-    status: asset.status,
-    user_id: user.id,
-  }));
+        console.error('画像アセット取得エラー:', imageAssetsError);
+        errors.push(`画像アセット: ${imageAssetsError.message}`);
+      } else if (imageAssets && imageAssets.length > 0) {
+  console.log(`${imageAssets.length}件の画像アセットを複製`);
+  for (const asset of imageAssets) {
+    const { error: imageAssetsInsertError } = await supabase
+      .from('image_assets')
+      .insert({
+        project_id: newProject.id,
+        name: asset.name,
+        purpose: asset.purpose,
+        url: asset.url,
+        status: asset.status,
+        user_id: user.id,
+      });
 
-  const { error: imageAssetsInsertError } = await supabase
-    .from('image_assets')
-    .insert(newImageAssets);
-
-  if (imageAssetsInsertError) {
-    console.error('画像アセット挿入エラー:', imageAssetsInsertError);
-    errors.push(`画像アセット: ${imageAssetsInsertError.message}`);
+    if (imageAssetsInsertError) {
+      console.error('画像アセット挿入エラー:', imageAssetsInsertError);
+      errors.push(`画像アセット挿入: ${imageAssetsInsertError.message}`);
+    }
+    
+    await new Promise(resolve => setTimeout(resolve, 10));
   }
-}
+} else {
+        console.log('画像アセットなし');
+      }
 
       // エラーがあった場合は警告を表示、なければ成功メッセージ
       if (errors.length > 0) {
