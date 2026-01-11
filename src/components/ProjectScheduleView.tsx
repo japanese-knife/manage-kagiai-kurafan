@@ -511,14 +511,21 @@ if (e.key === 'Escape' && !editingCell) {
 };
 
   const handleColorChange = async (projectId: string, date: Date, color: string, textColor: string) => {
-    const dateStr = date.toISOString().split('T')[0];
-    const key = `${projectId}-${dateStr}`;
-    const existingCell = schedules.get(key);
+  const dateStr = date.toISOString().split('T')[0];
+  
+  // 複数セル選択時はすべてのセルの色を変更
+  const targetCells = selectedCells.size > 0 ? Array.from(selectedCells) : [`${projectId}-${dateStr}`];
 
-    try {
+  try {
+    const updatedSchedules = new Map(schedules);
+    
+    for (const cellKey of targetCells) {
+      const [targetProjectId, targetDateStr] = cellKey.split('-');
+      const existingCell = schedules.get(cellKey);
+      
       const updateData: any = {
-        project_id: projectId,
-        date: dateStr,
+        project_id: targetProjectId,
+        date: targetDateStr,
         content: existingCell?.content || '',
         background_color: color,
         text_color: textColor,
@@ -533,23 +540,23 @@ if (e.key === 'Escape' && !editingCell) {
 
       if (error) throw error;
       
-      // ローカルステートを即座に更新
-      const updatedSchedules = new Map(schedules);
-      updatedSchedules.set(key, {
-        projectId: projectId,
-        date: dateStr,
+      // ローカルステートを更新
+      updatedSchedules.set(cellKey, {
+        projectId: targetProjectId,
+        date: targetDateStr,
         content: existingCell?.content || '',
         backgroundColor: color,
         textColor: textColor,
       });
-      setSchedules(updatedSchedules);
-      
-      setShowColorPicker(null);
-    } catch (error) {
-      console.error('色変更エラー:', error);
-      alert('色の変更に失敗しました');
     }
-  };
+    
+    setSchedules(updatedSchedules);
+    setShowColorPicker(null);
+  } catch (error) {
+    console.error('色変更エラー:', error);
+    alert('色の変更に失敗しました');
+  }
+};
 
   const predefinedColors = [
     { name: '白', color: '#ffffff', textColor: '#000000' },
