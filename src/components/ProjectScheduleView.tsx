@@ -97,23 +97,37 @@ export default function ProjectScheduleView({ user, activeBrandTab, viewType }: 
   };
 
   const loadProjects = async () => {
-    try {
-      let query = supabase
-        .from('projects')
-        .select('*');
-      
-      if (activeBrandTab !== 'all') {
-        query = query.eq('brand_type', activeBrandTab);
-      }
-      
-      const { data, error } = await query.order('name', { ascending: true });
-
-      if (error) throw error;
-      setProjects(data || []);
-    } catch (error) {
-      console.error('プロジェクト読み込みエラー:', error);
+  try {
+    let query = supabase
+      .from('projects')
+      .select('*');
+    
+    if (activeBrandTab !== 'all') {
+      query = query.eq('brand_type', activeBrandTab);
     }
-  };
+    
+    const { data, error } = await query.order('created_at', { ascending: true });
+
+    if (error) throw error;
+    
+    // activeBrandTab が 'all' の場合、ブランド別にソート
+    if (activeBrandTab === 'all' && data) {
+      const sortedData = data.sort((a, b) => {
+        // まず brand_type で比較（海外クラファン.com が先）
+        if (a.brand_type !== b.brand_type) {
+          return a.brand_type === '海外クラファン.com' ? -1 : 1;
+        }
+        // 同じブランド内では created_at で昇順（追加された順）
+        return new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
+      });
+      setProjects(sortedData);
+    } else {
+      setProjects(data || []);
+    }
+  } catch (error) {
+    console.error('プロジェクト読み込みエラー:', error);
+  }
+};
 
   const loadSchedules = async () => {
     try {
