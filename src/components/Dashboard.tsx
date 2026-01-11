@@ -27,7 +27,6 @@ export default function Dashboard({ onSelectProject, user, onLogout }: Dashboard
   const [newProjectName, setNewProjectName] = useState('');
   const [newProjectDescription, setNewProjectDescription] = useState('');
   const [newBrandType, setNewBrandType] = useState<BrandType>('海外クラファン.com');
-  const [activeMainTab, setActiveMainTab] = useState<'schedule' | 'projects'>('schedule');
   const [activeBrandTab, setActiveBrandTab] = useState<BrandType>('海外クラファン.com');
   const [editingProjectId, setEditingProjectId] = useState<string | null>(null);
   const [editProjectName, setEditProjectName] = useState('');
@@ -662,76 +661,41 @@ export default function Dashboard({ onSelectProject, user, onLogout }: Dashboard
       </header>
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8 lg:px-12 py-6 sm:py-8 md:py-12">
-  {/* メインタブ */}
-  <div className="flex items-center gap-2 mb-6 sm:mb-8 border-b border-neutral-200">
-    <button
-      onClick={() => setActiveMainTab('schedule')}
-      className={`px-4 sm:px-6 py-3 text-sm sm:text-base font-medium transition-all relative ${
-        activeMainTab === 'schedule'
-          ? 'text-primary-600'
-          : 'text-neutral-500 hover:text-neutral-700'
-      }`}
-    >
-      スケジュール
-      {activeMainTab === 'schedule' && (
-        <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary-600" />
-      )}
-    </button>
-    <button
-      onClick={() => setActiveMainTab('projects')}
-      className={`px-4 sm:px-6 py-3 text-sm sm:text-base font-medium transition-all relative ${
-        activeMainTab === 'projects'
-          ? 'text-primary-600'
-          : 'text-neutral-500 hover:text-neutral-700'
-      }`}
-    >
-      プロジェクト
-      <span className="ml-2 px-2 py-0.5 text-xs font-medium bg-neutral-100 text-neutral-600 rounded-full">
-        {projects.length}
-      </span>
-      {activeMainTab === 'projects' && (
-        <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary-600" />
-      )}
-    </button>
-  </div>
-
-{/* ブランドタブ - スケジュールタブ時のみ表示 */}
-  {activeMainTab === 'schedule' && (
-    <div className="flex items-center gap-2 mb-6 sm:mb-8 border-b border-neutral-200">
-      <button
-        onClick={() => setActiveBrandTab('海外クラファン.com')}
-        className={`px-4 sm:px-6 py-3 text-sm sm:text-base font-medium transition-all relative ${
-          activeBrandTab === '海外クラファン.com'
-            ? 'text-primary-600'
-            : 'text-neutral-500 hover:text-neutral-700'
-        }`}
-      >
-        海外クラファン.com
-        <span className="ml-2 px-2 py-0.5 text-xs font-medium bg-neutral-100 text-neutral-600 rounded-full">
-          {getProjectCountByBrand('海外クラファン.com')}
-        </span>
-        {activeBrandTab === '海外クラファン.com' && (
-          <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary-600" />
-        )}
-      </button>
-      <button
-        onClick={() => setActiveBrandTab('BRAND-BASE')}
-        className={`px-4 sm:px-6 py-3 text-sm sm:text-base font-medium transition-all relative ${
-          activeBrandTab === 'BRAND-BASE'
-            ? 'text-primary-600'
-            : 'text-neutral-500 hover:text-neutral-700'
-        }`}
-      >
-        BRAND-BASE
-        <span className="ml-2 px-2 py-0.5 text-xs font-medium bg-neutral-100 text-neutral-600 rounded-full">
-          {getProjectCountByBrand('BRAND-BASE')}
-        </span>
-        {activeBrandTab === 'BRAND-BASE' && (
-          <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary-600" />
-        )}
-      </button>
-    </div>
-  )}
+        {/* ブランドタブ */}
+        <div className="flex items-center gap-2 mb-6 sm:mb-8 border-b border-neutral-200">
+          <button
+            onClick={() => setActiveBrandTab('海外クラファン.com')}
+            className={`px-4 sm:px-6 py-3 text-sm sm:text-base font-medium transition-all relative ${
+              activeBrandTab === '海外クラファン.com'
+                ? 'text-primary-600'
+                : 'text-neutral-500 hover:text-neutral-700'
+            }`}
+          >
+            海外クラファン.com
+            <span className="ml-2 px-2 py-0.5 text-xs font-medium bg-neutral-100 text-neutral-600 rounded-full">
+              {getProjectCountByBrand('海外クラファン.com')}
+            </span>
+            {activeBrandTab === '海外クラファン.com' && (
+              <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary-600" />
+            )}
+          </button>
+          <button
+            onClick={() => setActiveBrandTab('BRAND-BASE')}
+            className={`px-4 sm:px-6 py-3 text-sm sm:text-base font-medium transition-all relative ${
+              activeBrandTab === 'BRAND-BASE'
+                ? 'text-primary-600'
+                : 'text-neutral-500 hover:text-neutral-700'
+            }`}
+          >
+            BRAND-BASE
+            <span className="ml-2 px-2 py-0.5 text-xs font-medium bg-neutral-100 text-neutral-600 rounded-full">
+              {getProjectCountByBrand('BRAND-BASE')}
+            </span>
+            {activeBrandTab === 'BRAND-BASE' && (
+              <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary-600" />
+            )}
+          </button>
+        </div>
 
         {showCreateForm && (
           <div className="bg-white rounded-2xl border border-neutral-200/50 p-4 sm:p-6 md:p-8 mb-6 sm:mb-8 md:mb-10 shadow-lg">
@@ -800,14 +764,11 @@ export default function Dashboard({ onSelectProject, user, onLogout }: Dashboard
           </div>
         )}
 
-        {/* スケジュールビュー - スケジュールタブ時のみ表示 */}
-{activeMainTab === 'schedule' && (
-  <ProjectScheduleView user={user} activeBrandTab={activeBrandTab} />
-)}
+        {/* スケジュールビュー */}
+        <ProjectScheduleView user={user} activeBrandTab={activeBrandTab} />
 
-{/* プロジェクト一覧 - プロジェクトタブ時のみ表示 */}
-{activeMainTab === 'projects' && (
-  <div className="mt-8">
+        {/* プロジェクト一覧 */}
+        <div className="mt-8">
           <h2 className="text-lg font-semibold text-neutral-900 mb-6">プロジェクト一覧</h2>
         
         {projects.filter(p => p.brand_type === activeBrandTab).length === 0 ? (
@@ -1027,9 +988,8 @@ export default function Dashboard({ onSelectProject, user, onLogout }: Dashboard
             })}
           </div>
         )}
-      </div>
-  )}
-</main>
+        </div>
+      </main>
       <Footer />
     </div>
   );
