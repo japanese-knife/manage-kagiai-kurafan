@@ -58,10 +58,10 @@ export default function ProjectScheduleView({ user, activeBrandTab, viewType }: 
       }
       setDates(datesArray);
     } else {
-      // 日次ビュー: 過去5日から未来30日
+      // 日次ビュー: 過去30日から未来60日
       const today = new Date();
       const datesArray: Date[] = [];
-      for (let i = -5; i <= 30; i++) {
+      for (let i = -30; i <= 60; i++) {
         const date = new Date(today);
         date.setDate(today.getDate() + i);
         datesArray.push(date);
