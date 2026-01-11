@@ -18,20 +18,9 @@ interface ScheduleCell {
   textColor: string;
 }
 
-// ✅ コンポーネント定義の前（export defaultの外）に配置
-const withTimeoutSchedule = <T,>(promise: Promise<T>, timeoutMs: number = 8000): Promise<T> => {
-  return Promise.race([
-    promise,
-    new Promise<T>((_, reject) =>
-      setTimeout(() => reject(new Error(`Timeout after ${timeoutMs}ms`)), timeoutMs)
-    )
-  ]);
-};
-
 export default function ProjectScheduleView({ user, activeBrandTab, viewType }: ProjectScheduleViewProps) {
   const [projects, setProjects] = useState<Project[]>([]);
   const [schedules, setSchedules] = useState<Map<string, ScheduleCell>>(new Map());
-  // ... 以降のコード
   const [dates, setDates] = useState<Date[]>([]);
   const [selectedCell, setSelectedCell] = useState<{ projectId: string; date: string } | null>(null);
   const [selectedCells, setSelectedCells] = useState<Set<string>>(new Set());
@@ -107,50 +96,24 @@ export default function ProjectScheduleView({ user, activeBrandTab, viewType }: 
     }
   };
 
-  // タイムアウトヘルパー追加
-const withTimeout = <T,>(promise: Promise<T>, timeoutMs: number = 8000): Promise<T> => {
-  return Promise.race([
-    promise,
-    new Promise<T>((_, reject) =>
-      setTimeout(() => reject(new Error(`Timeout after ${timeoutMs}ms`)), timeoutMs)
-    )
-  ]);
-};
+  const loadProjects = async () => {
+    try {
+      let query = supabase
+        .from('projects')
+        .select('*');
+      
+      if (activeBrandTab !== 'all') {
+        query = query.eq('brand_type', activeBrandTab);
+      }
+      
+      const { data, error } = await query.order('name', { ascending: true });
 
-// コンポーネント外に追加
-const withTimeout = <T,>(promise: Promise<T>, timeoutMs: number = 8000): Promise<T> => {
-  return Promise.race([
-    promise,
-    new Promise<T>((_, reject) =>
-      setTimeout(() => reject(new Error(`Timeout after ${timeoutMs}ms`)), timeoutMs)
-    )
-  ]);
-};
-
-// export default function ProjectScheduleView の中
-import { useState, useEffect } from 'react';
-import { User } from '@supabase/supabase-js';
-import { supabase } from '../lib/supabase';
-import { Project, Task, ProjectStatus, BrandType } from '../types';
-import { FolderKanban, Plus, ArrowRight, Calendar, CheckSquare, LogOut, Trash2, Edit2, Copy } from 'lucide-react';
-import Footer from './Footer';
-import ProjectScheduleView from './ProjectScheduleView';
-
-interface DashboardProps {
-  onSelectProject: (project: Project) => void;
-  user: User;
-  onLogout: () => void;
-}
-
-interface ProjectStats {
-  projectId: string;
-  totalTasks: number;
-  completedTasks: number;
-  progress: number;
-}
-
-export default function Dashboard({ onSelectProject, user, onLogout }: DashboardProps) {
-  // ... 以降のコード
+      if (error) throw error;
+      setProjects(data || []);
+    } catch (error) {
+      console.error('プロジェクト読み込みエラー:', error);
+    }
+  };
 
   const loadSchedules = async () => {
     try {
