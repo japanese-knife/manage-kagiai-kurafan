@@ -37,10 +37,8 @@ export default function ProjectScheduleView({ user, activeBrandTab, viewType }: 
   }, [activeBrandTab, viewType]);
 
   useEffect(() => {
-    if (projects.length > 0) {
-      loadSchedules();
-    }
-  }, [projects]);
+  loadSchedules();
+}, [loadSchedules]);
 
   useEffect(() => {
     if (editingCell && inputRef.current) {
