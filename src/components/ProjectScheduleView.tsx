@@ -333,6 +333,58 @@ export default function ProjectScheduleView({ user, activeBrandTab, viewType }: 
   }
 };
 
+  const handlePasteFromKeyboard = async (projectId: string, date: Date, text: string) => {
+  const dateStr = date.toISOString().split('T')[0];
+
+  try {
+    let content = '';
+    let backgroundColor = '#ffffff';
+    let textColor = '#000000';
+
+    // コピーしたセルデータがある場合は、それを使用（色も含む）
+    if (copiedCellData) {
+      content = copiedCellData.content;
+      backgroundColor = copiedCellData.backgroundColor;
+      textColor = copiedCellData.textColor;
+    } else {
+      // クリップボードからテキストを取得
+      content = text;
+      textColor = getTextColorForBackground(backgroundColor);
+    }
+
+    const updateData: any = {
+      project_id: projectId,
+      date: dateStr,
+      content: content,
+      background_color: backgroundColor,
+      text_color: textColor,
+      user_id: user.id,
+    };
+
+    const { error } = await supabase
+      .from('project_schedules')
+      .upsert(updateData, {
+        onConflict: 'project_id,date'
+      });
+
+    if (error) throw error;
+    
+    // ローカルステートを即座に更新
+    const key = `${projectId}-${dateStr}`;
+    const updatedSchedules = new Map(schedules);
+    updatedSchedules.set(key, {
+      projectId: projectId,
+      date: dateStr,
+      content: content,
+      backgroundColor: backgroundColor,
+      textColor: textColor,
+    });
+    setSchedules(updatedSchedules);
+  } catch (error) {
+    console.error('ペーストエラー:', error);
+  }
+};
+
   const handleCopy = async () => {
     if (!selectedCell) return;
 
