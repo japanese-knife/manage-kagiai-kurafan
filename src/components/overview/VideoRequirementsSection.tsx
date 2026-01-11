@@ -179,7 +179,7 @@ export default function VideoRequirementsSection({ projectId, readOnly = false }
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                参考動画URL
+                動画素材URL
               </label>
               <input
                 type="url"
