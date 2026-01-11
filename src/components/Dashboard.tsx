@@ -664,19 +664,19 @@ export default function Dashboard({ onSelectProject, user, onLogout }: Dashboard
       <main className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8 lg:px-12 py-6 sm:py-8 md:py-12">
         {/* タブナビゲーション */}
 <div className="flex items-center gap-2 mb-6 sm:mb-8 border-b border-neutral-200">
-  <button
-    onClick={() => setActiveTab('schedule')}
-    className={`px-4 sm:px-6 py-3 text-sm sm:text-base font-medium transition-all relative ${
-      activeTab === 'schedule'
-        ? 'text-primary-600'
-        : 'text-neutral-500 hover:text-neutral-700'
-    }`}
-  >
-    スケジュール
-    {activeTab === 'schedule' && (
-      <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary-600" />
-    )}
-  </button>
+ <button
+  onClick={() => setActiveTab('schedule')}
+  className={`px-4 sm:px-6 py-3 text-sm sm:text-base font-medium transition-all relative ${
+    activeTab === 'schedule'
+      ? 'text-primary-600'
+      : 'text-neutral-500 hover:text-neutral-700'
+  }`}
+>
+  ガントチャート
+  {activeTab === 'schedule' && (
+    <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary-600" />
+  )}
+</button>
   <button
     onClick={() => {
       setActiveTab('projects');
