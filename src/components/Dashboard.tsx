@@ -561,6 +561,7 @@ export default function Dashboard({ onSelectProject, user, onLogout }: Dashboard
     setEditingProjectId(project.id);
     setEditProjectName(project.name);
     setEditProjectDescription(project.description || '');
+    setEditBrandType(project.brand_type || '海外クラファン.com');
   };
 
   const handleCancelEdit = () => {
