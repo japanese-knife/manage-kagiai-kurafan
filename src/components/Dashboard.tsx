@@ -788,7 +788,7 @@ export default function Dashboard({ onSelectProject, user, onLogout }: Dashboard
 {activeTab === 'schedule' && (
   <div className="space-y-8">
     <div>
-      <h2 className="text-lg font-semibold text-neutral-900 mb-6">PJ全体スケジュール</h2>
+      <h2 className="text-lg font-semibold text-neutral-900 mb-6">全体ガントチャート</h2>
       <ProjectScheduleView user={user} activeBrandTab="all" viewType="daily" />
     </div>
     <div>
