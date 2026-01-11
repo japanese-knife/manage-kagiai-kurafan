@@ -725,7 +725,7 @@ export default function Dashboard({ onSelectProject, user, onLogout }: Dashboard
             <form onSubmit={handleCreateProject} className="space-y-5">
               <div>
                 <label className="block text-sm font-medium text-neutral-700 mb-2.5">
-                  ブランド *
+                  タイプ *
                 </label>
                 <select
                   value={newBrandType}
