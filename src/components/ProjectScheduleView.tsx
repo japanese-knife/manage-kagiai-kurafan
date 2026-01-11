@@ -589,6 +589,7 @@ export default function ProjectScheduleView({ user, activeBrandTab, viewType }: 
                   return (
                     <td
   key={dateIndex}
+  data-cell-id={`${project.id}-${dateStr}`}
   className={`p-0 cursor-cell relative ${
     isSelected 
       ? 'border-4 border-primary-600 shadow-lg' 
