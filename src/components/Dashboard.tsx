@@ -48,9 +48,19 @@ const withTimeout = <T,>(promise: Promise<T>, timeoutMs: number = 10000): Promis
   ]);
 };
 
+// タイムアウトヘルパーをコンポーネント外に追加
+const withTimeout = <T,>(promise: Promise<T>, timeoutMs: number = 10000): Promise<T> => {
+  return Promise.race([
+    promise,
+    new Promise<T>((_, reject) =>
+      setTimeout(() => reject(new Error(`Timeout after ${timeoutMs}ms`)), timeoutMs)
+    )
+  ]);
+};
+
+// export default function Dashboard の中
 const loadProjects = async () => {
   try {
-    // タイムアウト付きでプロジェクト取得
     const { data: projectsData, error: projectsError } = await withTimeout(
       supabase
         .from('projects')
@@ -63,7 +73,6 @@ const loadProjects = async () => {
 
     setProjects(projectsData || []);
 
-    // プロジェクトIDリストを取得
     const projectIds = (projectsData || []).map(p => p.id);
 
     if (projectIds.length === 0) {
@@ -71,7 +80,6 @@ const loadProjects = async () => {
       return;
     }
 
-    // ✅ 1回のクエリで全タスクを取得（N+1問題を解決）
     const { data: allTasksData, error: tasksError } = await withTimeout(
       supabase
         .from('tasks')
@@ -82,12 +90,10 @@ const loadProjects = async () => {
 
     if (tasksError) {
       console.error('タスク取得エラー:', tasksError);
-      // エラー時は空のstatsで継続
       setProjectStats(new Map());
       return;
     }
 
-    // プロジェクトIDごとにタスクをグループ化
     const tasksByProject = new Map<string, typeof allTasksData>();
     (allTasksData || []).forEach(task => {
       if (!tasksByProject.has(task.project_id)) {
@@ -96,7 +102,6 @@ const loadProjects = async () => {
       tasksByProject.get(task.project_id)!.push(task);
     });
 
-    // 統計情報を計算
     const statsMap = new Map<string, ProjectStats>();
     (projectsData || []).forEach(project => {
       const tasks = tasksByProject.get(project.id) || [];
@@ -115,7 +120,6 @@ const loadProjects = async () => {
     setProjectStats(statsMap);
   } catch (error) {
     console.error('プロジェクト読み込みエラー:', error);
-    // エラー時もプロジェクトは表示
     setProjectStats(new Map());
   } finally {
     setLoading(false);
