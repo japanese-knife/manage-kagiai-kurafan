@@ -758,7 +758,7 @@ export default function Dashboard({ onSelectProject, user, onLogout }: Dashboard
           </div>
         )}
 
-        {projects.length === 0 ? (
+        {projects.filter(p => p.brand_type === activeBrandTab).length === 0 ? (
           <div className="text-center py-16 sm:py-20 md:py-24 px-4">
             <div className="w-16 h-16 sm:w-20 sm:h-20 bg-neutral-100 rounded-2xl flex items-center justify-center mx-auto mb-4 sm:mb-6">
               <FolderKanban className="w-8 h-8 sm:w-10 sm:h-10 text-neutral-400" />
