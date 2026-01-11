@@ -784,16 +784,16 @@ export default function Dashboard({ onSelectProject, user, onLogout }: Dashboard
           </div>
         )}
 
-{/* スケジュールタブの内容 */}
+        {/* スケジュールタブの内容 */}
 {activeTab === 'schedule' && (
   <div className="space-y-8">
     <div>
-      <h2 className="text-lg font-semibold text-neutral-900 mb-6">PJ全体スケジュール</h2>
-      <ProjectScheduleView user={user} activeBrandTab="ALL" viewType="daily" />
+      <h2 className="text-lg font-semibold text-neutral-900 mb-6">海外クラファン.com スケジュール</h2>
+      <ProjectScheduleView user={user} activeBrandTab="海外クラファン.com" />
     </div>
     <div>
-      <h2 className="text-lg font-semibold text-neutral-900 mb-6">BRAND-BASE スケジュール（年間）</h2>
-      <ProjectScheduleView user={user} activeBrandTab="BRAND-BASE" viewType="monthly" />
+      <h2 className="text-lg font-semibold text-neutral-900 mb-6">BRAND-BASE スケジュール</h2>
+      <ProjectScheduleView user={user} activeBrandTab="BRAND-BASE" />
     </div>
   </div>
 )}
