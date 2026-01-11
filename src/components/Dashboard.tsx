@@ -359,22 +359,21 @@ const loadProjects = async () => {
         .order('created_at', { ascending: true });
 
       if (!documentsError && documents && documents.length > 0) {
-  for (const doc of documents) {
-    const { error: documentInsertError } = await supabase
-      .from('documents')
-      .insert({
-        project_id: newProject.id,
-        name: doc.name,
-        url: doc.url,
-        memo: doc.memo,
-        user_id: user.id,
-      });
+  const newDocuments = documents.map(doc => ({
+    project_id: newProject.id,
+    name: doc.name,
+    url: doc.url,
+    memo: doc.memo,
+    user_id: user.id,
+  }));
 
-    if (documentInsertError) {
-      console.error('資料一覧複製エラー:', documentInsertError);
-    }
-    
-    await new Promise(resolve => setTimeout(resolve, 10));
+  const { error: documentInsertError } = await supabase
+    .from('documents')
+    .insert(newDocuments);
+
+  if (documentInsertError) {
+    console.error('資料一覧複製エラー:', documentInsertError);
+    errors.push(`資料一覧: ${documentInsertError.message}`);
   }
 }
 
