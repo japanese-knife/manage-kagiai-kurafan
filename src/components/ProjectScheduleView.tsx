@@ -872,9 +872,9 @@ export default function ProjectScheduleView({ user, activeBrandTab, viewType }: 
                 <div className="bg-primary-50 px-4 py-2 border-b border-neutral-200">
                   <h3 className="text-sm font-bold text-primary-900">{brandName}</h3>
                 </div>
-                <div className="overflow-x-auto overflow-y-auto max-h-[400px]">
+                <div className="overflow-x-auto overflow-y-auto max-h-[600px]">
                   <table className="w-full border-collapse text-sm">
-                    <thead className="sticky top-0 z-10">
+                    <thead className="sticky top-0 z-20 bg-neutral-50">
                       {renderDateHeaders()}
                     </thead>
                     <tbody>
