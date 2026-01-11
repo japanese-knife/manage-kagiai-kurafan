@@ -310,8 +310,6 @@ const loadProjects = async () => {
         .order('created_at', { ascending: true });
 
       if (!projectNotesError && projectNotes && projectNotes.length > 0) {
-  // ✅ バッチ挿入で高速化
-if (!projectNotesError && projectNotes && projectNotes.length > 0) {
   const newNotes = projectNotes.map(note => ({
     project_id: newProject.id,
     content: note.content,
@@ -326,7 +324,6 @@ if (!projectNotesError && projectNotes && projectNotes.length > 0) {
     console.error('プロジェクトメモ複製エラー:', projectNoteInsertError);
     errors.push(`プロジェクトメモ: ${projectNoteInsertError.message}`);
   }
-}
 }
 
       // スケジュールを取得して複製
