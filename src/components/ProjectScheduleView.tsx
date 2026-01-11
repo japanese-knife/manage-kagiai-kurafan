@@ -691,20 +691,27 @@ export default function ProjectScheduleView({ user, activeBrandTab, viewType }: 
                             {cell?.content || ''}
                           </div>
                           {showColorPicker?.projectId === project.id && showColorPicker?.date === dateStr && (
-                            <div
-                              className="absolute z-50 bg-white border-2 border-neutral-300 rounded-xl shadow-2xl p-4 top-full left-0 mt-1 min-w-[280px]"
-                              onClick={(e) => e.stopPropagation()}
-                            >
-                              <div className="mb-3">
-                                <p className="text-xs font-semibold text-neutral-700 mb-2">カラーを選択</p>
-                                <div className="grid grid-cols-7 gap-2">
-                                  {predefinedColors.map((item) => (
-                                    <button
-                                      key={item.color}
-                                      onClick={() => handleColorChange(project.id, date, item.color, item.textColor)}
-                                      className="group relative"
-                                      title={item.name}
-                                    >
+  <div
+    className="absolute z-50 bg-white border-2 border-neutral-300 rounded-xl shadow-2xl p-4 top-full left-0 mt-1 min-w-[280px]"
+    onClick={(e) => e.stopPropagation()}
+    onMouseDown={(e) => e.stopPropagation()}
+  >
+    <div className="mb-3">
+      <p className="text-xs font-semibold text-neutral-700 mb-2">カラーを選択</p>
+      <div className="grid grid-cols-7 gap-2">
+        {predefinedColors.map((item) => (
+          <button
+            key={item.color}
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              handleColorChange(project.id, date, item.color, item.textColor);
+            }}
+            onMouseDown={(e) => e.stopPropagation()}
+            className="group relative"
+            title={item.name}
+            type="button"
+          >
                                       <div
                                         className="w-9 h-9 rounded-lg border-2 border-neutral-300 hover:border-primary-500 hover:scale-110 transition-all shadow-sm"
                                         style={{ backgroundColor: item.color }}
