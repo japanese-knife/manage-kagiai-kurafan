@@ -1,6 +1,18 @@
 export type ProjectStatus = '進行中' | '完了' | '保留';
 export type BrandType = '海外クラファン.com' | 'BRAND-BASE';
 
+export interface ProjectSchedule {
+  id: string;
+  project_id: string;
+  date: string;
+  content: string;
+  status?: string;
+  background_color: string;
+  user_id: string;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface Project {
   id: string;
   name: string;

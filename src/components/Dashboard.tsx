@@ -4,6 +4,7 @@ import { supabase } from '../lib/supabase';
 import { Project, Task, ProjectStatus, BrandType } from '../types';
 import { FolderKanban, Plus, ArrowRight, Calendar, CheckSquare, LogOut, Trash2, Edit2, Copy } from 'lucide-react';
 import Footer from './Footer';
+import ProjectScheduleView from './ProjectScheduleView';
 
 interface DashboardProps {
   onSelectProject: (project: Project) => void;
@@ -26,6 +27,7 @@ export default function Dashboard({ onSelectProject, user, onLogout }: Dashboard
   const [newProjectName, setNewProjectName] = useState('');
   const [newProjectDescription, setNewProjectDescription] = useState('');
   const [newBrandType, setNewBrandType] = useState<BrandType>('海外クラファン.com');
+  const [activeTab, setActiveTab] = useState<'schedule' | 'projects'>('schedule');
   const [activeBrandTab, setActiveBrandTab] = useState<BrandType>('海外クラファン.com');
   const [editingProjectId, setEditingProjectId] = useState<string | null>(null);
   const [editProjectName, setEditProjectName] = useState('');
@@ -660,41 +662,60 @@ export default function Dashboard({ onSelectProject, user, onLogout }: Dashboard
       </header>
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8 lg:px-12 py-6 sm:py-8 md:py-12">
-        {/* ブランドタブ */}
-        <div className="flex items-center gap-2 mb-6 sm:mb-8 border-b border-neutral-200">
-          <button
-            onClick={() => setActiveBrandTab('海外クラファン.com')}
-            className={`px-4 sm:px-6 py-3 text-sm sm:text-base font-medium transition-all relative ${
-              activeBrandTab === '海外クラファン.com'
-                ? 'text-primary-600'
-                : 'text-neutral-500 hover:text-neutral-700'
-            }`}
-          >
-            海外クラファン.com
-            <span className="ml-2 px-2 py-0.5 text-xs font-medium bg-neutral-100 text-neutral-600 rounded-full">
-              {getProjectCountByBrand('海外クラファン.com')}
-            </span>
-            {activeBrandTab === '海外クラファン.com' && (
-              <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary-600" />
-            )}
-          </button>
-          <button
-            onClick={() => setActiveBrandTab('BRAND-BASE')}
-            className={`px-4 sm:px-6 py-3 text-sm sm:text-base font-medium transition-all relative ${
-              activeBrandTab === 'BRAND-BASE'
-                ? 'text-primary-600'
-                : 'text-neutral-500 hover:text-neutral-700'
-            }`}
-          >
-            BRAND-BASE
-            <span className="ml-2 px-2 py-0.5 text-xs font-medium bg-neutral-100 text-neutral-600 rounded-full">
-              {getProjectCountByBrand('BRAND-BASE')}
-            </span>
-            {activeBrandTab === 'BRAND-BASE' && (
-              <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary-600" />
-            )}
-          </button>
-        </div>
+        {/* タブナビゲーション */}
+<div className="flex items-center gap-2 mb-6 sm:mb-8 border-b border-neutral-200">
+  <button
+    onClick={() => setActiveTab('schedule')}
+    className={`px-4 sm:px-6 py-3 text-sm sm:text-base font-medium transition-all relative ${
+      activeTab === 'schedule'
+        ? 'text-primary-600'
+        : 'text-neutral-500 hover:text-neutral-700'
+    }`}
+  >
+    スケジュール
+    {activeTab === 'schedule' && (
+      <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary-600" />
+    )}
+  </button>
+  <button
+    onClick={() => {
+      setActiveTab('projects');
+      setActiveBrandTab('海外クラファン.com');
+    }}
+    className={`px-4 sm:px-6 py-3 text-sm sm:text-base font-medium transition-all relative ${
+      activeTab === 'projects' && activeBrandTab === '海外クラファン.com'
+        ? 'text-primary-600'
+        : 'text-neutral-500 hover:text-neutral-700'
+    }`}
+  >
+    海外クラファン.com
+    <span className="ml-2 px-2 py-0.5 text-xs font-medium bg-neutral-100 text-neutral-600 rounded-full">
+      {getProjectCountByBrand('海外クラファン.com')}
+    </span>
+    {activeTab === 'projects' && activeBrandTab === '海外クラファン.com' && (
+      <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary-600" />
+    )}
+  </button>
+  <button
+    onClick={() => {
+      setActiveTab('projects');
+      setActiveBrandTab('BRAND-BASE');
+    }}
+    className={`px-4 sm:px-6 py-3 text-sm sm:text-base font-medium transition-all relative ${
+      activeTab === 'projects' && activeBrandTab === 'BRAND-BASE'
+        ? 'text-primary-600'
+        : 'text-neutral-500 hover:text-neutral-700'
+    }`}
+  >
+    BRAND-BASE
+    <span className="ml-2 px-2 py-0.5 text-xs font-medium bg-neutral-100 text-neutral-600 rounded-full">
+      {getProjectCountByBrand('BRAND-BASE')}
+    </span>
+    {activeTab === 'projects' && activeBrandTab === 'BRAND-BASE' && (
+      <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary-600" />
+    )}
+  </button>
+</div>
 
         {showCreateForm && (
           <div className="bg-white rounded-2xl border border-neutral-200/50 p-4 sm:p-6 md:p-8 mb-6 sm:mb-8 md:mb-10 shadow-lg">
@@ -763,7 +784,26 @@ export default function Dashboard({ onSelectProject, user, onLogout }: Dashboard
           </div>
         )}
 
-        {projects.filter(p => p.brand_type === activeBrandTab).length === 0 ? (
+        {/* スケジュールタブの内容 */}
+{activeTab === 'schedule' && (
+  <div className="space-y-8">
+    <div>
+      <h2 className="text-lg font-semibold text-neutral-900 mb-6">PJ全体スケジュール</h2>
+      <ProjectScheduleView user={user} activeBrandTab="all" viewType="daily" />
+    </div>
+    <div>
+      <h2 className="text-lg font-semibold text-neutral-900 mb-6">BRAND-BASE 年間スケジュール</h2>
+      <ProjectScheduleView user={user} activeBrandTab="BRAND-BASE" viewType="monthly" />
+    </div>
+  </div>
+)}
+
+{/* プロジェクト一覧タブの内容 */}
+{activeTab === 'projects' && (
+  <div className="mt-8">
+    <h2 className="text-lg font-semibold text-neutral-900 mb-6">プロジェクト一覧</h2>
+
+    {projects.filter(p => p.brand_type === activeBrandTab).length === 0 ? (
           <div className="text-center py-16 sm:py-20 md:py-24 px-4">
             <div className="w-16 h-16 sm:w-20 sm:h-20 bg-neutral-100 rounded-2xl flex items-center justify-center mx-auto mb-4 sm:mb-6">
               <FolderKanban className="w-8 h-8 sm:w-10 sm:h-10 text-neutral-400" />
@@ -980,6 +1020,8 @@ export default function Dashboard({ onSelectProject, user, onLogout }: Dashboard
             })}
           </div>
         )}
+  </div>
+)}
       </main>
       <Footer />
     </div>
