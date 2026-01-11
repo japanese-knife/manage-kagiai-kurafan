@@ -75,9 +75,9 @@ export default function ProjectScheduleView({ user, activeBrandTab }: ProjectSch
       .from('projects')
       .select('*');
     
-    // viewTypeが'daily'（PJ全体スケジュール）の場合は全プロジェクト取得
-    // viewTypeが'monthly'の場合は指定ブランドのみ
-    if (viewType === 'monthly') {
+    // activeBrandTabが'ALL'の場合は全プロジェクト取得
+    // それ以外の場合は指定ブランドのみ
+    if (activeBrandTab !== 'ALL') {
       query = query.eq('brand_type', activeBrandTab);
     }
     
