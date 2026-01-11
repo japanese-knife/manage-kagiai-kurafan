@@ -447,22 +447,21 @@ const loadProjects = async () => {
         .order('created_at', { ascending: true });
 
       if (!designReqError && designRequirements && designRequirements.length > 0) {
-  for (const req of designRequirements) {
-    const { error: designReqInsertError } = await supabase
-      .from('design_requirements')
-      .insert({
-        project_id: newProject.id,
-        name: req.name,
-        url: req.url,
-        memo: req.memo,
-        user_id: user.id,
-      });
+  const newDesignReqs = designRequirements.map(req => ({
+    project_id: newProject.id,
+    name: req.name,
+    url: req.url,
+    memo: req.memo,
+    user_id: user.id,
+  }));
 
-    if (designReqInsertError) {
-      console.error('ページデザイン要項複製エラー:', designReqInsertError);
-    }
-    
-    await new Promise(resolve => setTimeout(resolve, 10));
+  const { error: designReqInsertError } = await supabase
+    .from('design_requirements')
+    .insert(newDesignReqs);
+
+  if (designReqInsertError) {
+    console.error('ページデザイン要項複製エラー:', designReqInsertError);
+    errors.push(`ページデザイン要項: ${designReqInsertError.message}`);
   }
 }
 
