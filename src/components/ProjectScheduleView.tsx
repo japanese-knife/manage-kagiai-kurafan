@@ -96,24 +96,80 @@ export default function ProjectScheduleView({ user, activeBrandTab, viewType }: 
     }
   };
 
-  const loadProjects = async () => {
-    try {
-      let query = supabase
-        .from('projects')
-        .select('*');
-      
-      if (activeBrandTab !== 'all') {
-        query = query.eq('brand_type', activeBrandTab);
-      }
-      
-      const { data, error } = await query.order('name', { ascending: true });
+  // タイムアウトヘルパー追加
+const withTimeout = <T,>(promise: Promise<T>, timeoutMs: number = 8000): Promise<T> => {
+  return Promise.race([
+    promise,
+    new Promise<T>((_, reject) =>
+      setTimeout(() => reject(new Error(`Timeout after ${timeoutMs}ms`)), timeoutMs)
+    )
+  ]);
+};
 
-      if (error) throw error;
-      setProjects(data || []);
-    } catch (error) {
-      console.error('プロジェクト読み込みエラー:', error);
+const loadProjects = async () => {
+  try {
+    let query = supabase
+      .from('projects')
+      .select('*');
+    
+    if (activeBrandTab !== 'all') {
+      query = query.eq('brand_type', activeBrandTab);
     }
-  };
+    
+    // ✅ タイムアウト付きクエリ
+    const { data, error } = await withTimeout(
+      query.order('name', { ascending: true }),
+      8000
+    );
+
+    if (error) throw error;
+    setProjects(data || []);
+  } catch (error) {
+    console.error('プロジェクト読み込みエラー:', error);
+    setProjects([]); // ✅ エラー時は空配列
+  }
+};
+
+const loadSchedules = async () => {
+  try {
+    const projectIds = projects.map(p => p.id);
+    
+    if (projectIds.length === 0) {
+      setSchedules(new Map());
+      return;
+    }
+
+    // ✅ タイムアウト付きクエリ
+    const { data, error } = await withTimeout(
+      supabase
+        .from('project_schedules')
+        .select('*')
+        .in('project_id', projectIds),
+      8000
+    );
+
+    if (error) throw error;
+
+    const scheduleMap = new Map<string, ScheduleCell>();
+    (data || []).forEach((schedule) => {
+      const key = `${schedule.project_id}-${schedule.date}`;
+      const bgColor = schedule.background_color || '#ffffff';
+      const autoTextColor = getTextColorForBackground(bgColor);
+      scheduleMap.set(key, {
+        projectId: schedule.project_id,
+        date: schedule.date,
+        content: schedule.content || '',
+        backgroundColor: bgColor,
+        textColor: schedule.text_color || autoTextColor,
+      });
+    });
+
+    setSchedules(scheduleMap);
+  } catch (error) {
+    console.error('スケジュール読み込みエラー:', error);
+    setSchedules(new Map()); // ✅ エラー時は空Map
+  }
+};
 
   const loadSchedules = async () => {
     try {
