@@ -55,17 +55,20 @@ export default function ProjectScheduleView({ user, activeBrandTab, viewType }: 
       if (todayIndex !== -1) {
         hasScrolledToToday.current = true;
         setTimeout(() => {
-          const tableContainer = document.querySelector('.overflow-x-auto');
-          const todayHeader = document.querySelectorAll('thead th')[todayIndex + 1];
+          const tableContainers = document.querySelectorAll('.overflow-x-auto');
           
-          if (tableContainer && todayHeader) {
-            const containerWidth = tableContainer.clientWidth;
-            const headerLeft = (todayHeader as HTMLElement).offsetLeft;
-            const headerWidth = (todayHeader as HTMLElement).offsetWidth;
+          tableContainers.forEach((tableContainer) => {
+            const todayHeader = tableContainer.querySelectorAll('thead th')[todayIndex + 1];
             
-            const scrollLeft = headerLeft - (containerWidth / 2) + (headerWidth / 2);
-            tableContainer.scrollLeft = scrollLeft;
-          }
+            if (tableContainer && todayHeader) {
+              const containerWidth = tableContainer.clientWidth;
+              const headerLeft = (todayHeader as HTMLElement).offsetLeft;
+              const headerWidth = (todayHeader as HTMLElement).offsetWidth;
+              
+              const scrollLeft = headerLeft - (containerWidth / 2) + (headerWidth / 2);
+              tableContainer.scrollLeft = scrollLeft;
+            }
+          });
         }, 100);
       }
     }
