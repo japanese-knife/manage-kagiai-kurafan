@@ -342,37 +342,45 @@ export default function ProjectScheduleView({ user, activeBrandTab, viewType }: 
   };
 
   const handleColorChange = async (projectId: string, date: Date, color: string, textColor: string) => {
-    const dateStr = date.toISOString().split('T')[0];
-    const key = `${projectId}-${dateStr}`;
-    const existingCell = schedules.get(key);
+  const dateStr = date.toISOString().split('T')[0];
+  const key = `${projectId}-${dateStr}`;
+  const existingCell = schedules.get(key);
 
-    try {
-      const updateData: any = {
-        project_id: projectId,
-        date: dateStr,
-        content: existingCell?.content || '',
-        background_color: color,
-        user_id: user.id,
-      };
+  try {
+    const updateData: any = {
+      project_id: projectId,
+      date: dateStr,
+      content: existingCell?.content || '',
+      background_color: color,
+      text_color: textColor,
+      user_id: user.id,
+    };
 
-      // text_colorカラムが存在する場合のみ追加
-      try {
-        updateData.text_color = textColor;
-      } catch (err) {
-        // text_colorカラムがない場合はスキップ
-      }
+    const { error } = await supabase
+      .from('project_schedules')
+      .upsert(updateData, {
+        onConflict: 'project_id,date'
+      });
 
-      const { error } = await supabase
-        .from('project_schedules')
-        .upsert(updateData);
-
-      if (error) throw error;
-      await loadSchedules();
-      setShowColorPicker(null);
-    } catch (error) {
-      console.error('色変更エラー:', error);
-    }
-  };
+    if (error) throw error;
+    
+    // ローカルステートを即座に更新
+    const updatedSchedules = new Map(schedules);
+    updatedSchedules.set(key, {
+      projectId: projectId,
+      date: dateStr,
+      content: existingCell?.content || '',
+      backgroundColor: color,
+      textColor: textColor,
+    });
+    setSchedules(updatedSchedules);
+    
+    setShowColorPicker(null);
+  } catch (error) {
+    console.error('色変更エラー:', error);
+    alert('色の変更に失敗しました');
+  }
+};
 
   const predefinedColors = [
     { name: '白', color: '#ffffff', textColor: '#000000' },
@@ -416,35 +424,29 @@ export default function ProjectScheduleView({ user, activeBrandTab, viewType }: 
   };
 
   const exportToCSV = () => {
-  let csv = '事業者名,商品';
-  dates.forEach(date => {
-    if (viewType === 'monthly') {
-      csv += `,${date.getFullYear()}年${date.getMonth() + 1}月`;
-    } else {
-      csv += `,${date.getMonth() + 1}/${date.getDate()}`;
-    }
-  });
-  csv += '\n';
-
-  projects.forEach(project => {
-    csv += `${project.name},`;
+    let csv = '事業者名,商品';
     dates.forEach(date => {
-      const key = getCellKey(project.id, date);
-      const cell = schedules.get(key);
-      const content = cell?.content || '';
-      csv += `"${content.replace(/"/g, '""')}",`;
+      csv += `,${date.getMonth() + 1}/${date.getDate()}`;
     });
     csv += '\n';
-  });
 
-  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-  const link = document.createElement('a');
-  link.href = URL.createObjectURL(blob);
-  const brandName = activeBrandTab === 'all' ? 'all_projects' : activeBrandTab;
-  const viewTypeName = viewType === 'monthly' ? 'monthly' : 'daily';
-  link.download = `schedule_${brandName}_${viewTypeName}_${new Date().toISOString().split('T')[0]}.csv`;
-  link.click();
-};
+    projects.forEach(project => {
+      csv += `${project.name},`;
+      dates.forEach(date => {
+        const key = getCellKey(project.id, date);
+        const cell = schedules.get(key);
+        const content = cell?.content || '';
+        csv += `"${content.replace(/"/g, '""')}",`;
+      });
+      csv += '\n';
+    });
+
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = `schedule_${activeBrandTab}_${new Date().toISOString().split('T')[0]}.csv`;
+    link.click();
+  };
 
   if (projects.length === 0) {
     return (
@@ -534,93 +536,84 @@ export default function ProjectScheduleView({ user, activeBrandTab, viewType }: 
 
                   return (
                     <td
-  key={dateIndex}
-  className={`border border-neutral-200 p-0 cursor-cell relative ${
-    isSelected ? 'ring-2 ring-primary-500 ring-inset' : ''
-  }`}
-  onClick={() => handleCellClick(project.id, date)}
-  onDoubleClick={() => handleCellDoubleClick(project.id, date)}
-  onPaste={(e) => handlePaste(e, project.id, date)}
-  onKeyDown={(e) => handleKeyDown(e, project.id, dateIndex)}
-  onContextMenu={(e) => {
-    e.preventDefault();
-    setShowColorPicker({ projectId: project.id, date: dateStr });
-    setSelectedColor(cell?.backgroundColor || '#ffffff');
-  }}
-  tabIndex={0}
->
-  {/* 背景色レイヤー */}
-  <div 
-    className="absolute inset-0 z-0"
-    style={{ backgroundColor: cell?.backgroundColor || '#ffffff' }}
-  />
-  
-  {/* コンテンツレイヤー（前面） */}
-  <div className="relative z-10">
-    {isEditing ? (
-      <input
-        ref={inputRef}
-        type="text"
-        value={editValue}
-        onChange={(e) => setEditValue(e.target.value)}
-        onBlur={handleCellBlur}
-        onKeyDown={(e) => {
-          if (e.key === 'Enter') {
-            handleCellBlur();
-          } else if (e.key === 'Escape') {
-            setEditingCell(null);
-            setEditValue('');
-          }
-        }}
-        className="w-full h-full px-2 py-1 border-0 focus:outline-none text-center bg-transparent"
-        style={{ color: cell?.textColor || '#000000' }}
-      />
-    ) : (
-      <div 
-        className="px-2 py-1 min-h-[32px] flex items-center justify-center text-center"
-        style={{ color: cell?.textColor || '#000000' }}
-      >
-        {cell?.content || ''}
-      </div>
-    )}
-  </div>
-  
-  {/* カラーピッカー（最前面） */}
-  {showColorPicker?.projectId === project.id && showColorPicker?.date === dateStr && (
-    <div
-      className="absolute z-50 bg-white border-2 border-neutral-300 rounded-xl shadow-2xl p-4 top-full left-0 mt-1 min-w-[280px]"
-      onClick={(e) => e.stopPropagation()}
-    >
-      <div className="mb-3">
-        <p className="text-xs font-semibold text-neutral-700 mb-2">カラーを選択</p>
-        <div className="grid grid-cols-7 gap-2">
-          {predefinedColors.map((item) => (
-            <button
-              key={item.color}
-              onClick={() => handleColorChange(project.id, date, item.color, item.textColor)}
-              className="group relative"
-              title={item.name}
-            >
-              <div
-                className="w-9 h-9 rounded-lg border-2 border-neutral-300 hover:border-primary-500 hover:scale-110 transition-all shadow-sm"
-                style={{ backgroundColor: item.color }}
-              />
-              <span className="absolute hidden group-hover:block bottom-full left-1/2 transform -translate-x-1/2 mb-1 px-2 py-1 text-xs bg-neutral-800 text-white rounded whitespace-nowrap">
-                {item.name}
-              </span>
-            </button>
-          ))}
-        </div>
-      </div>
-      <button
-        onClick={() => setShowColorPicker(null)}
-        className="w-full px-3 py-2 text-sm font-medium bg-neutral-100 hover:bg-neutral-200 rounded-lg transition-colors"
-      >
-        閉じる
-      </button>
-    </div>
-  )}
-</td>
+                      key={dateIndex}
+                      className={`border border-neutral-200 p-0 cursor-cell relative ${
+                        isSelected ? 'ring-2 ring-primary-500 ring-inset' : ''
+                      }`}
+                      style={{ backgroundColor: cell?.backgroundColor || '#ffffff' }}
+                      onClick={() => handleCellClick(project.id, date)}
+                      onDoubleClick={() => handleCellDoubleClick(project.id, date)}
+                      onPaste={(e) => handlePaste(e, project.id, date)}
+                      onKeyDown={(e) => handleKeyDown(e, project.id, dateIndex)}
+                      onContextMenu={(e) => {
+                        e.preventDefault();
+                        setShowColorPicker({ projectId: project.id, date: dateStr });
+                        setSelectedColor(cell?.backgroundColor || '#ffffff');
+                      }}
+                      tabIndex={0}
+                    >
+                      {isEditing ? (
+                        <input
+                          ref={inputRef}
+                          type="text"
+                          value={editValue}
+                          onChange={(e) => setEditValue(e.target.value)}
+                          onBlur={handleCellBlur}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') {
+                              handleCellBlur();
+                            } else if (e.key === 'Escape') {
+                              setEditingCell(null);
+                              setEditValue('');
+                            }
+                          }}
+                          className="w-full h-full px-2 py-1 border-0 focus:outline-none text-center"
+                        />
+                      ) : (
+                        <>
+                          <div 
+                            className="px-2 py-1 min-h-[32px] flex items-center justify-center text-center"
+                            style={{ color: cell?.textColor || '#000000' }}
+                          >
+                            {cell?.content || ''}
+                          </div>
+                          {showColorPicker?.projectId === project.id && showColorPicker?.date === dateStr && (
+                            <div
+                              className="absolute z-50 bg-white border-2 border-neutral-300 rounded-xl shadow-2xl p-4 top-full left-0 mt-1 min-w-[280px]"
+                              onClick={(e) => e.stopPropagation()}
+                            >
+                              <div className="mb-3">
+                                <p className="text-xs font-semibold text-neutral-700 mb-2">カラーを選択</p>
+                                <div className="grid grid-cols-7 gap-2">
+                                  {predefinedColors.map((item) => (
+                                    <button
+                                      key={item.color}
+                                      onClick={() => handleColorChange(project.id, date, item.color, item.textColor)}
+                                      className="group relative"
+                                      title={item.name}
+                                    >
+                                      <div
+                                        className="w-9 h-9 rounded-lg border-2 border-neutral-300 hover:border-primary-500 hover:scale-110 transition-all shadow-sm"
+                                        style={{ backgroundColor: item.color }}
+                                      />
+                                      <span className="absolute hidden group-hover:block bottom-full left-1/2 transform -translate-x-1/2 mb-1 px-2 py-1 text-xs bg-neutral-800 text-white rounded whitespace-nowrap">
+                                        {item.name}
+                                      </span>
+                                    </button>
+                                  ))}
+                                </div>
+                              </div>
+                              <button
+                                onClick={() => setShowColorPicker(null)}
+                                className="w-full px-3 py-2 text-sm font-medium bg-neutral-100 hover:bg-neutral-200 rounded-lg transition-colors"
+                              >
+                                閉じる
+                              </button>
+                            </div>
+                          )}
+                        </>
+                      )}
+                    </td>
                   );
                 })}
               </tr>
