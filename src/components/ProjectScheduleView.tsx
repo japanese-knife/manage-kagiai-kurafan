@@ -654,8 +654,7 @@ export default function ProjectScheduleView({ user, activeBrandTab, viewType }: 
     link.click();
   };
 
-  if (projects.length === 0) {
-    return (
+  
       <div className="text-center py-12 text-neutral-500">
         このブランドにはプロジェクトがありません
       </div>
