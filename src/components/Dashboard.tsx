@@ -27,7 +27,7 @@ export default function Dashboard({ onSelectProject, user, onLogout }: Dashboard
   const [newProjectDescription, setNewProjectDescription] = useState('');
   const [newBrandType, setNewBrandType] = useState<BrandType>('海外クラファン.com');
   const [activeBrandTab, setActiveBrandTab] = useState<BrandType>('海外クラファン.com');
-const [editingProjectId, setEditingProjectId] = useState<string | null>(null);
+  const [editingProjectId, setEditingProjectId] = useState<string | null>(null);
   const [editProjectName, setEditProjectName] = useState('');
   const [editProjectDescription, setEditProjectDescription] = useState('');
   const [editBrandType, setEditBrandType] = useState<BrandType>('海外クラファン.com');
