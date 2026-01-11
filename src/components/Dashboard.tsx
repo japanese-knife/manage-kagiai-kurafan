@@ -386,33 +386,27 @@ const loadProjects = async () => {
         .order('created_at', { ascending: true });
 
       if (meetingsError) {
-        console.error('打ち合わせ内容取得エラー:', meetingsError);
-        errors.push(`打ち合わせ内容: ${meetingsError.message}`);
-      } else if (meetings && meetings.length > 0) {
-  console.log(`${meetings.length}件の打ち合わせ内容を複製`);
-  for (const meeting of meetings) {
-    const { error: meetingInsertError } = await supabase
-      .from('meetings')
-      .insert({
-        project_id: newProject.id,
-        date: meeting.date,
-        participants: meeting.participants,
-        summary: meeting.summary,
-        decisions: meeting.decisions,
-        user_id: user.id,
-      });
+  console.error('打ち合わせ内容取得エラー:', meetingsError);
+  errors.push(`打ち合わせ内容: ${meetingsError.message}`);
+} else if (meetings && meetings.length > 0) {
+  const newMeetings = meetings.map(meeting => ({
+    project_id: newProject.id,
+    date: meeting.date,
+    participants: meeting.participants,
+    summary: meeting.summary,
+    decisions: meeting.decisions,
+    user_id: user.id,
+  }));
 
-    if (meetingInsertError) {
-      console.error('打ち合わせ内容挿入エラー:', meetingInsertError);
-      errors.push(`打ち合わせ内容挿入: ${meetingInsertError.message}`);
-    }
-    
-    await new Promise(resolve => setTimeout(resolve, 10));
+  const { error: meetingInsertError } = await supabase
+    .from('meetings')
+    .insert(newMeetings);
+
+  if (meetingInsertError) {
+    console.error('打ち合わせ内容挿入エラー:', meetingInsertError);
+    errors.push(`打ち合わせ内容: ${meetingInsertError.message}`);
   }
-
-      } else {
-        console.log('打ち合わせ内容なし');
-      }
+}
 
       // リターン内容を取得して複製
       console.log('リターン内容を複製中...');
