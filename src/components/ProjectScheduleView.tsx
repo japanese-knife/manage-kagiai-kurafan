@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { User } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabase';
 import { Project, BrandType } from '../types';
@@ -37,8 +37,10 @@ export default function ProjectScheduleView({ user, activeBrandTab, viewType }: 
   }, [activeBrandTab, viewType]);
 
   useEffect(() => {
-  loadSchedules();
-}, [loadSchedules]);
+    if (projects.length > 0) {
+      loadSchedules();
+    }
+  }, [projects]);
 
   useEffect(() => {
     if (editingCell && inputRef.current) {
@@ -94,56 +96,54 @@ export default function ProjectScheduleView({ user, activeBrandTab, viewType }: 
     }
   };
 
-  const loadProjects = useCallback(async () => {
-  try {
-    let query = supabase
-      .from('projects')
-      .select('*');
-    
-    if (activeBrandTab !== 'all') {
-      query = query.eq('brand_type', activeBrandTab);
+  const loadProjects = async () => {
+    try {
+      let query = supabase
+        .from('projects')
+        .select('*');
+      
+      if (activeBrandTab !== 'all') {
+        query = query.eq('brand_type', activeBrandTab);
+      }
+      
+      const { data, error } = await query.order('name', { ascending: true });
+
+      if (error) throw error;
+      setProjects(data || []);
+    } catch (error) {
+      console.error('プロジェクト読み込みエラー:', error);
     }
-    
-    const { data, error } = await query.order('name', { ascending: true });
+  };
 
-    if (error) throw error;
-    setProjects(data || []);
-  } catch (error) {
-    console.error('プロジェクト読み込みエラー:', error);
-  }
-}, [activeBrandTab]);
+  const loadSchedules = async () => {
+    try {
+      const projectIds = projects.map(p => p.id);
+      const { data, error } = await supabase
+        .from('project_schedules')
+        .select('*')
+        .in('project_id', projectIds);
 
-  const loadSchedules = useCallback(async () => {
-  if (projects.length === 0) return;
-  
-  try {
-    const projectIds = projects.map(p => p.id);
-    const { data, error } = await supabase
-      .from('project_schedules')
-      .select('*')
-      .in('project_id', projectIds);
+      if (error) throw error;
 
-    if (error) throw error;
-
-    const scheduleMap = new Map<string, ScheduleCell>();
-    (data || []).forEach((schedule) => {
-      const key = `${schedule.project_id}-${schedule.date}`;
-      const bgColor = schedule.background_color || '#ffffff';
-      const autoTextColor = getTextColorForBackground(bgColor);
-      scheduleMap.set(key, {
-        projectId: schedule.project_id,
-        date: schedule.date,
-        content: schedule.content || '',
-        backgroundColor: bgColor,
-        textColor: schedule.text_color || autoTextColor,
+      const scheduleMap = new Map<string, ScheduleCell>();
+      (data || []).forEach((schedule) => {
+        const key = `${schedule.project_id}-${schedule.date}`;
+        const bgColor = schedule.background_color || '#ffffff';
+        const autoTextColor = getTextColorForBackground(bgColor);
+        scheduleMap.set(key, {
+          projectId: schedule.project_id,
+          date: schedule.date,
+          content: schedule.content || '',
+          backgroundColor: bgColor,
+          textColor: schedule.text_color || autoTextColor,
+        });
       });
-    });
 
-    setSchedules(scheduleMap);
-  } catch (error) {
-    console.error('スケジュール読み込みエラー:', error);
-  }
-}, [projects]);
+      setSchedules(scheduleMap);
+    } catch (error) {
+      console.error('スケジュール読み込みエラー:', error);
+    }
+  };
 
   const getCellKey = (projectId: string, date: Date): string => {
     return `${projectId}-${date.toISOString().split('T')[0]}`;
