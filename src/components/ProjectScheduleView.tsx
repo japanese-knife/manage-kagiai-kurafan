@@ -68,6 +68,9 @@ export default function ProjectScheduleView({ user, activeBrandTab }: ProjectSch
     }
   };
 
+  const [showColorPicker, setShowColorPicker] = useState<{ projectId: string; date: string } | null>(null);
+const [selectedColor, setSelectedColor] = useState('#ffffff');
+
   const loadSchedules = async () => {
     try {
       const projectIds = projects.map(p => p.id);
