@@ -789,7 +789,7 @@ export default function Dashboard({ onSelectProject, user, onLogout }: Dashboard
   <div className="space-y-8">
     <div>
       <h2 className="text-lg font-semibold text-neutral-900 mb-6">PJ全体スケジュール</h2>
-      <ProjectScheduleView user={user} activeBrandTab="海外クラファン.com" viewType="daily" />
+      <ProjectScheduleView user={user} activeBrandTab="ALL" viewType="daily" />
     </div>
     <div>
       <h2 className="text-lg font-semibold text-neutral-900 mb-6">BRAND-BASE スケジュール（年間）</h2>
