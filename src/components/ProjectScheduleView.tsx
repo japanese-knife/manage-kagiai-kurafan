@@ -106,6 +106,17 @@ const withTimeout = <T,>(promise: Promise<T>, timeoutMs: number = 8000): Promise
   ]);
 };
 
+// コンポーネント外に追加
+const withTimeout = <T,>(promise: Promise<T>, timeoutMs: number = 8000): Promise<T> => {
+  return Promise.race([
+    promise,
+    new Promise<T>((_, reject) =>
+      setTimeout(() => reject(new Error(`Timeout after ${timeoutMs}ms`)), timeoutMs)
+    )
+  ]);
+};
+
+// export default function ProjectScheduleView の中
 const loadProjects = async () => {
   try {
     let query = supabase
@@ -116,7 +127,6 @@ const loadProjects = async () => {
       query = query.eq('brand_type', activeBrandTab);
     }
     
-    // ✅ タイムアウト付きクエリ
     const { data, error } = await withTimeout(
       query.order('name', { ascending: true }),
       8000
@@ -126,7 +136,7 @@ const loadProjects = async () => {
     setProjects(data || []);
   } catch (error) {
     console.error('プロジェクト読み込みエラー:', error);
-    setProjects([]); // ✅ エラー時は空配列
+    setProjects([]);
   }
 };
 
@@ -139,7 +149,6 @@ const loadSchedules = async () => {
       return;
     }
 
-    // ✅ タイムアウト付きクエリ
     const { data, error } = await withTimeout(
       supabase
         .from('project_schedules')
@@ -167,7 +176,7 @@ const loadSchedules = async () => {
     setSchedules(scheduleMap);
   } catch (error) {
     console.error('スケジュール読み込みエラー:', error);
-    setSchedules(new Map()); // ✅ エラー時は空Map
+    setSchedules(new Map());
   }
 };
 
