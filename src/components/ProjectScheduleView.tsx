@@ -501,90 +501,103 @@ export default function ProjectScheduleView({ user, activeBrandTab }: ProjectSch
                       className={`border border-neutral-200 p-0 cursor-cell relative ${
                         isSelected ? 'ring-2 ring-primary-500 ring-inset' : ''
                       }`}
-                      onClick={() => handleCellClick(project.id, date)}
-                      onDoubleClick={() => handleCellDoubleClick(project.id, date)}
-                      onPaste={(e) => handlePaste(e, project.id, date)}
-                      onKeyDown={(e) => handleKeyDown(e, project.id, dateIndex)}
-                      onContextMenu={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        setShowColorPicker({ projectId: project.id, date: dateStr });
-                        setSelectedColor(cell?.backgroundColor || '#ffffff');
-                      }}
+                      style={{ backgroundColor: cell?.backgroundColor || '#ffffff' }}
                       tabIndex={0}
                     >
-                      <div 
-                        className="absolute inset-0 pointer-events-none"
-                        style={{ backgroundColor: cell?.backgroundColor || '#ffffff' }}
-                      />
-                      {isEditing ? (
-                        <input
-                          ref={inputRef}
-                          type="text"
-                          value={editValue}
-                          onChange={(e) => setEditValue(e.target.value)}
-                          onBlur={handleCellBlur}
-                          onKeyDown={(e) => {
-                            if (e.key === 'Enter') {
-                              handleCellBlur();
-                            } else if (e.key === 'Escape') {
-                              setEditingCell(null);
-                              setEditValue('');
-                            }
-                          }}
-                          className="relative z-10 w-full h-full px-2 py-1 border-0 focus:outline-none text-center bg-transparent"
-                          style={{ color: cell?.textColor || '#000000' }}
-                        />
-                      ) : (
-                        <>
+                      <div
+                        className="w-full h-full min-h-[32px]"
+                        onClick={() => handleCellClick(project.id, date)}
+                        onDoubleClick={() => handleCellDoubleClick(project.id, date)}
+                        onPaste={(e) => handlePaste(e, project.id, date)}
+                        onKeyDown={(e) => handleKeyDown(e, project.id, dateIndex)}
+                        onContextMenu={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          setShowColorPicker({ projectId: project.id, date: dateStr });
+                          setSelectedColor(cell?.backgroundColor || '#ffffff');
+                        }}
+                      >
+                        {isEditing ? (
+                          <input
+                            ref={inputRef}
+                            type="text"
+                            value={editValue}
+                            onChange={(e) => setEditValue(e.target.value)}
+                            onBlur={handleCellBlur}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter') {
+                                handleCellBlur();
+                              } else if (e.key === 'Escape') {
+                                setEditingCell(null);
+                                setEditValue('');
+                              }
+                            }}
+                            className="w-full h-full px-2 py-1 border-0 focus:outline-none text-center bg-transparent"
+                            style={{ color: cell?.textColor || '#000000' }}
+                          />
+                        ) : (
                           <div 
-                            className="relative z-10 px-2 py-1 min-h-[32px] flex items-center justify-center text-center font-medium pointer-events-none"
+                            className="px-2 py-1 min-h-[32px] flex items-center justify-center text-center font-medium"
                             style={{ color: cell?.textColor || '#000000' }}
                           >
                             {cell?.content || ''}
                           </div>
-                          {showColorPicker?.projectId === project.id && showColorPicker?.date === dateStr && (
-                            <div
-                              className="absolute z-[100] bg-white border-2 border-neutral-300 rounded-xl shadow-2xl p-4 top-full left-0 mt-1 min-w-[280px] pointer-events-auto"
-                              onClick={(e) => e.stopPropagation()}
-                              onContextMenu={(e) => e.stopPropagation()}
-                            >
-                              <div className="mb-3">
-                                <p className="text-xs font-semibold text-neutral-700 mb-2">カラーを選択</p>
-                                <div className="grid grid-cols-7 gap-2">
-                                  {predefinedColors.map((item) => (
-                                    <button
-                                      key={item.color}
-                                      onClick={(e) => {
-                                        e.stopPropagation();
-                                        handleColorChange(project.id, date, item.color, item.textColor);
-                                      }}
-                                      className="group relative"
-                                      title={item.name}
-                                    >
-                                      <div
-                                        className="w-9 h-9 rounded-lg border-2 border-neutral-300 hover:border-primary-500 hover:scale-110 transition-all shadow-sm"
-                                        style={{ backgroundColor: item.color }}
-                                      />
-                                      <span className="absolute hidden group-hover:block bottom-full left-1/2 transform -translate-x-1/2 mb-1 px-2 py-1 text-xs bg-neutral-800 text-white rounded whitespace-nowrap z-[110]">
-                                        {item.name}
-                                      </span>
-                                    </button>
-                                  ))}
-                                </div>
-                              </div>
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  setShowColorPicker(null);
-                                }}
-                                className="w-full px-3 py-2 text-sm font-medium bg-neutral-100 hover:bg-neutral-200 rounded-lg transition-colors"
-                              >
-                                閉じる
-                              </button>
+                        )}
+                      </div>
+                      
+                      {showColorPicker?.projectId === project.id && showColorPicker?.date === dateStr && (
+                        <div
+                          className="fixed bg-white border-2 border-neutral-300 rounded-xl shadow-2xl p-4 min-w-[280px]"
+                          style={{
+                            zIndex: 9999,
+                            top: '50%',
+                            left: '50%',
+                            transform: 'translate(-50%, -50%)'
+                          }}
+                          onClick={(e) => e.stopPropagation()}
+                          onContextMenu={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                          }}
+                        >
+                          <div className="mb-3">
+                            <p className="text-xs font-semibold text-neutral-700 mb-2">カラーを選択</p>
+                            <div className="grid grid-cols-7 gap-2">
+                              {predefinedColors.map((item) => (
+                                <button
+                                  key={item.color}
+                                  onClick={(e) => {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    handleColorChange(project.id, date, item.color, item.textColor);
+                                  }}
+                                  className="group relative"
+                                  title={item.name}
+                                  type="button"
+                                >
+                                  <div
+                                    className="w-9 h-9 rounded-lg border-2 border-neutral-300 hover:border-primary-500 hover:scale-110 transition-all shadow-sm cursor-pointer"
+                                    style={{ backgroundColor: item.color }}
+                                  />
+                                  <span className="absolute hidden group-hover:block bottom-full left-1/2 transform -translate-x-1/2 mb-1 px-2 py-1 text-xs bg-neutral-800 text-white rounded whitespace-nowrap pointer-events-none">
+                                    {item.name}
+                                  </span>
+                                </button>
+                              ))}
                             </div>
-                          )}
-                        </>
+                          </div>
+                          <button
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              setShowColorPicker(null);
+                            }}
+                            type="button"
+                            className="w-full px-3 py-2 text-sm font-medium bg-neutral-100 hover:bg-neutral-200 rounded-lg transition-colors"
+                          >
+                            閉じる
+                          </button>
+                        </div>
                       )}
                     </td>
                   );
