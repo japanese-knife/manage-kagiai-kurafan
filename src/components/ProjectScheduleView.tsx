@@ -457,8 +457,10 @@ export default function ProjectScheduleView({ user, activeBrandTab, viewType }: 
   const key = `${projectId}-${dateStr}`;
   const existingCell = schedules.get(key);
 
+  console.log('色変更開始:', { projectId, dateStr, color, textColor, existingContent: existingCell?.content });
+
   try {
-    const updateData: any = {
+    const updateData = {
       project_id: projectId,
       date: dateStr,
       content: existingCell?.content || '',
@@ -467,13 +469,21 @@ export default function ProjectScheduleView({ user, activeBrandTab, viewType }: 
       user_id: user.id,
     };
 
-    const { error } = await supabase
+    console.log('更新データ:', updateData);
+
+    const { data, error } = await supabase
       .from('project_schedules')
       .upsert(updateData, {
         onConflict: 'project_id,date'
-      });
+      })
+      .select();
 
-    if (error) throw error;
+    if (error) {
+      console.error('Supabaseエラー:', error);
+      throw error;
+    }
+
+    console.log('Supabase更新成功:', data);
     
     // ローカルステートを即座に更新
     const updatedSchedules = new Map(schedules);
@@ -486,10 +496,12 @@ export default function ProjectScheduleView({ user, activeBrandTab, viewType }: 
     });
     setSchedules(updatedSchedules);
     
+    console.log('ローカルステート更新完了');
+    
     setShowColorPicker(null);
   } catch (error) {
     console.error('色変更エラー:', error);
-    alert('色の変更に失敗しました');
+    alert(`色の変更に失敗しました: ${error}`);
   }
 };
 
