@@ -751,7 +751,7 @@ export default function Dashboard({ onSelectProject, user, onLogout }: Dashboard
               </div>
               <div>
                 <label className="block text-sm font-medium text-neutral-700 mb-2.5">
-                  説明
+                  商品
                 </label>
                 <textarea
                   value={newProjectDescription}
