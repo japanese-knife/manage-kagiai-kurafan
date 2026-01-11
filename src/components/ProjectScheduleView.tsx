@@ -110,16 +110,21 @@ export default function ProjectScheduleView({ user, activeBrandTab, viewType }: 
 
     if (error) throw error;
     
-    // activeBrandTab が 'all' の場合、ブランド別にグループ化してソート
+    // activeBrandTab が 'all' の場合、ブランド別にグループ化してソートし、各ブランド上位8件のみ表示
     if (activeBrandTab === 'all' && data) {
-      const sortedData = data.sort((a, b) => {
-        // まず brand_type で比較（海外クラファン.com が先）
-        if (a.brand_type !== b.brand_type) {
-          return a.brand_type === '海外クラファン.com' ? -1 : 1;
-        }
-        // 同じブランド内では created_at で降順（最近追加されたものが上）
-        return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
-      });
+      // ブランド別に分類
+      const kaigaiProjects = data
+        .filter(p => p.brand_type === '海外クラファン.com')
+        .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+        .slice(0, 8); // 上位8件のみ
+      
+      const brandBaseProjects = data
+        .filter(p => p.brand_type === 'BRAND-BASE')
+        .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+        .slice(0, 8); // 上位8件のみ
+      
+      // 海外クラファン.com → BRAND-BASE の順で結合
+      const sortedData = [...kaigaiProjects, ...brandBaseProjects];
       setProjects(sortedData);
     } else {
       setProjects(data || []);
