@@ -6,7 +6,7 @@ import { Calendar, Copy, Download } from 'lucide-react';
 
 interface ProjectScheduleViewProps {
   user: User;
-  activeBrandTab: BrandType;
+  activeBrandTab: BrandType | 'ALL';
   viewType: 'daily' | 'monthly'; // 日次または月次表示
 }
 
