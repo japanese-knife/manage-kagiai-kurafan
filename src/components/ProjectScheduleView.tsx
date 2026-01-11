@@ -85,12 +85,15 @@ export default function ProjectScheduleView({ user, activeBrandTab }: ProjectSch
       const scheduleMap = new Map<string, ScheduleCell>();
       (data || []).forEach((schedule) => {
         const key = `${schedule.project_id}-${schedule.date}`;
+        const bgColor = schedule.background_color || '#ffffff';
+        // 背景色に応じて文字色を自動設定
+        const autoTextColor = getTextColorForBackground(bgColor);
         scheduleMap.set(key, {
           projectId: schedule.project_id,
           date: schedule.date,
           content: schedule.content || '',
-          backgroundColor: schedule.background_color || '#ffffff',
-          textColor: schedule.text_color || '#000000',
+          backgroundColor: bgColor,
+          textColor: schedule.text_color || autoTextColor,
         });
       });
 
@@ -102,6 +105,16 @@ export default function ProjectScheduleView({ user, activeBrandTab }: ProjectSch
 
   const getCellKey = (projectId: string, date: Date): string => {
     return `${projectId}-${date.toISOString().split('T')[0]}`;
+  };
+
+  const getTextColorForBackground = (bgColor: string): string => {
+    // 背景色の明度に基づいて文字色を決定
+    const hex = bgColor.replace('#', '');
+    const r = parseInt(hex.substr(0, 2), 16);
+    const g = parseInt(hex.substr(2, 2), 16);
+    const b = parseInt(hex.substr(4, 2), 16);
+    const brightness = (r * 299 + g * 587 + b * 114) / 1000;
+    return brightness > 155 ? '#000000' : '#ffffff';
   };
 
   const handleCellClick = (projectId: string, date: Date) => {
@@ -136,16 +149,27 @@ export default function ProjectScheduleView({ user, activeBrandTab }: ProjectSch
         }
       } else {
         // 更新または作成
+        const bgColor = existingCell?.backgroundColor || '#ffffff';
+        const txtColor = existingCell?.textColor || getTextColorForBackground(bgColor);
+        
+        const updateData: any = {
+          project_id: editingCell.projectId,
+          date: editingCell.date,
+          content: editValue,
+          background_color: bgColor,
+          user_id: user.id,
+        };
+
+        // text_colorカラムが存在する場合のみ追加
+        try {
+          updateData.text_color = txtColor;
+        } catch (e) {
+          // text_colorカラムがない場合はスキップ
+        }
+
         const { error } = await supabase
           .from('project_schedules')
-          .upsert({
-            project_id: editingCell.projectId,
-            date: editingCell.date,
-            content: editValue,
-            background_color: existingCell?.backgroundColor || '#ffffff',
-            text_color: existingCell?.textColor || '#000000',
-            user_id: user.id,
-          });
+          .upsert(updateData);
 
         if (error) throw error;
       }
@@ -270,18 +294,27 @@ export default function ProjectScheduleView({ user, activeBrandTab }: ProjectSch
       } else {
         // クリップボードからテキストを取得
         content = e.clipboardData.getData('text');
+        textColor = getTextColorForBackground(backgroundColor);
+      }
+
+      const updateData: any = {
+        project_id: projectId,
+        date: dateStr,
+        content: content,
+        background_color: backgroundColor,
+        user_id: user.id,
+      };
+
+      // text_colorカラムが存在する場合のみ追加
+      try {
+        updateData.text_color = textColor;
+      } catch (err) {
+        // text_colorカラムがない場合はスキップ
       }
 
       const { error } = await supabase
         .from('project_schedules')
-        .upsert({
-          project_id: projectId,
-          date: dateStr,
-          content: content,
-          background_color: backgroundColor,
-          text_color: textColor,
-          user_id: user.id,
-        });
+        .upsert(updateData);
 
       if (error) throw error;
       await loadSchedules();
@@ -296,16 +329,24 @@ export default function ProjectScheduleView({ user, activeBrandTab }: ProjectSch
     const existingCell = schedules.get(key);
 
     try {
+      const updateData: any = {
+        project_id: projectId,
+        date: dateStr,
+        content: existingCell?.content || '',
+        background_color: color,
+        user_id: user.id,
+      };
+
+      // text_colorカラムが存在する場合のみ追加
+      try {
+        updateData.text_color = textColor;
+      } catch (err) {
+        // text_colorカラムがない場合はスキップ
+      }
+
       const { error } = await supabase
         .from('project_schedules')
-        .upsert({
-          project_id: projectId,
-          date: dateStr,
-          content: existingCell?.content || '',
-          background_color: color,
-          text_color: textColor,
-          user_id: user.id,
-        });
+        .upsert(updateData);
 
       if (error) throw error;
       await loadSchedules();
