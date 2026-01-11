@@ -430,50 +430,61 @@ if (e.key === 'Escape' && !editingCell) {
 };
 
   const handlePaste = async (e: React.ClipboardEvent, projectId: string, date: Date) => {
-    e.preventDefault();
-    const dateStr = date.toISOString().split('T')[0];
+  e.preventDefault();
+  
+  // 複数セル選択時は選択されたすべてのセルにペースト
+  const targetCells = selectedCells.size > 0 ? Array.from(selectedCells) : [`${projectId}-${date.toISOString().split('T')[0]}`];
 
-    try {
-      let content = '';
-      let backgroundColor = '#ffffff';
-      let textColor = '#000000';
+  try {
+    if (copiedCellData && (copiedCellData as any).isMultiple && (copiedCellData as any).cellsData) {
+      // 複数セルのコピーデータをペースト
+      const cellsData = (copiedCellData as any).cellsData;
+      
+      for (const targetKey of targetCells) {
+        const [targetProjectId, targetDateStr] = targetKey.split('-');
+        // 各セルに最初のセルのデータを適用
+        const sourceData = cellsData[0];
+        
+        const updateData: any = {
+          project_id: targetProjectId,
+          date: targetDateStr,
+          content: sourceData.content,
+          background_color: sourceData.backgroundColor,
+          text_color: sourceData.textColor,
+          user_id: user.id,
+        };
 
-      // コピーしたセルデータがある場合は、それを使用（色も含む）
-      if (copiedCellData) {
-        content = copiedCellData.content;
-        backgroundColor = copiedCellData.backgroundColor;
-        textColor = copiedCellData.textColor;
-      } else {
-        // クリップボードからテキストを取得
-        content = e.clipboardData.getData('text');
-        textColor = getTextColorForBackground(backgroundColor);
+        await supabase
+          .from('project_schedules')
+          .upsert(updateData, {
+            onConflict: 'project_id,date'
+          });
       }
+    } else if (copiedCellData) {
+      // 単一セルのコピーデータをペースト
+      for (const targetKey of targetCells) {
+        const [targetProjectId, targetDateStr] = targetKey.split('-');
+        
+        const updateData: any = {
+          project_id: targetProjectId,
+          date: targetDateStr,
+          content: copiedCellData.content,
+          background_color: copiedCellData.backgroundColor,
+          text_color: copiedCellData.textColor,
+          user_id: user.id,
+        };
 
-      const updateData: any = {
-        project_id: projectId,
-        date: dateStr,
-        content: content,
-        background_color: backgroundColor,
-        user_id: user.id,
-      };
-
-      // text_colorカラムが存在する場合のみ追加
-      try {
-        updateData.text_color = textColor;
-      } catch (err) {
-        // text_colorカラムがない場合はスキップ
+        await supabase
+          .from('project_schedules')
+          .upsert(updateData, {
+            onConflict: 'project_id,date'
+          });
       }
-
-      const { error } = await supabase
-        .from('project_schedules')
-        .upsert(updateData);
-
-      if (error) throw error;
-      await loadSchedules();
-    } catch (error) {
-      console.error('ペーストエラー:', error);
-    }
-  };
+    } else {
+      // クリップボードからテキストを取得してペースト
+      const content = e.clipboardData.getData('text');
+      const backgroundColor = '#ffffff';
+      const textCo
 
   const handleColorChange = async (projectId: string, date: Date, color: string, textColor: string) => {
     const dateStr = date.toISOString().split('T')[0];
