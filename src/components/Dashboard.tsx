@@ -594,7 +594,11 @@ export default function Dashboard({ onSelectProject, user, onLogout }: Dashboard
   };
   
   const getProjectsByStatus = (status: ProjectStatus): Project[] => {
-    return projects.filter((p) => p.status === status);
+    return projects.filter((p) => p.status === status && p.brand_type === activeBrandTab);
+  };
+  
+  const getProjectCountByBrand = (brandType: BrandType): number => {
+    return projects.filter((p) => p.brand_type === brandType).length;
   };
 
   if (loading) {
