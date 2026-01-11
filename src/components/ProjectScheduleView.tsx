@@ -32,6 +32,7 @@ const [selectionStart, setSelectionStart] = useState<{ projectId: string; date: 
   const [selectedColor, setSelectedColor] = useState('#ffffff');
   const [copiedCellData, setCopiedCellData] = useState<{ content: string; backgroundColor: string; textColor: string } | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+const hasScrolledToToday = useRef(false);
 
   useEffect(() => {
     loadProjects();
