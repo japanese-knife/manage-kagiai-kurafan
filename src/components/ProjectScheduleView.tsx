@@ -546,71 +546,50 @@ export default function ProjectScheduleView({ user, activeBrandTab, viewType }: 
       <div className="overflow-x-auto">
         <table className="w-full border-collapse text-sm">
           <thead>
-            <tr>
-              <th className="sticky left-0 z-20 bg-neutral-50 border border-neutral-200 px-4 py-2 text-left font-semibold text-neutral-900 min-w-[200px]">
-                事業者名
-              </th>
-              {dates.map((date, index) => (
-  <th
-    key={index}
-    className={`border border-neutral-200 px-3 py-2 text-center font-medium min-w-[80px] ${
-      viewType === 'daily' && isToday(date) 
-        ? 'bg-yellow-100 border-yellow-400 border-2' 
-        : viewType === 'daily' && isWeekend(date) 
-          ? 'bg-blue-50' 
-          : 'bg-neutral-50'
-    }`}
-  >
-    {viewType === 'monthly' ? (
-      <>
-        <div className="text-xs text-neutral-600">
-          {date.getFullYear()}年
-        </div>
-        <div className="text-xs text-neutral-600">
-          {date.getMonth() + 1}月
-        </div>
-      </>
-    ) : (
-      <>
-        <div className={`text-xs ${isToday(date) ? 'font-bold text-yellow-700' : 'text-neutral-600'}`}>
-          {date.getMonth() + 1}/{date.getDate()}
-        </div>
-        <div className={`text-xs ${
-          isToday(date) 
-            ? 'font-bold text-yellow-700' 
-            : isWeekend(date) 
-              ? 'text-blue-600' 
-              : 'text-neutral-500'
-        }`}>
-          {getWeekday(date)}
-        </div>
-      </>
-    )}
-  </th>
-))}
-                  {viewType === 'monthly' ? (
-                    <>
-                      <div className="text-xs text-neutral-600">
-                        {date.getFullYear()}年
-                      </div>
-                      <div className="text-xs text-neutral-600">
-                        {date.getMonth() + 1}月
-                      </div>
-                    </>
-                  ) : (
-                    <>
-                      <div className="text-xs text-neutral-600">
-                        {date.getMonth() + 1}/{date.getDate()}
-                      </div>
-                      <div className={`text-xs ${isWeekend(date) ? 'text-blue-600' : 'text-neutral-500'}`}>
-                        {getWeekday(date)}
-                      </div>
-                    </>
-                  )}
-                </th>
-              ))}
-            </tr>
-          </thead>
+  <tr>
+    <th className="sticky left-0 z-20 bg-neutral-50 border border-neutral-200 px-4 py-2 text-left font-semibold text-neutral-900 min-w-[200px]">
+      事業者名
+    </th>
+    {dates.map((date, index) => (
+      <th
+        key={index}
+        className={`border border-neutral-200 px-3 py-2 text-center font-medium min-w-[80px] ${
+          viewType === 'daily' && isToday(date) 
+            ? 'bg-yellow-100 border-yellow-400 border-2' 
+            : viewType === 'daily' && isWeekend(date) 
+              ? 'bg-blue-50' 
+              : 'bg-neutral-50'
+        }`}
+      >
+        {viewType === 'monthly' ? (
+          <>
+            <div className="text-xs text-neutral-600">
+              {date.getFullYear()}年
+            </div>
+            <div className="text-xs text-neutral-600">
+              {date.getMonth() + 1}月
+            </div>
+          </>
+        ) : (
+          <>
+            <div className={`text-xs ${isToday(date) ? 'font-bold text-yellow-700' : 'text-neutral-600'}`}>
+              {date.getMonth() + 1}/{date.getDate()}
+            </div>
+            <div className={`text-xs ${
+              isToday(date) 
+                ? 'font-bold text-yellow-700' 
+                : isWeekend(date) 
+                  ? 'text-blue-600' 
+                  : 'text-neutral-500'
+            }`}>
+              {getWeekday(date)}
+            </div>
+          </>
+        )}
+      </th>
+    ))}
+  </tr>
+</thead>
           <tbody>
             {projects.map((project) => (
               <tr key={project.id} className="hover:bg-neutral-50/50">
