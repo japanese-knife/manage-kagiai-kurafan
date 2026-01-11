@@ -1052,9 +1052,280 @@ export default function Dashboard({ onSelectProject, user, onLogout }: Dashboard
 {/* プロジェクト一覧タブの内容 */}
 {activeTab === 'projects' && (
   <div className="mt-8">
-    <h2 className="text-lg font-semibold text-neutral-900 mb-6">プロジェクト一覧</h2>
+    <h2 className="text-lg font-semibold text-neutral-900 mb-6">
+      {activeBrandTab === 'BRAND-BASE' ? 'クリエイター一覧' : 'プロジェクト一覧'}
+    </h2>
 
-    {projects.filter(p => p.brand_type === activeBrandTab).length === 0 ? (
+    {activeBrandTab === 'BRAND-BASE' ? (
+      // BRAND-BASE用: クリエイターごとにグループ化
+      <>
+        {creators.length === 0 ? (
+          <div className="text-center py-16 sm:py-20 md:py-24 px-4">
+            <div className="w-16 h-16 sm:w-20 sm:h-20 bg-neutral-100 rounded-2xl flex items-center justify-center mx-auto mb-4 sm:mb-6">
+              <FolderKanban className="w-8 h-8 sm:w-10 sm:h-10 text-neutral-400" />
+            </div>
+            <h2 className="text-base sm:text-lg font-semibold text-neutral-900 mb-2">
+              クリエイターがありません
+            </h2>
+            <p className="text-sm sm:text-base text-neutral-500 mb-6 sm:mb-8 leading-relaxed">
+              新しいクリエイターを作成して始めましょう
+            </p>
+            <button
+              onClick={() => setShowCreateCreatorForm(true)}
+              className="inline-flex items-center px-5 sm:px-6 py-2 sm:py-2.5 btn-gradient-animated text-white text-sm font-medium rounded-lg shadow-soft-lg"
+            >
+              <Plus className="w-4 h-4 mr-1.5 sm:mr-2" />
+              クリエイターを作成
+            </button>
+          </div>
+        ) : (
+          <div className="space-y-8 sm:space-y-10 md:space-y-12">
+            {creators.map((creator) => {
+              const creatorCategories = productCategories.filter(cat => cat.creator_id === creator.id);
+              const creatorProjects = projects.filter(p => {
+                const category = productCategories.find(cat => cat.id === p.product_category_id);
+                return category?.creator_id === creator.id;
+              });
+
+              if (creatorProjects.length === 0 && creatorCategories.length === 0) return null;
+
+              return (
+                <div key={creator.id} className="bg-white rounded-2xl border border-neutral-200/50 p-6 shadow-lg">
+                  <div className="flex items-center justify-between mb-6">
+                    <div>
+                      <h3 className="text-xl font-bold text-neutral-900">{creator.name}</h3>
+                      <p className="text-sm text-neutral-500 mt-1">
+                        {creatorCategories.length}品目 · {creatorProjects.length}プロジェクト
+                      </p>
+                    </div>
+                    <button
+                      onClick={() => {
+                        setSelectedCreatorId(creator.id);
+                        setShowCreateCategoryForm(true);
+                      }}
+                      className="px-4 py-2 text-sm font-medium text-primary-600 hover:bg-primary-50 rounded-lg transition-colors"
+                    >
+                      品目を追加
+                    </button>
+                  </div>
+
+                  {creatorCategories.map((category) => {
+                    const categoryProjects = projects.filter(p => p.product_category_id === category.id);
+                    
+                    return (
+                      <div key={category.id} className="mb-6 last:mb-0">
+                        <div className="flex items-center justify-between mb-4">
+                          <div className="flex items-center">
+                            <h4 className="text-base font-semibold text-neutral-800">
+                              {category.name}
+                            </h4>
+                            <span className="ml-2 px-2 py-0.5 text-xs font-medium bg-neutral-100 text-neutral-600 rounded-full">
+                              {categoryProjects.length}
+                            </span>
+                          </div>
+                          <button
+                            onClick={() => {
+                              setSelectedCategoryId(category.id);
+                              setNewBrandType('BRAND-BASE');
+                              setShowCreateForm(true);
+                            }}
+                            className="text-sm text-primary-600 hover:text-primary-700 font-medium"
+                          >
+                            + プロジェクト追加
+                          </button>
+                        </div>
+
+                        {categoryProjects.length === 0 ? (
+                          <div className="text-center py-8 bg-neutral-50 rounded-lg border-2 border-dashed border-neutral-200">
+                            <p className="text-sm text-neutral-500">プロジェクトがありません</p>
+                          </div>
+                        ) : (
+                          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                            {categoryProjects.map((project) => {
+                              const stats = projectStats.get(project.id);
+                              const lastUpdated = new Date(project.updated_at).toLocaleDateString('ja-JP');
+
+                              return (
+                                <div
+                                  key={project.id}
+                                  className="bg-neutral-50 rounded-xl border border-neutral-200 hover:border-primary-300 hover:shadow-lg transition-all group cursor-pointer"
+                                  onClick={() => onSelectProject(project)}
+                                >
+                                  <div className="p-5">
+                                    {editingProjectId === project.id ? (
+                                      <div 
+                                        className="space-y-4"
+                                        onClick={(e) => e.stopPropagation()}
+                                      >
+                                        <div>
+                                          <label className="block text-sm font-medium text-neutral-700 mb-2">
+                                            プロジェクト名
+                                          </label>
+                                          <input
+                                            type="text"
+                                            value={editProjectName}
+                                            onChange={(e) => setEditProjectName(e.target.value)}
+                                            className="w-full px-3 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-100 focus:border-primary-500"
+                                          />
+                                        </div>
+                                        <div>
+                                          <label className="block text-sm font-medium text-neutral-700 mb-2">
+                                            詳細
+                                          </label>
+                                          <textarea
+                                            value={editProjectDescription}
+                                            onChange={(e) => setEditProjectDescription(e.target.value)}
+                                            className="w-full px-3 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-100 focus:border-primary-500 resize-none"
+                                            rows={2}
+                                          />
+                                        </div>
+                                        <div className="flex gap-2">
+                                          <button
+                                            onClick={() => handleUpdateProject(project.id)}
+                                            className="flex-1 px-4 py-2 bg-primary-600 text-white text-sm font-medium rounded-lg hover:bg-primary-700"
+                                          >
+                                            保存
+                                          </button>
+                                          <button
+                                            onClick={handleCancelEdit}
+                                            className="flex-1 px-4 py-2 bg-white border border-neutral-300 text-neutral-700 text-sm font-medium rounded-lg hover:bg-neutral-50"
+                                          >
+                                            キャンセル
+                                          </button>
+                                        </div>
+                                      </div>
+                                    ) : (
+                                      <>
+                                        <div className="flex items-start justify-between mb-4">
+                                          <div className="flex-1">
+                                            <h5 className="text-sm font-semibold text-neutral-900 mb-1 group-hover:text-primary-600 transition-colors">
+                                              {project.name}
+                                            </h5>
+                                            {project.description && (
+                                              <p className="text-xs text-neutral-600 line-clamp-2">
+                                                {project.description}
+                                              </p>
+                                            )}
+                                          </div>
+                                          <div className="flex items-center gap-1 ml-2">
+                                            <button
+                                              onClick={(e) => {
+                                                e.stopPropagation();
+                                                handleStartEdit(project);
+                                              }}
+                                              className="p-1 text-neutral-500 hover:text-primary-600 hover:bg-primary-50 rounded transition-colors"
+                                              title="編集"
+                                            >
+                                              <Edit2 className="w-3.5 h-3.5" />
+                                            </button>
+                                            <button
+                                              onClick={(e) => handleDuplicateProject(project, e)}
+                                              className="p-1 text-neutral-500 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors"
+                                              title="複製"
+                                            >
+                                              <Copy className="w-3.5 h-3.5" />
+                                            </button>
+                                            <button
+                                              onClick={(e) => {
+                                                e.stopPropagation();
+                                                handleDeleteProject(project.id);
+                                              }}
+                                              className="p-1 text-neutral-500 hover:text-red-600 hover:bg-red-50 rounded transition-colors"
+                                              title="削除"
+                                            >
+                                              <Trash2 className="w-3.5 h-3.5" />
+                                            </button>
+                                            <select
+                                              value={project.status}
+                                              onChange={(e) => {
+                                                e.stopPropagation();
+                                                handleStatusChange(project.id, e.target.value as ProjectStatus);
+                                              }}
+                                              onClick={(e) => e.stopPropagation()}
+                                              className={`px-2 py-0.5 text-xs font-medium rounded-full border-0 cursor-pointer ${
+                                                project.status === '完了'
+                                                  ? 'bg-green-50 text-green-700'
+                                                  : project.status === '保留'
+                                                  ? 'bg-yellow-50 text-yellow-700'
+                                                  : 'bg-primary-50 text-primary-700'
+                                              }`}
+                                            >
+                                              <option value="進行中">進行中</option>
+                                              <option value="保留">保留</option>
+                                              <option value="完了">完了</option>
+                                            </select>
+                                          </div>
+                                        </div>
+
+                                        <div className="space-y-3 mt-4">
+                                          {stats && stats.totalTasks > 0 && (
+                                            <>
+                                              <div className="flex items-center justify-between text-xs">
+                                                <span className="text-neutral-600">進捗</span>
+                                                <span className="font-semibold text-primary-600">
+                                                  {stats.progress}%
+                                                </span>
+                                              </div>
+                                              <div className="w-full bg-neutral-200 rounded-full h-1.5">
+                                                <div
+                                                  className="bg-gradient-to-r from-primary-600 to-primary-500 h-1.5 rounded-full transition-all"
+                                                  style={{ width: `${stats.progress}%` }}
+                                                />
+                                              </div>
+                                              <div className="flex items-center text-xs text-neutral-600">
+                                                <CheckSquare className="w-3.5 h-3.5 mr-1.5" />
+                                                {stats.completedTasks} / {stats.totalTasks}
+                                              </div>
+                                            </>
+                                          )}
+
+                                          <div className="pt-3 border-t border-neutral-200 flex items-center justify-between">
+                                            <div className="flex items-center text-xs text-neutral-500">
+                                              <Calendar className="w-3 h-3 mr-1.5" />
+                                              {lastUpdated}
+                                            </div>
+                                            <div className="text-xs text-primary-600 font-medium flex items-center">
+                                              詳細
+                                              <ArrowRight className="w-3 h-3 ml-0.5" />
+                                            </div>
+                                          </div>
+                                        </div>
+                                      </>
+                                    )}
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+
+                  {creatorCategories.length === 0 && (
+                    <div className="text-center py-8 bg-neutral-50 rounded-lg border-2 border-dashed border-neutral-200">
+                      <p className="text-sm text-neutral-500 mb-3">品目がありません</p>
+                      <button
+                        onClick={() => {
+                          setSelectedCreatorId(creator.id);
+                          setShowCreateCategoryForm(true);
+                        }}
+                        className="text-sm text-primary-600 hover:text-primary-700 font-medium"
+                      >
+                        + 品目を追加
+                      </button>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </>
+    ) : (
+      // 海外クラファン.com用: 従来通りのステータス別表示
+      <>
+        {projects.filter(p => p.brand_type === activeBrandTab).length === 0 ? (
           <div className="text-center py-16 sm:py-20 md:py-24 px-4">
             <div className="w-16 h-16 sm:w-20 sm:h-20 bg-neutral-100 rounded-2xl flex items-center justify-center mx-auto mb-4 sm:mb-6">
               <FolderKanban className="w-8 h-8 sm:w-10 sm:h-10 text-neutral-400" />
@@ -1271,6 +1542,8 @@ export default function Dashboard({ onSelectProject, user, onLogout }: Dashboard
             })}
           </div>
         )}
+      </>
+    )}
   </div>
 )}
       </main>
