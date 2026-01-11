@@ -38,43 +38,66 @@ export default function Dashboard({ onSelectProject, user, onLogout }: Dashboard
     loadProjects();
   }, []);
 
-  const loadProjects = async () => {
-    try {
-      const { data: projectsData, error: projectsError } = await supabase
+  // タイムアウト付きPromiseヘルパー
+const withTimeout = <T,>(promise: Promise<T>, timeoutMs: number = 10000): Promise<T> => {
+  return Promise.race([
+    promise,
+    new Promise<T>((_, reject) =>
+      setTimeout(() => reject(new Error(`Timeout after ${timeoutMs}ms`)), timeoutMs)
+    )
+  ]);
+};
+
+const loadProjects = async () => {
+  try {
+    // タイムアウト付きでプロジェクト取得
+    const { data: projectsData, error: projectsError } = await withTimeout(
+      supabase
         .from('projects')
         .select('*')
-        .order('updated_at', { ascending: false });
+        .order('updated_at', { ascending: false }),
+      10000
+    );
 
-      if (projectsError) throw projectsError;
+    if (projectsError) throw projectsError;
 
-      setProjects(projectsData || []);
+    setProjects(projectsData || []);
 
-      const statsMap = new Map<string, ProjectStats>();
-      for (const project of projectsData || []) {
-        const { data: tasksData } = await supabase
-          .from('tasks')
-          .select('status')
-          .eq('project_id', project.id);
+    // プロジェクトIDリストを取得
+    const projectIds = (projectsData || []).map(p => p.id);
 
-        const total = tasksData?.length || 0;
-        const completed = tasksData?.filter((t: Task) => t.status === '完了').length || 0;
-        const progress = total > 0 ? Math.round((completed / total) * 100) : 0;
-
-        statsMap.set(project.id, {
-          projectId: project.id,
-          totalTasks: total,
-          completedTasks: completed,
-          progress,
-        });
-      }
-
-      setProjectStats(statsMap);
-    } catch (error) {
-      console.error('プロジェクト読み込みエラー:', error);
-    } finally {
-      setLoading(false);
+    if (projectIds.length === 0) {
+      setProjectStats(new Map());
+      return;
     }
-  };
+
+    // ✅ 1回のクエリで全タスクを取得（N+1問題を解決）
+    const { data: allTasksData, error: tasksError } = await withTimeout(
+      supabase
+        .from('tasks')
+        .select('id, project_id, status')
+        .in('project_id', projectIds),
+      10000
+    );
+
+    if (tasksError) {
+      console.error('タスク取得エラー:', tasksError);
+      // エラー時は空のstatsで継続
+      setProjectStats(new Map());
+      return;
+    }
+
+    // プロジェクトIDごとにタスクをグループ化
+    const tasksByProject = new Map<string, typeof allTasksData>();
+    (allTasksData || []).forEach(task => {
+      if (!tasksByProject.has(task.project_id)) {
+        tasksByProject.set(task.project_id, []);
+      }
+      tasksByProject.get(task.project_id)!.push(task);
+    });
+
+    // 統計情報を計算
+    const statsMap = new Map<s
 
   const handleCreateProject = async (e: React.FormEvent) => {
     e.preventDefault();
