@@ -771,12 +771,45 @@ export default function Dashboard({ onSelectProject, user, onLogout }: Dashboard
           </div>
         )}
 
-        {/* スケジュールビュー */}
-        <ProjectScheduleView user={user} activeBrandTab={activeBrandTab} />
+        {/* ビュータブ */}
+<div className="flex items-center gap-2 mb-6 sm:mb-8 border-b border-neutral-200">
+  <button
+    onClick={() => setActiveViewTab('schedule')}
+    className={`px-4 sm:px-6 py-3 text-sm sm:text-base font-medium transition-all relative ${
+      activeViewTab === 'schedule'
+        ? 'text-primary-600'
+        : 'text-neutral-500 hover:text-neutral-700'
+    }`}
+  >
+    スケジュール
+    {activeViewTab === 'schedule' && (
+      <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary-600" />
+    )}
+  </button>
+  <button
+    onClick={() => setActiveViewTab('projects')}
+    className={`px-4 sm:px-6 py-3 text-sm sm:text-base font-medium transition-all relative ${
+      activeViewTab === 'projects'
+        ? 'text-primary-600'
+        : 'text-neutral-500 hover:text-neutral-700'
+    }`}
+  >
+    プロジェクト一覧
+    {activeViewTab === 'projects' && (
+      <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary-600" />
+    )}
+  </button>
+</div>
 
-        {/* プロジェクト一覧 */}
-        <div className="mt-8">
-          <h2 className="text-lg font-semibold text-neutral-900 mb-6">プロジェクト一覧</h2>
+{/* スケジュールビュー */}
+{activeViewTab === 'schedule' && (
+  <ProjectScheduleView user={user} activeBrandTab={activeBrandTab} />
+)}
+
+{/* プロジェクト一覧 */}
+{activeViewTab === 'projects' && (
+  <div>
+    <h2 className="text-lg font-semibold text-neutral-900 mb-6">プロジェクト一覧</h2>
         
         {projects.filter(p => p.brand_type === activeBrandTab).length === 0 ? (
           <div className="text-center py-16 sm:py-20 md:py-24 px-4">
