@@ -484,7 +484,31 @@ if (e.key === 'Escape' && !editingCell) {
       // クリップボードからテキストを取得してペースト
       const content = e.clipboardData.getData('text');
       const backgroundColor = '#ffffff';
-      const textCo
+      const textColor = getTextColorForBackground(backgroundColor);
+      
+      for (const targetKey of targetCells) {
+        const [targetProjectId, targetDateStr] = targetKey.split('-');
+        
+        const updateData: any = {
+          project_id: targetProjectId,
+          date: targetDateStr,
+          content: content,
+          background_color: backgroundColor,
+          text_color: textColor,
+          user_id: user.id,
+        };
+
+        await supabase
+          .from('project_schedules')
+          .upsert(updateData);
+      }
+    }
+
+    await loadSchedules();
+  } catch (error) {
+    console.error('ペーストエラー:', error);
+  }
+};
 
   const handleColorChange = async (projectId: string, date: Date, color: string, textColor: string) => {
     const dateStr = date.toISOString().split('T')[0];
