@@ -668,7 +668,7 @@ export default function ProjectScheduleView({ user, activeBrandTab, viewType }: 
   const renderDateHeaders = () => {
     return (
       <tr>
-        <th className="sticky left-0 z-20 bg-neutral-50 border border-neutral-200 px-4 py-2 text-left font-semibold text-neutral-900 min-w-[200px]">
+        <th className="sticky left-0 z-30 bg-neutral-50 border border-neutral-200 px-4 py-2 text-left font-semibold text-neutral-900 min-w-[200px]">
           事業者名
         </th>
         {dates.map((date, index) => (
