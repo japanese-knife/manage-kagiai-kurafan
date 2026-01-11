@@ -818,6 +818,19 @@ export default function Dashboard({ onSelectProject, user, onLogout }: Dashboard
                               >
                                 <div>
                                   <label className="block text-sm font-medium text-neutral-700 mb-2">
+                                    ブランド
+                                  </label>
+                                  <select
+                                    value={editBrandType}
+                                    onChange={(e) => setEditBrandType(e.target.value as BrandType)}
+                                    className="w-full px-3 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-100 focus:border-primary-500"
+                                  >
+                                    <option value="海外クラファン.com">海外クラファン.com</option>
+                                    <option value="BRAND-BASE">BRAND-BASE</option>
+                                  </select>
+                                </div>
+                                <div>
+                                  <label className="block text-sm font-medium text-neutral-700 mb-2">
                                     プロジェクト名
                                   </label>
                                   <input
