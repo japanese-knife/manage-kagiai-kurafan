@@ -48,6 +48,17 @@ export default function ProjectScheduleView({ user, activeBrandTab, viewType }: 
   }, [editingCell]);
 
   const generateDates = () => {
+  if (viewType === 'monthly') {
+    // 月次ビュー: 今月から12ヶ月分
+    const today = new Date();
+    const datesArray: Date[] = [];
+    for (let i = 0; i < 12; i++) {
+      const date = new Date(today.getFullYear(), today.getMonth() + i, 1);
+      datesArray.push(date);
+    }
+    setDates(datesArray);
+  } else {
+    // 日次ビュー: 過去5日から未来30日
     const today = new Date();
     const datesArray: Date[] = [];
     for (let i = -5; i <= 30; i++) {
@@ -56,7 +67,8 @@ export default function ProjectScheduleView({ user, activeBrandTab, viewType }: 
       datesArray.push(date);
     }
     setDates(datesArray);
-  };
+  }
+};
 
   const loadProjects = async () => {
     try {
