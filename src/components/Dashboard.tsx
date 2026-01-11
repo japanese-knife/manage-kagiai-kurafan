@@ -97,7 +97,30 @@ const loadProjects = async () => {
     });
 
     // 統計情報を計算
-    const statsMap = new Map<s
+    const statsMap = new Map<string, ProjectStats>();
+    (projectsData || []).forEach(project => {
+      const tasks = tasksByProject.get(project.id) || [];
+      const total = tasks.length;
+      const completed = tasks.filter(t => t.status === '完了').length;
+      const progress = total > 0 ? Math.round((completed / total) * 100) : 0;
+
+      statsMap.set(project.id, {
+        projectId: project.id,
+        totalTasks: total,
+        completedTasks: completed,
+        progress,
+      });
+    });
+
+    setProjectStats(statsMap);
+  } catch (error) {
+    console.error('プロジェクト読み込みエラー:', error);
+    // エラー時もプロジェクトは表示
+    setProjectStats(new Map());
+  } finally {
+    setLoading(false);
+  }
+};
 
   const handleCreateProject = async (e: React.FormEvent) => {
     e.preventDefault();
