@@ -794,7 +794,8 @@ onClick={(e) => handleCellClick(project.id, date, e)}
                       </div>
                       
                       {/* カラーピッカー（最前面） */}
-                      {showColorPicker?.projectId === project.id && showColorPicker?.date === dateStr && (
+{/* カラーピッカー（最前面） */}
+{showColorPicker?.projectId === project.id && showColorPicker?.date === dateStr && (
   <div
     className="absolute z-50 bg-white border-2 border-neutral-300 rounded-xl shadow-2xl p-4 top-full left-0 mt-1 min-w-[280px]"
     onClick={(e) => e.stopPropagation()}
@@ -803,39 +804,33 @@ onClick={(e) => handleCellClick(project.id, date, e)}
       <p className="text-xs font-semibold text-neutral-700 mb-2">
         {selectedCells.size > 1 ? `${selectedCells.size}個のセルの色を変更` : 'カラーを選択'}
       </p>
-                        <div
-                          className="absolute z-50 bg-white border-2 border-neutral-300 rounded-xl shadow-2xl p-4 top-full left-0 mt-1 min-w-[280px]"
-                          onClick={(e) => e.stopPropagation()}
-                        >
-                          <div className="mb-3">
-                            <p className="text-xs font-semibold text-neutral-700 mb-2">カラーを選択</p>
-                            <div className="grid grid-cols-7 gap-2">
-                              {predefinedColors.map((item) => (
-                                <button
-                                  key={item.color}
-                                  onClick={() => handleColorChange(project.id, date, item.color, item.textColor)}
-                                  className="group relative"
-                                  title={item.name}
-                                >
-                                  <div
-                                    className="w-9 h-9 rounded-lg border-2 border-neutral-300 hover:border-primary-500 hover:scale-110 transition-all shadow-sm"
-                                    style={{ backgroundColor: item.color }}
-                                  />
-                                  <span className="absolute hidden group-hover:block bottom-full left-1/2 transform -translate-x-1/2 mb-1 px-2 py-1 text-xs bg-neutral-800 text-white rounded whitespace-nowrap">
-                                    {item.name}
-                                  </span>
-                                </button>
-                              ))}
-                            </div>
-                          </div>
-                          <button
-                            onClick={() => setShowColorPicker(null)}
-                            className="w-full px-3 py-2 text-sm font-medium bg-neutral-100 hover:bg-neutral-200 rounded-lg transition-colors"
-                          >
-                            閉じる
-                          </button>
-                        </div>
-                      )}
+      <div className="grid grid-cols-7 gap-2">
+        {predefinedColors.map((item) => (
+          <button
+            key={item.color}
+            onClick={() => handleColorChange(project.id, date, item.color, item.textColor)}
+            className="group relative"
+            title={item.name}
+          >
+            <div
+              className="w-9 h-9 rounded-lg border-2 border-neutral-300 hover:border-primary-500 hover:scale-110 transition-all shadow-sm"
+              style={{ backgroundColor: item.color }}
+            />
+            <span className="absolute hidden group-hover:block bottom-full left-1/2 transform -translate-x-1/2 mb-1 px-2 py-1 text-xs bg-neutral-800 text-white rounded whitespace-nowrap">
+              {item.name}
+            </span>
+          </button>
+        ))}
+      </div>
+    </div>
+    <button
+      onClick={() => setShowColorPicker(null)}
+      className="w-full px-3 py-2 text-sm font-medium bg-neutral-100 hover:bg-neutral-200 rounded-lg transition-colors"
+    >
+      閉じる
+    </button>
+  </div>
+)}
                     </td>
                   );
                 })}
