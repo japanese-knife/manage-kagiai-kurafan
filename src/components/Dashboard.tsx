@@ -662,8 +662,42 @@ export default function Dashboard({ onSelectProject, user, onLogout }: Dashboard
       </header>
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8 lg:px-12 py-6 sm:py-8 md:py-12">
-        {/* ブランドタブ */}
-        <div className="flex items-center gap-2 mb-6 sm:mb-8 border-b border-neutral-200">
+  {/* メインタブ */}
+  <div className="flex items-center gap-2 mb-6 sm:mb-8 border-b border-neutral-200">
+    <button
+      onClick={() => setActiveMainTab('schedule')}
+      className={`px-4 sm:px-6 py-3 text-sm sm:text-base font-medium transition-all relative ${
+        activeMainTab === 'schedule'
+          ? 'text-primary-600'
+          : 'text-neutral-500 hover:text-neutral-700'
+      }`}
+    >
+      スケジュール
+      {activeMainTab === 'schedule' && (
+        <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary-600" />
+      )}
+    </button>
+    <button
+      onClick={() => setActiveMainTab('projects')}
+      className={`px-4 sm:px-6 py-3 text-sm sm:text-base font-medium transition-all relative ${
+        activeMainTab === 'projects'
+          ? 'text-primary-600'
+          : 'text-neutral-500 hover:text-neutral-700'
+      }`}
+    >
+      プロジェクト
+      <span className="ml-2 px-2 py-0.5 text-xs font-medium bg-neutral-100 text-neutral-600 rounded-full">
+        {projects.length}
+      </span>
+      {activeMainTab === 'projects' && (
+        <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary-600" />
+      )}
+    </button>
+  </div>
+
+  {/* ブランドタブ - スケジュールタブ時のみ表示 */}
+  {activeMainTab === 'schedule' && (
+    <div className="flex items-center gap-2 mb-6 sm:mb-8 border-b border-neutral-200">
           <button
             onClick={() => setActiveBrandTab('海外クラファン.com')}
             className={`px-4 sm:px-6 py-3 text-sm sm:text-base font-medium transition-all relative ${
