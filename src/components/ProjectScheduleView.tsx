@@ -213,77 +213,112 @@ export default function ProjectScheduleView({ user, activeBrandTab, viewType }: 
   };
 
   const handleKeyDown = (e: React.KeyboardEvent, projectId: string, dateIndex: number) => {
-    if (editingCell) {
-      if (e.key === 'Enter') {
-        handleCellBlur();
-      } else if (e.key === 'Escape') {
-        setEditingCell(null);
-        setEditValue('');
-      }
-      return;
+  if (editingCell) {
+    if (e.key === 'Enter') {
+      handleCellBlur();
+    } else if (e.key === 'Escape') {
+      setEditingCell(null);
+      setEditValue('');
     }
+    return;
+  }
 
-    // コピー機能（Ctrl+C または Cmd+C）
-    if ((e.ctrlKey || e.metaKey) && e.key === 'c') {
+  // コピー機能（Ctrl+C または Cmd+C）
+  if ((e.ctrlKey || e.metaKey) && e.key === 'c') {
+    e.preventDefault();
+    handleCopy();
+    return;
+  }
+
+  // セルが選択されていない場合は現在のセルを選択
+  if (!selectedCell) {
+    const dateStr = dates[dateIndex].toISOString().split('T')[0];
+    setSelectedCell({ projectId, date: dateStr });
+    return;
+  }
+
+  const currentProjectIndex = projects.findIndex(p => p.id === selectedCell.projectId);
+  const currentDateIndex = dates.findIndex(d => d.toISOString().split('T')[0] === selectedCell.date);
+  
+  switch (e.key) {
+    case 'ArrowUp':
       e.preventDefault();
-      handleCopy();
-      return;
-    }
-
-    // セル間の移動
-    if (!selectedCell) return;
-
-    const projectIndex = projects.findIndex(p => p.id === selectedCell.projectId);
-    
-    switch (e.key) {
-      case 'ArrowUp':
-        e.preventDefault();
-        if (projectIndex > 0) {
-          setSelectedCell({ 
-            projectId: projects[projectIndex - 1].id, 
-            date: selectedCell.date 
-          });
-        }
-        break;
-      case 'ArrowDown':
-        e.preventDefault();
-        if (projectIndex < projects.length - 1) {
-          setSelectedCell({ 
-            projectId: projects[projectIndex + 1].id, 
-            date: selectedCell.date 
-          });
-        }
-        break;
-      case 'ArrowLeft':
-        e.preventDefault();
-        if (dateIndex > 0) {
-          setSelectedCell({ 
-            projectId: selectedCell.projectId, 
-            date: dates[dateIndex - 1].toISOString().split('T')[0]
-          });
-        }
-        break;
-      case 'ArrowRight':
-        e.preventDefault();
-        if (dateIndex < dates.length - 1) {
-          setSelectedCell({ 
-            projectId: selectedCell.projectId, 
-            date: dates[dateIndex + 1].toISOString().split('T')[0]
-          });
-        }
-        break;
-      case 'Enter':
-        e.preventDefault();
-        handleCellDoubleClick(selectedCell.projectId, new Date(selectedCell.date));
-        break;
-      case 'Delete':
-      case 'Backspace':
-        e.preventDefault();
-        handleCellDoubleClick(selectedCell.projectId, new Date(selectedCell.date));
-        setEditValue('');
-        break;
-    }
-  };
+      if (currentProjectIndex > 0) {
+        setSelectedCell({ 
+          projectId: projects[currentProjectIndex - 1].id, 
+          date: selectedCell.date 
+        });
+        // 選択されたセルにフォーカスを移動
+        setTimeout(() => {
+          const newCell = document.querySelector(
+            `[data-cell-id="${projects[currentProjectIndex - 1].id}-${selectedCell.date}"]`
+          ) as HTMLElement;
+          newCell?.focus();
+        }, 0);
+      }
+      break;
+    case 'ArrowDown':
+      e.preventDefault();
+      if (currentProjectIndex < projects.length - 1) {
+        setSelectedCell({ 
+          projectId: projects[currentProjectIndex + 1].id, 
+          date: selectedCell.date 
+        });
+        // 選択されたセルにフォーカスを移動
+        setTimeout(() => {
+          const newCell = document.querySelector(
+            `[data-cell-id="${projects[currentProjectIndex + 1].id}-${selectedCell.date}"]`
+          ) as HTMLElement;
+          newCell?.focus();
+        }, 0);
+      }
+      break;
+    case 'ArrowLeft':
+      e.preventDefault();
+      if (currentDateIndex > 0) {
+        const newDate = dates[currentDateIndex - 1].toISOString().split('T')[0];
+        setSelectedCell({ 
+          projectId: selectedCell.projectId, 
+          date: newDate
+        });
+        // 選択されたセルにフォーカスを移動
+        setTimeout(() => {
+          const newCell = document.querySelector(
+            `[data-cell-id="${selectedCell.projectId}-${newDate}"]`
+          ) as HTMLElement;
+          newCell?.focus();
+        }, 0);
+      }
+      break;
+    case 'ArrowRight':
+      e.preventDefault();
+      if (currentDateIndex < dates.length - 1) {
+        const newDate = dates[currentDateIndex + 1].toISOString().split('T')[0];
+        setSelectedCell({ 
+          projectId: selectedCell.projectId, 
+          date: newDate
+        });
+        // 選択されたセルにフォーカスを移動
+        setTimeout(() => {
+          const newCell = document.querySelector(
+            `[data-cell-id="${selectedCell.projectId}-${newDate}"]`
+          ) as HTMLElement;
+          newCell?.focus();
+        }, 0);
+      }
+      break;
+    case 'Enter':
+      e.preventDefault();
+      handleCellDoubleClick(selectedCell.projectId, new Date(selectedCell.date));
+      break;
+    case 'Delete':
+    case 'Backspace':
+      e.preventDefault();
+      handleCellDoubleClick(selectedCell.projectId, new Date(selectedCell.date));
+      setEditValue('');
+      break;
+  }
+};
 
   const handleCopy = async () => {
     if (!selectedCell) return;
