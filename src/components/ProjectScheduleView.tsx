@@ -507,13 +507,14 @@ export default function ProjectScheduleView({ user, activeBrandTab }: ProjectSch
                       onKeyDown={(e) => handleKeyDown(e, project.id, dateIndex)}
                       onContextMenu={(e) => {
                         e.preventDefault();
+                        e.stopPropagation();
                         setShowColorPicker({ projectId: project.id, date: dateStr });
                         setSelectedColor(cell?.backgroundColor || '#ffffff');
                       }}
                       tabIndex={0}
                     >
                       <div 
-                        className="absolute inset-0"
+                        className="absolute inset-0 pointer-events-none"
                         style={{ backgroundColor: cell?.backgroundColor || '#ffffff' }}
                       />
                       {isEditing ? (
@@ -537,15 +538,16 @@ export default function ProjectScheduleView({ user, activeBrandTab }: ProjectSch
                       ) : (
                         <>
                           <div 
-                            className="relative z-10 px-2 py-1 min-h-[32px] flex items-center justify-center text-center font-medium"
+                            className="relative z-10 px-2 py-1 min-h-[32px] flex items-center justify-center text-center font-medium pointer-events-none"
                             style={{ color: cell?.textColor || '#000000' }}
                           >
                             {cell?.content || ''}
                           </div>
                           {showColorPicker?.projectId === project.id && showColorPicker?.date === dateStr && (
                             <div
-                              className="absolute z-50 bg-white border-2 border-neutral-300 rounded-xl shadow-2xl p-4 top-full left-0 mt-1 min-w-[280px]"
+                              className="absolute z-[100] bg-white border-2 border-neutral-300 rounded-xl shadow-2xl p-4 top-full left-0 mt-1 min-w-[280px] pointer-events-auto"
                               onClick={(e) => e.stopPropagation()}
+                              onContextMenu={(e) => e.stopPropagation()}
                             >
                               <div className="mb-3">
                                 <p className="text-xs font-semibold text-neutral-700 mb-2">カラーを選択</p>
@@ -553,7 +555,10 @@ export default function ProjectScheduleView({ user, activeBrandTab }: ProjectSch
                                   {predefinedColors.map((item) => (
                                     <button
                                       key={item.color}
-                                      onClick={() => handleColorChange(project.id, date, item.color, item.textColor)}
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleColorChange(project.id, date, item.color, item.textColor);
+                                      }}
                                       className="group relative"
                                       title={item.name}
                                     >
@@ -561,7 +566,7 @@ export default function ProjectScheduleView({ user, activeBrandTab }: ProjectSch
                                         className="w-9 h-9 rounded-lg border-2 border-neutral-300 hover:border-primary-500 hover:scale-110 transition-all shadow-sm"
                                         style={{ backgroundColor: item.color }}
                                       />
-                                      <span className="absolute hidden group-hover:block bottom-full left-1/2 transform -translate-x-1/2 mb-1 px-2 py-1 text-xs bg-neutral-800 text-white rounded whitespace-nowrap z-[60]">
+                                      <span className="absolute hidden group-hover:block bottom-full left-1/2 transform -translate-x-1/2 mb-1 px-2 py-1 text-xs bg-neutral-800 text-white rounded whitespace-nowrap z-[110]">
                                         {item.name}
                                       </span>
                                     </button>
@@ -569,7 +574,10 @@ export default function ProjectScheduleView({ user, activeBrandTab }: ProjectSch
                                 </div>
                               </div>
                               <button
-                                onClick={() => setShowColorPicker(null)}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setShowColorPicker(null);
+                                }}
                                 className="w-full px-3 py-2 text-sm font-medium bg-neutral-100 hover:bg-neutral-200 rounded-lg transition-colors"
                               >
                                 閉じる
