@@ -169,16 +169,28 @@ export default function Dashboard({ onSelectProject, user, onLogout }: Dashboard
 
     if (!newProjectName.trim()) return;
 
+    // BRAND-BASEの場合は品目IDが必要
+    if (newBrandType === 'BRAND-BASE' && !selectedCategoryId) {
+      alert('品目を選択してください');
+      return;
+    }
+
     try {
+      const projectData: any = {
+        name: newProjectName,
+        description: newProjectDescription,
+        status: '進行中',
+        brand_type: newBrandType,
+        user_id: user.id,
+      };
+
+      if (newBrandType === 'BRAND-BASE') {
+        projectData.product_category_id = selectedCategoryId;
+      }
+
       const { data, error } = await supabase
         .from('projects')
-        .insert({
-          name: newProjectName,
-          description: newProjectDescription,
-          status: '進行中',
-          brand_type: newBrandType,
-          user_id: user.id,
-        })
+        .insert(projectData)
         .select()
         .single();
 
@@ -187,6 +199,7 @@ export default function Dashboard({ onSelectProject, user, onLogout }: Dashboard
       setNewProjectName('');
       setNewProjectDescription('');
       setNewBrandType('海外クラファン.com');
+      setSelectedCategoryId(null);
       setShowCreateForm(false);
       loadProjects();
     } catch (error) {
