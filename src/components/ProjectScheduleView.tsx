@@ -390,25 +390,43 @@ const handleRangeSelection = (endProjectId: string, endDate: string) => {
 };
 
   const handleCopy = async () => {
-    if (!selectedCell) return;
+  if (selectedCells.size === 0) return;
 
-    const key = `${selectedCell.projectId}-${selectedCell.date}`;
-    const cell = schedules.get(key);
-    if (cell) {
-      try {
-        // セルのデータ（内容、背景色、文字色）を保存
+  try {
+    if (selectedCells.size === 1) {
+      // 単一セルのコピー
+      const cellKey = Array.from(selectedCells)[0];
+      const cell = schedules.get(cellKey);
+      if (cell) {
         setCopiedCellData({
           content: cell.content || '',
           backgroundColor: cell.backgroundColor || '#ffffff',
           textColor: cell.textColor || '#000000'
         });
-        // クリップボードにはテキストのみをコピー
         await navigator.clipboard.writeText(cell.content || '');
-      } catch (error) {
-        console.error('コピーエラー:', error);
       }
+    } else {
+      // 複数セルのコピー（TSV形式）
+      const cellsArray = Array.from(selectedCells).map(key => {
+        const cell = schedules.get(key);
+        return {
+          key,
+          content: cell?.content || '',
+          backgroundColor: cell?.backgroundColor || '#ffffff',
+          textColor: cell?.textColor || '#000000'
+        };
+      });
+      
+      const text = cellsArray.map(c => c.content).join('\t');
+      await navigator.clipboard.writeText(text);
+      
+      // 複数セルの場合はデータ構造を保存
+      setCopiedCellData(null); // 複数セルの場合は特別な処理が必要なのでnull
     }
-  };
+  } catch (error) {
+    console.error('コピーエラー:', error);
+  }
+};
 
   const handlePaste = async (e: React.ClipboardEvent, projectId: string, date: Date) => {
     e.preventDefault();
