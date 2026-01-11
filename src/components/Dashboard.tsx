@@ -46,7 +46,85 @@ export default function Dashboard({ onSelectProject, user, onLogout }: Dashboard
 
   useEffect(() => {
     loadProjects();
+    loadCreators();
+    loadProductCategories();
   }, []);
+
+  const loadCreators = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('creators')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      setCreators(data || []);
+    } catch (error) {
+      console.error('クリエイター読み込みエラー:', error);
+    }
+  };
+
+  const loadProductCategories = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('product_categories')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      setProductCategories(data || []);
+    } catch (error) {
+      console.error('品目読み込みエラー:', error);
+    }
+  };
+
+  const handleCreateCreator = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newCreatorName.trim()) return;
+
+    try {
+      const { error } = await supabase
+        .from('creators')
+        .insert({
+          name: newCreatorName,
+          user_id: user.id,
+        });
+
+      if (error) throw error;
+
+      setNewCreatorName('');
+      setShowCreateCreatorForm(false);
+      loadCreators();
+    } catch (error) {
+      console.error('クリエイター作成エラー:', error);
+      alert('クリエイターの作成に失敗しました');
+    }
+  };
+
+  const handleCreateCategory = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newCategoryName.trim() || !selectedCreatorId) return;
+
+    try {
+      const { error } = await supabase
+        .from('product_categories')
+        .insert({
+          creator_id: selectedCreatorId,
+          name: newCategoryName,
+          user_id: user.id,
+        });
+
+      if (error) throw error;
+
+      setNewCategoryName('');
+      setShowCreateCategoryForm(false);
+      setSelectedCreatorId(null);
+      loadProductCategories();
+    } catch (error) {
+      console.error('品目作成エラー:', error);
+      alert('品目の作成に失敗しました');
+    }
+  };
 
   const loadProjects = async () => {
     try {
