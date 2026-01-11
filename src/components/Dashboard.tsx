@@ -4,6 +4,7 @@ import { supabase } from '../lib/supabase';
 import { Project, Task, ProjectStatus, BrandType } from '../types';
 import { FolderKanban, Plus, ArrowRight, Calendar, CheckSquare, LogOut, Trash2, Edit2, Copy } from 'lucide-react';
 import Footer from './Footer';
+import ProjectScheduleView from './ProjectScheduleView';
 
 interface DashboardProps {
   onSelectProject: (project: Project) => void;
