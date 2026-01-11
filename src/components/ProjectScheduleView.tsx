@@ -719,8 +719,13 @@ export default function ProjectScheduleView({ user, activeBrandTab, viewType }: 
       <>
         {brandProjects.map((project) => (
           <tr key={project.id} className="hover:bg-neutral-50/50">
-            <td className="sticky left-0 z-10 bg-white border border-neutral-200 px-4 py-2 font-medium text-neutral-900">
-              {project.name}
+            <td className="sticky left-0 z-10 bg-white border border-neutral-200 px-4 py-2 text-neutral-900">
+              <div className="font-medium">{project.name}</div>
+              {project.description && (
+                <div className="text-xs text-neutral-500 mt-1 line-clamp-2">
+                  {project.description}
+                </div>
+              )}
             </td>
             {dates.map((date, dateIndex) => {
               const key = getCellKey(project.id, date);
