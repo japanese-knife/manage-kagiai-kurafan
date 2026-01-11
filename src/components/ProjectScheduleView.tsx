@@ -42,10 +42,33 @@ export default function ProjectScheduleView({ user, activeBrandTab, viewType }: 
   }, [projects]);
 
   useEffect(() => {
-    if (editingCell && inputRef.current) {
-      inputRef.current.focus();
+  if (editingCell && inputRef.current) {
+    inputRef.current.focus();
+  }
+}, [editingCell]);
+
+useEffect(() => {
+  // 日次ビューで初回読み込み時に当日の列を中央に配置
+  if (viewType === 'daily' && dates.length > 0) {
+    const todayIndex = dates.findIndex(date => isToday(date));
+    if (todayIndex !== -1) {
+      setTimeout(() => {
+        const tableContainer = document.querySelector('.overflow-x-auto');
+        const todayHeader = document.querySelectorAll('thead th')[todayIndex + 1]; // +1 は「事業者名」列の分
+        
+        if (tableContainer && todayHeader) {
+          const containerWidth = tableContainer.clientWidth;
+          const headerLeft = (todayHeader as HTMLElement).offsetLeft;
+          const headerWidth = (todayHeader as HTMLElement).offsetWidth;
+          
+          // 当日の列を中央に配置
+          const scrollLeft = headerLeft - (containerWidth / 2) + (headerWidth / 2);
+          tableContainer.scrollLeft = scrollLeft;
+        }
+      }, 100);
     }
-  }, [editingCell]);
+  }
+}, [dates, viewType]);
 
   const generateDates = () => {
     if (viewType === 'monthly') {
