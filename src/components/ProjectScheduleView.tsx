@@ -128,68 +128,29 @@ const withTimeout = <T,>(promise: Promise<T>, timeoutMs: number = 8000): Promise
 };
 
 // export default function ProjectScheduleView の中
-const loadProjects = async () => {
-  try {
-    let query = supabase
-      .from('projects')
-      .select('*');
-    
-    if (activeBrandTab !== 'all') {
-      query = query.eq('brand_type', activeBrandTab);
-    }
-    
-    const { data, error } = await withTimeout(
-      query.order('name', { ascending: true }),
-      8000
-    );
+import { useState, useEffect } from 'react';
+import { User } from '@supabase/supabase-js';
+import { supabase } from '../lib/supabase';
+import { Project, Task, ProjectStatus, BrandType } from '../types';
+import { FolderKanban, Plus, ArrowRight, Calendar, CheckSquare, LogOut, Trash2, Edit2, Copy } from 'lucide-react';
+import Footer from './Footer';
+import ProjectScheduleView from './ProjectScheduleView';
 
-    if (error) throw error;
-    setProjects(data || []);
-  } catch (error) {
-    console.error('プロジェクト読み込みエラー:', error);
-    setProjects([]);
-  }
-};
+interface DashboardProps {
+  onSelectProject: (project: Project) => void;
+  user: User;
+  onLogout: () => void;
+}
 
-const loadSchedules = async () => {
-  try {
-    const projectIds = projects.map(p => p.id);
-    
-    if (projectIds.length === 0) {
-      setSchedules(new Map());
-      return;
-    }
+interface ProjectStats {
+  projectId: string;
+  totalTasks: number;
+  completedTasks: number;
+  progress: number;
+}
 
-    const { data, error } = await withTimeout(
-      supabase
-        .from('project_schedules')
-        .select('*')
-        .in('project_id', projectIds),
-      8000
-    );
-
-    if (error) throw error;
-
-    const scheduleMap = new Map<string, ScheduleCell>();
-    (data || []).forEach((schedule) => {
-      const key = `${schedule.project_id}-${schedule.date}`;
-      const bgColor = schedule.background_color || '#ffffff';
-      const autoTextColor = getTextColorForBackground(bgColor);
-      scheduleMap.set(key, {
-        projectId: schedule.project_id,
-        date: schedule.date,
-        content: schedule.content || '',
-        backgroundColor: bgColor,
-        textColor: schedule.text_color || autoTextColor,
-      });
-    });
-
-    setSchedules(scheduleMap);
-  } catch (error) {
-    console.error('スケジュール読み込みエラー:', error);
-    setSchedules(new Map());
-  }
-};
+export default function Dashboard({ onSelectProject, user, onLogout }: DashboardProps) {
+  // ... 以降のコード
 
   const loadSchedules = async () => {
     try {
