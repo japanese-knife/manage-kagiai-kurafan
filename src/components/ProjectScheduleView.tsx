@@ -150,56 +150,67 @@ export default function ProjectScheduleView({ user, activeBrandTab, viewType }: 
   };
 
   const handleCellBlur = async () => {
-    if (!editingCell) return;
+  if (!editingCell) return;
 
-    const key = `${editingCell.projectId}-${editingCell.date}`;
-    const existingCell = schedules.get(key);
+  const key = `${editingCell.projectId}-${editingCell.date}`;
+  const existingCell = schedules.get(key);
 
-    try {
-      if (editValue.trim() === '') {
-        // 空の場合は削除
-        if (existingCell) {
-          await supabase
-            .from('project_schedules')
-            .delete()
-            .eq('project_id', editingCell.projectId)
-            .eq('date', editingCell.date);
-        }
-      } else {
-        // 更新または作成
-        const bgColor = existingCell?.backgroundColor || '#ffffff';
-        const txtColor = existingCell?.textColor || getTextColorForBackground(bgColor);
-        
-        const updateData: any = {
-          project_id: editingCell.projectId,
-          date: editingCell.date,
-          content: editValue,
-          background_color: bgColor,
-          user_id: user.id,
-        };
-
-        // text_colorカラムが存在する場合のみ追加
-        try {
-          updateData.text_color = txtColor;
-        } catch (e) {
-          // text_colorカラムがない場合はスキップ
-        }
-
-        const { error } = await supabase
+  try {
+    if (editValue.trim() === '') {
+      // 空の場合は削除
+      if (existingCell) {
+        await supabase
           .from('project_schedules')
-          .upsert(updateData);
-
-        if (error) throw error;
+          .delete()
+          .eq('project_id', editingCell.projectId)
+          .eq('date', editingCell.date);
+        
+        // ローカルステートから削除
+        const updatedSchedules = new Map(schedules);
+        updatedSchedules.delete(key);
+        setSchedules(updatedSchedules);
       }
+    } else {
+      // 更新または作成
+      const bgColor = existingCell?.backgroundColor || '#ffffff';
+      const txtColor = existingCell?.textColor || getTextColorForBackground(bgColor);
+      
+      const updateData: any = {
+        project_id: editingCell.projectId,
+        date: editingCell.date,
+        content: editValue,
+        background_color: bgColor,
+        text_color: txtColor,
+        user_id: user.id,
+      };
 
-      await loadSchedules();
-    } catch (error) {
-      console.error('スケジュール保存エラー:', error);
+      const { error } = await supabase
+        .from('project_schedules')
+        .upsert(updateData, {
+          onConflict: 'project_id,date'
+        });
+
+      if (error) throw error;
+      
+      // ローカルステートを即座に更新
+      const updatedSchedules = new Map(schedules);
+      updatedSchedules.set(key, {
+        projectId: editingCell.projectId,
+        date: editingCell.date,
+        content: editValue,
+        backgroundColor: bgColor,
+        textColor: txtColor,
+      });
+      setSchedules(updatedSchedules);
     }
+  } catch (error) {
+    console.error('スケジュール保存エラー:', error);
+    alert('スケジュールの保存に失敗しました');
+  }
 
-    setEditingCell(null);
-    setEditValue('');
-  };
+  setEditingCell(null);
+  setEditValue('');
+};
 
   const handleKeyDown = (e: React.KeyboardEvent, projectId: string, dateIndex: number) => {
     if (editingCell) {
