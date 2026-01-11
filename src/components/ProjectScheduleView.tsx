@@ -8,7 +8,6 @@ interface ProjectScheduleViewProps {
   user: User;
   activeBrandTab: BrandType | 'all';
   viewType: 'daily' | 'monthly';
-  maxVisibleProjects?: number;
 }
 
 interface ScheduleCell {
@@ -19,17 +18,18 @@ interface ScheduleCell {
   textColor: string;
 }
 
-export default function ProjectScheduleView({ user, activeBrandTab, viewType, maxVisibleProjects }: ProjectScheduleViewProps) {
+export default function ProjectScheduleView({ user, activeBrandTab, viewType }: ProjectScheduleViewProps) {
   const [projects, setProjects] = useState<Project[]>([]);
   const [schedules, setSchedules] = useState<Map<string, ScheduleCell>>(new Map());
   const [dates, setDates] = useState<Date[]>([]);
   const [selectedCell, setSelectedCell] = useState<{ projectId: string; date: string } | null>(null);
+  const [selectedCells, setSelectedCells] = useState<Set<string>>(new Set());
   const [editingCell, setEditingCell] = useState<{ projectId: string; date: string } | null>(null);
   const [editValue, setEditValue] = useState('');
   const [showColorPicker, setShowColorPicker] = useState<{ projectId: string; date: string } | null>(null);
-  const [selectedColor, setSelectedColor] = useState('#ffffff');
-  const [copiedCellData, setCopiedCellData] = useState<{ content: string; backgroundColor: string; textColor: string } | null>(null);
+  const [copiedCellData, setCopiedCellData] = useState<any>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const hasScrolledToToday = useRef(false);
 
   useEffect(() => {
     loadProjects();
@@ -43,37 +43,40 @@ export default function ProjectScheduleView({ user, activeBrandTab, viewType, ma
   }, [projects]);
 
   useEffect(() => {
-  if (editingCell && inputRef.current) {
-    inputRef.current.focus();
-  }
-}, [editingCell]);
-
-useEffect(() => {
-  // 日次ビューで初回読み込み時に当日の列を中央に配置
-  if (viewType === 'daily' && dates.length > 0) {
-    const todayIndex = dates.findIndex(date => isToday(date));
-    if (todayIndex !== -1) {
-      setTimeout(() => {
-        const tableContainer = document.querySelector('.overflow-x-auto');
-        const todayHeader = document.querySelectorAll('thead th')[todayIndex + 1]; // +1 は「事業者名」列の分
-        
-        if (tableContainer && todayHeader) {
-          const containerWidth = tableContainer.clientWidth;
-          const headerLeft = (todayHeader as HTMLElement).offsetLeft;
-          const headerWidth = (todayHeader as HTMLElement).offsetWidth;
-          
-          // 当日の列を中央に配置
-          const scrollLeft = headerLeft - (containerWidth / 2) + (headerWidth / 2);
-          tableContainer.scrollLeft = scrollLeft;
-        }
-      }, 100);
+    if (editingCell && inputRef.current) {
+      inputRef.current.focus();
     }
-  }
-}, [dates, viewType]);
+  }, [editingCell]);
+
+  useEffect(() => {
+    // 日次ビューで初回読み込み時のみ当日の列を中央に配置
+    if (viewType === 'daily' && dates.length > 0 && !hasScrolledToToday.current) {
+      const todayIndex = dates.findIndex(date => isToday(date));
+      if (todayIndex !== -1) {
+        hasScrolledToToday.current = true;
+        setTimeout(() => {
+          const tableContainer = document.querySelector('.overflow-x-auto');
+          const todayHeader = document.querySelectorAll('thead th')[todayIndex + 1];
+          
+          if (tableContainer && todayHeader) {
+            const containerWidth = tableContainer.clientWidth;
+            const headerLeft = (todayHeader as HTMLElement).offsetLeft;
+            const headerWidth = (todayHeader as HTMLElement).offsetWidth;
+            
+            const scrollLeft = headerLeft - (containerWidth / 2) + (headerWidth / 2);
+            tableContainer.scrollLeft = scrollLeft;
+          }
+        }, 100);
+      }
+    }
+  }, [dates.length, viewType]);
+
+  useEffect(() => {
+    hasScrolledToToday.current = false;
+  }, [viewType]);
 
   const generateDates = () => {
     if (viewType === 'monthly') {
-      // 月次ビュー: 今月から12ヶ月分
       const today = new Date();
       const datesArray: Date[] = [];
       for (let i = 0; i < 12; i++) {
@@ -82,7 +85,6 @@ useEffect(() => {
       }
       setDates(datesArray);
     } else {
-      // 日次ビュー: 過去30日から未来60日
       const today = new Date();
       const datesArray: Date[] = [];
       for (let i = -30; i <= 60; i++) {
@@ -100,7 +102,6 @@ useEffect(() => {
         .from('projects')
         .select('*');
       
-      // 'all'の場合は両方のブランドを取得
       if (activeBrandTab !== 'all') {
         query = query.eq('brand_type', activeBrandTab);
       }
@@ -128,7 +129,6 @@ useEffect(() => {
       (data || []).forEach((schedule) => {
         const key = `${schedule.project_id}-${schedule.date}`;
         const bgColor = schedule.background_color || '#ffffff';
-        // 背景色に応じて文字色を自動設定
         const autoTextColor = getTextColorForBackground(bgColor);
         scheduleMap.set(key, {
           projectId: schedule.project_id,
@@ -150,7 +150,6 @@ useEffect(() => {
   };
 
   const getTextColorForBackground = (bgColor: string): string => {
-    // 背景色の明度に基づいて文字色を決定
     const hex = bgColor.replace('#', '');
     const r = parseInt(hex.substr(0, 2), 16);
     const g = parseInt(hex.substr(2, 2), 16);
@@ -159,9 +158,56 @@ useEffect(() => {
     return brightness > 155 ? '#000000' : '#ffffff';
   };
 
-  const handleCellClick = (projectId: string, date: Date) => {
+  const isToday = (date: Date): boolean => {
+    const today = new Date();
+    return date.getFullYear() === today.getFullYear() &&
+           date.getMonth() === today.getMonth() &&
+           date.getDate() === today.getDate();
+  };
+
+  const handleCellClick = (projectId: string, date: Date, e?: React.MouseEvent) => {
     const dateStr = date.toISOString().split('T')[0];
-    setSelectedCell({ projectId, date: dateStr });
+    const cellKey = `${projectId}-${dateStr}`;
+    
+    if (e?.shiftKey && selectedCell) {
+      handleRangeSelection(projectId, dateStr);
+    } else if (e?.ctrlKey || e?.metaKey) {
+      const newSelectedCells = new Set(selectedCells);
+      if (newSelectedCells.has(cellKey)) {
+        newSelectedCells.delete(cellKey);
+      } else {
+        newSelectedCells.add(cellKey);
+      }
+      setSelectedCells(newSelectedCells);
+      setSelectedCell({ projectId, date: dateStr });
+    } else {
+      setSelectedCell({ projectId, date: dateStr });
+      setSelectedCells(new Set([cellKey]));
+    }
+  };
+
+  const handleRangeSelection = (endProjectId: string, endDate: string) => {
+    if (!selectedCell) return;
+    
+    const startProjectIndex = projects.findIndex(p => p.id === selectedCell.projectId);
+    const endProjectIndex = projects.findIndex(p => p.id === endProjectId);
+    const startDateIndex = dates.findIndex(d => d.toISOString().split('T')[0] === selectedCell.date);
+    const endDateIndex = dates.findIndex(d => d.toISOString().split('T')[0] === endDate);
+    
+    const minProjectIndex = Math.min(startProjectIndex, endProjectIndex);
+    const maxProjectIndex = Math.max(startProjectIndex, endProjectIndex);
+    const minDateIndex = Math.min(startDateIndex, endDateIndex);
+    const maxDateIndex = Math.max(startDateIndex, endDateIndex);
+    
+    const newSelectedCells = new Set<string>();
+    for (let pIndex = minProjectIndex; pIndex <= maxProjectIndex; pIndex++) {
+      for (let dIndex = minDateIndex; dIndex <= maxDateIndex; dIndex++) {
+        const cellKey = `${projects[pIndex].id}-${dates[dIndex].toISOString().split('T')[0]}`;
+        newSelectedCells.add(cellKey);
+      }
+    }
+    
+    setSelectedCells(newSelectedCells);
   };
 
   const handleCellDoubleClick = (projectId: string, date: Date) => {
@@ -181,7 +227,6 @@ useEffect(() => {
 
     try {
       if (editValue.trim() === '') {
-        // 空の場合は削除
         if (existingCell) {
           await supabase
             .from('project_schedules')
@@ -189,13 +234,11 @@ useEffect(() => {
             .eq('project_id', editingCell.projectId)
             .eq('date', editingCell.date);
           
-          // ローカルステートから削除
           const updatedSchedules = new Map(schedules);
           updatedSchedules.delete(key);
           setSchedules(updatedSchedules);
         }
       } else {
-        // 更新または作成
         const bgColor = existingCell?.backgroundColor || '#ffffff';
         const txtColor = existingCell?.textColor || getTextColorForBackground(bgColor);
         
@@ -216,7 +259,6 @@ useEffect(() => {
 
         if (error) throw error;
         
-        // ローカルステートを即座に更新
         const updatedSchedules = new Map(schedules);
         updatedSchedules.set(key, {
           projectId: editingCell.projectId,
@@ -237,174 +279,234 @@ useEffect(() => {
   };
 
   const handleKeyDown = (e: React.KeyboardEvent, projectId: string, dateIndex: number) => {
-  if (editingCell) {
-    if (e.key === 'Enter') {
-      handleCellBlur();
-    } else if (e.key === 'Escape') {
-      setEditingCell(null);
-      setEditValue('');
+    if (editingCell) {
+      if (e.key === 'Enter') {
+        handleCellBlur();
+      } else if (e.key === 'Escape') {
+        setEditingCell(null);
+        setEditValue('');
+      }
+      return;
     }
-    return;
-  }
 
-  // コピー機能（Ctrl+C または Cmd+C）
-  if ((e.ctrlKey || e.metaKey) && e.key === 'c') {
-    e.preventDefault();
-    handleCopy();
-    return;
-  }
+    if ((e.ctrlKey || e.metaKey) && e.key === 'c') {
+      e.preventDefault();
+      handleCopy();
+      return;
+    }
 
-  // セルが選択されていない場合は現在のセルを選択
-  if (!selectedCell) {
-    const dateStr = dates[dateIndex].toISOString().split('T')[0];
-    setSelectedCell({ projectId, date: dateStr });
-    return;
-  }
+    if (e.key === 'Escape' && !editingCell) {
+      e.preventDefault();
+      setSelectedCells(new Set());
+      setSelectedCell(null);
+      return;
+    }
 
-  const currentProjectIndex = projects.findIndex(p => p.id === selectedCell.projectId);
-  const currentDateIndex = dates.findIndex(d => d.toISOString().split('T')[0] === selectedCell.date);
-  
-  switch (e.key) {
-    case 'ArrowUp':
-      e.preventDefault();
-      if (currentProjectIndex > 0) {
-        setSelectedCell({ 
-          projectId: projects[currentProjectIndex - 1].id, 
-          date: selectedCell.date 
-        });
-        // 選択されたセルにフォーカスを移動
-        setTimeout(() => {
-          const newCell = document.querySelector(
-            `[data-cell-id="${projects[currentProjectIndex - 1].id}-${selectedCell.date}"]`
-          ) as HTMLElement;
-          newCell?.focus();
-        }, 0);
-      }
-      break;
-    case 'ArrowDown':
-      e.preventDefault();
-      if (currentProjectIndex < projects.length - 1) {
-        setSelectedCell({ 
-          projectId: projects[currentProjectIndex + 1].id, 
-          date: selectedCell.date 
-        });
-        // 選択されたセルにフォーカスを移動
-        setTimeout(() => {
-          const newCell = document.querySelector(
-            `[data-cell-id="${projects[currentProjectIndex + 1].id}-${selectedCell.date}"]`
-          ) as HTMLElement;
-          newCell?.focus();
-        }, 0);
-      }
-      break;
-    case 'ArrowLeft':
-      e.preventDefault();
-      if (currentDateIndex > 0) {
-        const newDate = dates[currentDateIndex - 1].toISOString().split('T')[0];
-        setSelectedCell({ 
-          projectId: selectedCell.projectId, 
-          date: newDate
-        });
-        // 選択されたセルにフォーカスを移動
-        setTimeout(() => {
-          const newCell = document.querySelector(
-            `[data-cell-id="${selectedCell.projectId}-${newDate}"]`
-          ) as HTMLElement;
-          newCell?.focus();
-        }, 0);
-      }
-      break;
-    case 'ArrowRight':
-      e.preventDefault();
-      if (currentDateIndex < dates.length - 1) {
-        const newDate = dates[currentDateIndex + 1].toISOString().split('T')[0];
-        setSelectedCell({ 
-          projectId: selectedCell.projectId, 
-          date: newDate
-        });
-        // 選択されたセルにフォーカスを移動
-        setTimeout(() => {
-          const newCell = document.querySelector(
-            `[data-cell-id="${selectedCell.projectId}-${newDate}"]`
-          ) as HTMLElement;
-          newCell?.focus();
-        }, 0);
-      }
-      break;
-    case 'Enter':
-      e.preventDefault();
-      handleCellDoubleClick(selectedCell.projectId, new Date(selectedCell.date));
-      break;
-    case 'Delete':
-    case 'Backspace':
-      e.preventDefault();
-      handleCellDoubleClick(selectedCell.projectId, new Date(selectedCell.date));
-      setEditValue('');
-      break;
-  }
-};
+    if (!selectedCell) {
+      const dateStr = dates[dateIndex].toISOString().split('T')[0];
+      setSelectedCell({ projectId, date: dateStr });
+      return;
+    }
+
+    const currentProjectIndex = projects.findIndex(p => p.id === selectedCell.projectId);
+    const currentDateIndex = dates.findIndex(d => d.toISOString().split('T')[0] === selectedCell.date);
+    
+    switch (e.key) {
+      case 'ArrowUp':
+        e.preventDefault();
+        if (currentProjectIndex > 0) {
+          setSelectedCell({ 
+            projectId: projects[currentProjectIndex - 1].id, 
+            date: selectedCell.date 
+          });
+          setTimeout(() => {
+            const newCell = document.querySelector(
+              `[data-cell-id="${projects[currentProjectIndex - 1].id}-${selectedCell.date}"]`
+            ) as HTMLElement;
+            newCell?.focus();
+          }, 0);
+        }
+        break;
+      case 'ArrowDown':
+        e.preventDefault();
+        if (currentProjectIndex < projects.length - 1) {
+          setSelectedCell({ 
+            projectId: projects[currentProjectIndex + 1].id, 
+            date: selectedCell.date 
+          });
+          setTimeout(() => {
+            const newCell = document.querySelector(
+              `[data-cell-id="${projects[currentProjectIndex + 1].id}-${selectedCell.date}"]`
+            ) as HTMLElement;
+            newCell?.focus();
+          }, 0);
+        }
+        break;
+      case 'ArrowLeft':
+        e.preventDefault();
+        if (currentDateIndex > 0) {
+          const newDate = dates[currentDateIndex - 1].toISOString().split('T')[0];
+          setSelectedCell({ 
+            projectId: selectedCell.projectId, 
+            date: newDate
+          });
+          setTimeout(() => {
+            const newCell = document.querySelector(
+              `[data-cell-id="${selectedCell.projectId}-${newDate}"]`
+            ) as HTMLElement;
+            newCell?.focus();
+          }, 0);
+        }
+        break;
+      case 'ArrowRight':
+        e.preventDefault();
+        if (currentDateIndex < dates.length - 1) {
+          const newDate = dates[currentDateIndex + 1].toISOString().split('T')[0];
+          setSelectedCell({ 
+            projectId: selectedCell.projectId, 
+            date: newDate
+          });
+          setTimeout(() => {
+            const newCell = document.querySelector(
+              `[data-cell-id="${selectedCell.projectId}-${newDate}"]`
+            ) as HTMLElement;
+            newCell?.focus();
+          }, 0);
+        }
+        break;
+      case 'Enter':
+        e.preventDefault();
+        handleCellDoubleClick(selectedCell.projectId, new Date(selectedCell.date));
+        break;
+      case 'Delete':
+      case 'Backspace':
+        e.preventDefault();
+        handleCellDoubleClick(selectedCell.projectId, new Date(selectedCell.date));
+        setEditValue('');
+        break;
+    }
+  };
 
   const handleCopy = async () => {
-    if (!selectedCell) return;
+    if (selectedCells.size === 0) return;
 
-    const key = `${selectedCell.projectId}-${selectedCell.date}`;
-    const cell = schedules.get(key);
-    if (cell) {
-      try {
-        // セルのデータ（内容、背景色、文字色）を保存
-        setCopiedCellData({
-          content: cell.content || '',
-          backgroundColor: cell.backgroundColor || '#ffffff',
-          textColor: cell.textColor || '#000000'
-        });
-        // クリップボードにはテキストのみをコピー
-        await navigator.clipboard.writeText(cell.content || '');
-      } catch (error) {
-        console.error('コピーエラー:', error);
-      }
+    try {
+      const cellsData = Array.from(selectedCells).map(key => {
+        const cell = schedules.get(key);
+        return {
+          key,
+          content: cell?.content || '',
+          backgroundColor: cell?.backgroundColor || '#ffffff',
+          textColor: cell?.textColor || '#000000'
+        };
+      });
+      
+      setCopiedCellData({
+        content: cellsData.map(c => c.content).join('\t'),
+        backgroundColor: cellsData[0].backgroundColor,
+        textColor: cellsData[0].textColor,
+        isMultiple: selectedCells.size > 1,
+        cellsData: cellsData
+      });
+      
+      await navigator.clipboard.writeText(cellsData.map(c => c.content).join('\t'));
+    } catch (error) {
+      console.error('コピーエラー:', error);
     }
   };
 
   const handlePaste = async (e: React.ClipboardEvent, projectId: string, date: Date) => {
     e.preventDefault();
-    const dateStr = date.toISOString().split('T')[0];
+    
+    const targetCells = selectedCells.size > 0 ? Array.from(selectedCells) : [`${projectId}-${date.toISOString().split('T')[0]}`];
 
     try {
-      let content = '';
-      let backgroundColor = '#ffffff';
-      let textColor = '#000000';
+      if (copiedCellData && copiedCellData.isMultiple && copiedCellData.cellsData) {
+        const cellsData = copiedCellData.cellsData;
+        
+        for (const targetKey of targetCells) {
+          const [targetProjectId, targetDateStr] = targetKey.split('-').reduce((acc, part, idx, arr) => {
+            if (idx < arr.length - 3) {
+              acc[0] = acc[0] ? `${acc[0]}-${part}` : part;
+            } else {
+              acc[1] = acc[1] ? `${acc[1]}-${part}` : part;
+            }
+            return acc;
+          }, ['', '']);
+          
+          const sourceData = cellsData[0];
+          
+          const updateData: any = {
+            project_id: targetProjectId,
+            date: targetDateStr,
+            content: sourceData.content,
+            background_color: sourceData.backgroundColor,
+            text_color: sourceData.textColor,
+            user_id: user.id,
+          };
 
-      // コピーしたセルデータがある場合は、それを使用（色も含む）
-      if (copiedCellData) {
-        content = copiedCellData.content;
-        backgroundColor = copiedCellData.backgroundColor;
-        textColor = copiedCellData.textColor;
+          await supabase
+            .from('project_schedules')
+            .upsert(updateData, {
+              onConflict: 'project_id,date'
+            });
+        }
+      } else if (copiedCellData) {
+        for (const targetKey of targetCells) {
+          const [targetProjectId, targetDateStr] = targetKey.split('-').reduce((acc, part, idx, arr) => {
+            if (idx < arr.length - 3) {
+              acc[0] = acc[0] ? `${acc[0]}-${part}` : part;
+            } else {
+              acc[1] = acc[1] ? `${acc[1]}-${part}` : part;
+            }
+            return acc;
+          }, ['', '']);
+          
+          const updateData: any = {
+            project_id: targetProjectId,
+            date: targetDateStr,
+            content: copiedCellData.content,
+            background_color: copiedCellData.backgroundColor,
+            text_color: copiedCellData.textColor,
+            user_id: user.id,
+          };
+
+          await supabase
+            .from('project_schedules')
+            .upsert(updateData, {
+              onConflict: 'project_id,date'
+            });
+        }
       } else {
-        // クリップボードからテキストを取得
-        content = e.clipboardData.getData('text');
-        textColor = getTextColorForBackground(backgroundColor);
+        const content = e.clipboardData.getData('text');
+        const backgroundColor = '#ffffff';
+        const textColor = getTextColorForBackground(backgroundColor);
+        
+        for (const targetKey of targetCells) {
+          const [targetProjectId, targetDateStr] = targetKey.split('-').reduce((acc, part, idx, arr) => {
+            if (idx < arr.length - 3) {
+              acc[0] = acc[0] ? `${acc[0]}-${part}` : part;
+            } else {
+              acc[1] = acc[1] ? `${acc[1]}-${part}` : part;
+            }
+            return acc;
+          }, ['', '']);
+          
+          const updateData: any = {
+            project_id: targetProjectId,
+            date: targetDateStr,
+            content: content,
+            background_color: backgroundColor,
+            text_color: textColor,
+            user_id: user.id,
+          };
+
+          await supabase
+            .from('project_schedules')
+            .upsert(updateData);
+        }
       }
 
-      const updateData: any = {
-        project_id: projectId,
-        date: dateStr,
-        content: content,
-        background_color: backgroundColor,
-        user_id: user.id,
-      };
-
-      // text_colorカラムが存在する場合のみ追加
-      try {
-        updateData.text_color = textColor;
-      } catch (err) {
-        // text_colorカラムがない場合はスキップ
-      }
-
-      const { error } = await supabase
-        .from('project_schedules')
-        .upsert(updateData);
-
-      if (error) throw error;
       await loadSchedules();
     } catch (error) {
       console.error('ペーストエラー:', error);
@@ -413,42 +515,56 @@ useEffect(() => {
 
   const handleColorChange = async (projectId: string, date: Date, color: string, textColor: string) => {
     const dateStr = date.toISOString().split('T')[0];
-    const key = `${projectId}-${dateStr}`;
-    const existingCell = schedules.get(key);
+    const clickedCellKey = `${projectId}-${dateStr}`;
+    
+    const targetCells = selectedCells.size > 0 && selectedCells.has(clickedCellKey) 
+      ? Array.from(selectedCells) 
+      : [clickedCellKey];
 
     try {
-      const updateData: any = {
-        project_id: projectId,
-        date: dateStr,
-        content: existingCell?.content || '',
-        background_color: color,
-        text_color: textColor,
-        user_id: user.id,
-      };
-
-      const { error } = await supabase
-        .from('project_schedules')
-        .upsert(updateData, {
-          onConflict: 'project_id,date'
-        });
-
-      if (error) throw error;
-      
-      // ローカルステートを即座に更新
       const updatedSchedules = new Map(schedules);
-      updatedSchedules.set(key, {
-        projectId: projectId,
-        date: dateStr,
-        content: existingCell?.content || '',
-        backgroundColor: color,
-        textColor: textColor,
-      });
-      setSchedules(updatedSchedules);
       
+      for (const cellKey of targetCells) {
+        const parts = cellKey.split('-');
+        const targetDateStr = parts.slice(-3).join('-');
+        const targetProjectId = parts.slice(0, -3).join('-');
+        
+        const existingCell = schedules.get(cellKey);
+        
+        const updateData: any = {
+          project_id: targetProjectId,
+          date: targetDateStr,
+          content: existingCell?.content || '',
+          background_color: color,
+          text_color: textColor,
+          user_id: user.id,
+        };
+
+        const { error } = await supabase
+          .from('project_schedules')
+          .upsert(updateData, {
+            onConflict: 'project_id,date'
+          });
+
+        if (error) {
+          console.error('Supabaseエラー詳細:', error);
+          throw error;
+        }
+        
+        updatedSchedules.set(cellKey, {
+          projectId: targetProjectId,
+          date: targetDateStr,
+          content: existingCell?.content || '',
+          backgroundColor: color,
+          textColor: textColor,
+        });
+      }
+      
+      setSchedules(updatedSchedules);
       setShowColorPicker(null);
     } catch (error) {
       console.error('色変更エラー:', error);
-      alert('色の変更に失敗しました');
+      alert(`色の変更に失敗しました: ${error instanceof Error ? error.message : '不明なエラー'}`);
     }
   };
 
@@ -491,13 +607,6 @@ useEffect(() => {
   const isWeekend = (date: Date): boolean => {
     const day = date.getDay();
     return day === 0 || day === 6;
-  };
-
-  const isToday = (date: Date): boolean => {
-    const today = new Date();
-    return date.getFullYear() === today.getFullYear() &&
-           date.getMonth() === today.getMonth() &&
-           date.getDate() === today.getDate();
   };
 
   const exportToCSV = () => {
@@ -551,7 +660,7 @@ useEffect(() => {
         <div className="flex items-center gap-2">
           <button
             onClick={handleCopy}
-            disabled={!selectedCell}
+            disabled={selectedCells.size === 0}
             className="p-2 text-neutral-600 hover:text-primary-600 hover:bg-primary-50 rounded-lg transition-colors disabled:opacity-30"
             title="コピー (Ctrl+C)"
           >
@@ -567,190 +676,53 @@ useEffect(() => {
         </div>
       </div>
 
-      {activeBrandTab === 'all' && maxVisibleProjects ? (
-  // ガントチャート表示（ブランド別カード）
-  <div className="space-y-6">
-    {/* 海外クラファン.com セクション */}
-    {(() => {
-      const kaigaiProjects = projects.filter(p => p.brand_type === '海外クラファン.com');
-      return kaigaiProjects.length > 0 && (
-        <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl border-2 border-blue-200 overflow-hidden">
-          <div className="bg-gradient-to-r from-blue-600 to-indigo-600 px-6 py-3 border-b-2 border-blue-300">
-            <h3 className="text-lg font-bold text-white">海外クラファン.com</h3>
-          </div>
-          <div className="overflow-x-auto" style={{ maxHeight: maxVisibleProjects * 40 + 100 + 'px' }}>
-            <table className="w-full border-collapse text-sm">
-              <thead className="sticky top-0 z-10">
-                <tr>
-                  <th className="sticky left-0 z-20 bg-blue-50 border border-blue-200 px-4 py-2 text-left font-semibold text-neutral-900 min-w-[200px]">
-                    事業者名
-                  </th>
-                  {dates.map((date, index) => (
-                    <th
-                      key={index}
-                      className={`border border-blue-200 px-3 py-2 text-center font-medium min-w-[80px] ${
-                        viewType === 'daily' && isToday(date) 
-                          ? 'bg-yellow-100 border-yellow-400 border-2' 
-                          : viewType === 'daily' && isWeekend(date) 
-                            ? 'bg-blue-100' 
-                            : 'bg-blue-50'
-                      }`}
-                    >
-                      {viewType === 'monthly' ? (
-                        <>
-                          <div className="text-xs text-neutral-600">
-                            {date.getFullYear()}年
-                          </div>
-                          <div className="text-xs text-neutral-600">
-                            {date.getMonth() + 1}月
-                          </div>
-                        </>
-                      ) : (
-                        <>
-                          <div className={`text-xs ${isToday(date) ? 'font-bold text-yellow-700' : 'text-neutral-600'}`}>
-                            {date.getMonth() + 1}/{date.getDate()}
-                          </div>
-                          <div className={`text-xs ${
-                            isToday(date) 
-                              ? 'font-bold text-yellow-700' 
-                              : isWeekend(date) 
-                                ? 'text-blue-600' 
-                                : 'text-neutral-500'
-                          }`}>
-                            {getWeekday(date)}
-                          </div>
-                        </>
-                      )}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {kaigaiProjects.map((project) => {
-                  return renderProjectRow(project);
-                })}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      );
-    })()}
-
-    {/* BRAND-BASE セクション */}
-    {(() => {
-      const brandBaseProjects = projects.filter(p => p.brand_type === 'BRAND-BASE');
-      return brandBaseProjects.length > 0 && (
-        <div className="bg-gradient-to-br from-purple-50 to-pink-50 rounded-xl border-2 border-purple-200 overflow-hidden">
-          <div className="bg-gradient-to-r from-purple-600 to-pink-600 px-6 py-3 border-b-2 border-purple-300">
-            <h3 className="text-lg font-bold text-white">BRAND-BASE</h3>
-          </div>
-          <div className="overflow-x-auto" style={{ maxHeight: maxVisibleProjects * 40 + 100 + 'px' }}>
-            <table className="w-full border-collapse text-sm">
-              <thead className="sticky top-0 z-10">
-                <tr>
-                  <th className="sticky left-0 z-20 bg-purple-50 border border-purple-200 px-4 py-2 text-left font-semibold text-neutral-900 min-w-[200px]">
-                    事業者名
-                  </th>
-                  {dates.map((date, index) => (
-                    <th
-                      key={index}
-                      className={`border border-purple-200 px-3 py-2 text-center font-medium min-w-[80px] ${
-                        viewType === 'daily' && isToday(date) 
-                          ? 'bg-yellow-100 border-yellow-400 border-2' 
-                          : viewType === 'daily' && isWeekend(date) 
-                            ? 'bg-purple-100' 
-                            : 'bg-purple-50'
-                      }`}
-                    >
-                      {viewType === 'monthly' ? (
-                        <>
-                          <div className="text-xs text-neutral-600">
-                            {date.getFullYear()}年
-                          </div>
-                          <div className="text-xs text-neutral-600">
-                            {date.getMonth() + 1}月
-                          </div>
-                        </>
-                      ) : (
-                        <>
-                          <div className={`text-xs ${isToday(date) ? 'font-bold text-yellow-700' : 'text-neutral-600'}`}>
-                            {date.getMonth() + 1}/{date.getDate()}
-                          </div>
-                          <div className={`text-xs ${
-                            isToday(date) 
-                              ? 'font-bold text-yellow-700' 
-                              : isWeekend(date) 
-                                ? 'text-purple-600' 
-                                : 'text-neutral-500'
-                          }`}>
-                            {getWeekday(date)}
-                          </div>
-                        </>
-                      )}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {brandBaseProjects.map((project) => {
-                  return renderProjectRow(project);
-                })}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      );
-    })()}
-  </div>
-) : (
-  // 通常表示（既存のテーブル）
-  <div className="overflow-x-auto">
-    <table className="w-full border-collapse text-sm">
+      <div className="overflow-x-auto">
+        <table className="w-full border-collapse text-sm">
           <thead>
-  <tr>
-    <th className="sticky left-0 z-20 bg-neutral-50 border border-neutral-200 px-4 py-2 text-left font-semibold text-neutral-900 min-w-[200px]">
-      事業者名
-    </th>
-    {dates.map((date, index) => (
-      <th
-        key={index}
-        className={`border border-neutral-200 px-3 py-2 text-center font-medium min-w-[80px] ${
-          viewType === 'daily' && isToday(date) 
-            ? 'bg-yellow-100 border-yellow-400 border-2' 
-            : viewType === 'daily' && isWeekend(date) 
-              ? 'bg-blue-50' 
-              : 'bg-neutral-50'
-        }`}
-      >
-        {viewType === 'monthly' ? (
-          <>
-            <div className="text-xs text-neutral-600">
-              {date.getFullYear()}年
-            </div>
-            <div className="text-xs text-neutral-600">
-              {date.getMonth() + 1}月
-            </div>
-          </>
-        ) : (
-          <>
-            <div className={`text-xs ${isToday(date) ? 'font-bold text-yellow-700' : 'text-neutral-600'}`}>
-              {date.getMonth() + 1}/{date.getDate()}
-            </div>
-            <div className={`text-xs ${
-              isToday(date) 
-                ? 'font-bold text-yellow-700' 
-                : isWeekend(date) 
-                  ? 'text-blue-600' 
-                  : 'text-neutral-500'
-            }`}>
-              {getWeekday(date)}
-            </div>
-          </>
-        )}
-      </th>
-    ))}
-  </tr>
-</thead>
+            <tr>
+              <th className="sticky left-0 z-20 bg-neutral-50 border border-neutral-200 px-4 py-2 text-left font-semibold text-neutral-900 min-w-[200px]">
+                事業者名
+              </th>
+              {dates.map((date, index) => (
+                <th
+                  key={index}
+                  className={`border border-neutral-200 px-3 py-2 text-center font-medium min-w-[80px] ${
+                    viewType === 'daily' && isToday(date) 
+                      ? 'bg-yellow-100 border-yellow-400 border-2' 
+                      : viewType === 'daily' && isWeekend(date) 
+                        ? 'bg-blue-50' 
+                        : 'bg-neutral-50'
+                  }`}
+                >
+                  {viewType === 'monthly' ? (
+                    <>
+                      <div className="text-xs text-neutral-600">
+                        {date.getFullYear()}年
+                      </div>
+                      <div className="text-xs text-neutral-600">
+                        {date.getMonth() + 1}月
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <div className={`text-xs ${isToday(date) ? 'font-bold text-yellow-700' : 'text-neutral-600'}`}>
+                        {date.getMonth() + 1}/{date.getDate()}
+                      </div>
+                      <div className={`text-xs ${
+                        isToday(date) 
+                          ? 'font-bold text-yellow-700' 
+                          : isWeekend(date) 
+                            ? 'text-blue-600' 
+                            : 'text-neutral-500'
+                      }`}>
+                        {getWeekday(date)}
+                      </div>
+                    </>
+                  )}
+                </th>
+              ))}
+            </tr>
+          </thead>
           <tbody>
             {projects.map((project) => (
               <tr key={project.id} className="hover:bg-neutral-50/50">
@@ -761,36 +733,37 @@ useEffect(() => {
                   const key = getCellKey(project.id, date);
                   const cell = schedules.get(key);
                   const dateStr = date.toISOString().split('T')[0];
-                  const isSelected = selectedCell?.projectId === project.id && selectedCell?.date === dateStr;
+                  const cellKey = `${project.id}-${dateStr}`;
+                  const isSelected = selectedCells.has(cellKey);
+                  const isPrimarySelected = selectedCell?.projectId === project.id && selectedCell?.date === dateStr;
                   const isEditing = editingCell?.projectId === project.id && editingCell?.date === dateStr;
 
                   return (
                     <td
-  key={dateIndex}
-  data-cell-id={`${project.id}-${dateStr}`}
-  className={`p-0 cursor-cell relative ${
-    isSelected 
-      ? 'border-4 border-primary-600 shadow-lg' 
-      : 'border border-neutral-200'
-  }`}
-  onClick={() => handleCellClick(project.id, date)}
-  onDoubleClick={() => handleCellDoubleClick(project.id, date)}
-  onPaste={(e) => handlePaste(e, project.id, date)}
-  onKeyDown={(e) => handleKeyDown(e, project.id, dateIndex)}
-  onContextMenu={(e) => {
-    e.preventDefault();
-    setShowColorPicker({ projectId: project.id, date: dateStr });
-    setSelectedColor(cell?.backgroundColor || '#ffffff');
-  }}
-  tabIndex={0}
->
-                      {/* 背景色レイヤー */}
+                      key={dateIndex}
+                      data-cell-id={`${project.id}-${dateStr}`}
+                      className={`p-0 cursor-cell relative ${
+                        isPrimarySelected
+                          ? 'border-4 border-primary-600 shadow-lg' 
+                          : isSelected
+                            ? 'border-2 border-primary-400 bg-primary-50/30'
+                            : 'border border-neutral-200'
+                      }`}
+                      onClick={(e) => handleCellClick(project.id, date, e)}
+                      onDoubleClick={() => handleCellDoubleClick(project.id, date)}
+                      onPaste={(e) => handlePaste(e, project.id, date)}
+                      onKeyDown={(e) => handleKeyDown(e, project.id, dateIndex)}
+                      onContextMenu={(e) => {
+                        e.preventDefault();
+                        setShowColorPicker({ projectId: project.id, date: dateStr });
+                      }}
+                      tabIndex={0}
+                    >
                       <div 
                         className="absolute inset-0 z-0"
                         style={{ backgroundColor: cell?.backgroundColor || '#ffffff' }}
                       />
                       
-                      {/* コンテンツレイヤー（前面） */}
                       <div className="relative z-10">
                         {isEditing ? (
                           <input
@@ -820,14 +793,15 @@ useEffect(() => {
                         )}
                       </div>
                       
-                      {/* カラーピッカー（最前面） */}
                       {showColorPicker?.projectId === project.id && showColorPicker?.date === dateStr && (
                         <div
                           className="absolute z-50 bg-white border-2 border-neutral-300 rounded-xl shadow-2xl p-4 top-full left-0 mt-1 min-w-[280px]"
                           onClick={(e) => e.stopPropagation()}
                         >
                           <div className="mb-3">
-                            <p className="text-xs font-semibold text-neutral-700 mb-2">カラーを選択</p>
+                            <p className="text-xs font-semibold text-neutral-700 mb-2">
+                              {selectedCells.size > 1 ? `${selectedCells.size}個のセルの色を変更` : 'カラーを選択'}
+                            </p>
                             <div className="grid grid-cols-7 gap-2">
                               {predefinedColors.map((item) => (
                                 <button
@@ -870,6 +844,8 @@ useEffect(() => {
           <span>• 右クリックで色選択</span>
           <span>• 矢印キーで移動</span>
           <span>• Enterで編集開始</span>
+          <span>• Ctrl+クリックで複数選択</span>
+          <span>• Shiftで範囲選択</span>
           <span>• Ctrl+C でコピー</span>
           <span>• Ctrl+V でペースト</span>
         </div>
