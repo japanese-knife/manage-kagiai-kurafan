@@ -784,14 +784,26 @@ export default function Dashboard({ onSelectProject, user, onLogout }: Dashboard
           </div>
         )}
 
-        {/* スケジュールビュー */}
-        <ProjectScheduleView user={user} activeBrandTab={activeBrandTab} />
+        {/* スケジュールタブの内容 */}
+{activeTab === 'schedule' && (
+  <div className="space-y-8">
+    <div>
+      <h2 className="text-lg font-semibold text-neutral-900 mb-6">海外クラファン.com スケジュール</h2>
+      <ProjectScheduleView user={user} activeBrandTab="海外クラファン.com" />
+    </div>
+    <div>
+      <h2 className="text-lg font-semibold text-neutral-900 mb-6">BRAND-BASE スケジュール</h2>
+      <ProjectScheduleView user={user} activeBrandTab="BRAND-BASE" />
+    </div>
+  </div>
+)}
 
-        {/* プロジェクト一覧 */}
-        <div className="mt-8">
-          <h2 className="text-lg font-semibold text-neutral-900 mb-6">プロジェクト一覧</h2>
-        
-        {projects.filter(p => p.brand_type === activeBrandTab).length === 0 ? (
+{/* プロジェクト一覧タブの内容 */}
+{activeTab === 'projects' && (
+  <div className="mt-8">
+    <h2 className="text-lg font-semibold text-neutral-900 mb-6">プロジェクト一覧</h2>
+
+    {projects.filter(p => p.brand_type === activeBrandTab).length === 0 ? (
           <div className="text-center py-16 sm:py-20 md:py-24 px-4">
             <div className="w-16 h-16 sm:w-20 sm:h-20 bg-neutral-100 rounded-2xl flex items-center justify-center mx-auto mb-4 sm:mb-6">
               <FolderKanban className="w-8 h-8 sm:w-10 sm:h-10 text-neutral-400" />
@@ -1008,7 +1020,8 @@ export default function Dashboard({ onSelectProject, user, onLogout }: Dashboard
             })}
           </div>
         )}
-        </div>
+  </div>
+)}
       </main>
       <Footer />
     </div>
