@@ -6,8 +6,7 @@ import { Calendar, Copy, Download } from 'lucide-react';
 
 interface ProjectScheduleViewProps {
   user: User;
-  activeBrandTab: BrandType | 'ALL';
-  viewType: 'daily' | 'monthly'; // 日次または月次表示
+  activeBrandTab: BrandType;
 }
 
 interface ScheduleCell {
@@ -31,9 +30,9 @@ export default function ProjectScheduleView({ user, activeBrandTab }: ProjectSch
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-  loadProjects();
-  generateDates();
-}, [activeBrandTab, viewType]);
+    loadProjects();
+    generateDates();
+  }, [activeBrandTab]);
 
   useEffect(() => {
     if (projects.length > 0) {
@@ -48,47 +47,30 @@ export default function ProjectScheduleView({ user, activeBrandTab }: ProjectSch
   }, [editingCell]);
 
   const generateDates = () => {
-  const today = new Date();
-  const datesArray: Date[] = [];
-  
-  if (viewType === 'monthly') {
-    // 月次表示: 当年の12ヶ月を生成
-    const currentYear = today.getFullYear();
-    for (let month = 0; month < 12; month++) {
-      const date = new Date(currentYear, month, 1);
-      datesArray.push(date);
-    }
-  } else {
-    // 日次表示: -5日から+30日
+    const today = new Date();
+    const datesArray: Date[] = [];
     for (let i = -5; i <= 30; i++) {
       const date = new Date(today);
       date.setDate(today.getDate() + i);
       datesArray.push(date);
     }
-  }
-  setDates(datesArray);
-};
+    setDates(datesArray);
+  };
 
   const loadProjects = async () => {
-  try {
-    let query = supabase
-      .from('projects')
-      .select('*');
-    
-    // activeBrandTabが'ALL'の場合は全プロジェクト取得
-    // それ以外の場合は指定ブランドのみ
-    if (activeBrandTab !== 'ALL') {
-      query = query.eq('brand_type', activeBrandTab);
-    }
-    
-    const { data, error } = await query.order('name', { ascending: true });
+    try {
+      const { data, error } = await supabase
+        .from('projects')
+        .select('*')
+        .eq('brand_type', activeBrandTab)
+        .order('name', { ascending: true });
 
-    if (error) throw error;
-    setProjects(data || []);
-  } catch (error) {
-    console.error('プロジェクト読み込みエラー:', error);
-  }
-};
+      if (error) throw error;
+      setProjects(data || []);
+    } catch (error) {
+      console.error('プロジェクト読み込みエラー:', error);
+    }
+  };
 
   const loadSchedules = async () => {
     try {
@@ -416,34 +398,29 @@ export default function ProjectScheduleView({ user, activeBrandTab }: ProjectSch
   };
 
   const exportToCSV = () => {
-  let csv = '事業者名,商品';
-  dates.forEach(date => {
-    if (viewType === 'monthly') {
-      csv += `,${date.getMonth() + 1}月`;
-    } else {
-      csv += `,${date.getMonth() + 1}/${date.getDate()}`;
-    }
-  });
-  csv += '\n';
-  // 以降は同じ
-  projects.forEach(project => {
-    csv += `${project.name},`;
+    let csv = '事業者名,商品';
     dates.forEach(date => {
-      const key = getCellKey(project.id, date);
-      const cell = schedules.get(key);
-      const content = cell?.content || '';
-      csv += `"${content.replace(/"/g, '""')}",`;
+      csv += `,${date.getMonth() + 1}/${date.getDate()}`;
     });
     csv += '\n';
-  });
 
-  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-  const link = document.createElement('a');
-  link.href = URL.createObjectURL(blob);
-  const viewLabel = viewType === 'monthly' ? 'monthly' : 'daily';
-  link.download = `schedule_${viewLabel}_${activeBrandTab}_${new Date().toISOString().split('T')[0]}.csv`;
-  link.click();
-};
+    projects.forEach(project => {
+      csv += `${project.name},`;
+      dates.forEach(date => {
+        const key = getCellKey(project.id, date);
+        const cell = schedules.get(key);
+        const content = cell?.content || '';
+        csv += `"${content.replace(/"/g, '""')}",`;
+      });
+      csv += '\n';
+    });
+
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = `schedule_${activeBrandTab}_${new Date().toISOString().split('T')[0]}.csv`;
+    link.click();
+  };
 
   if (projects.length === 0) {
     return (
@@ -489,28 +466,20 @@ export default function ProjectScheduleView({ user, activeBrandTab }: ProjectSch
                 事業者名
               </th>
               {dates.map((date, index) => (
-  <th
-    key={index}
-    className={`border border-neutral-200 px-3 py-2 text-center font-medium min-w-[80px] ${
-      viewType === 'monthly' ? 'bg-neutral-50' : (isWeekend(date) ? 'bg-blue-50' : 'bg-neutral-50')
-    }`}
-  >
-    {viewType === 'monthly' ? (
-      <div className="text-sm text-neutral-700 font-semibold">
-        {date.getMonth() + 1}月
-      </div>
-    ) : (
-      <>
-        <div className="text-xs text-neutral-600">
-          {date.getMonth() + 1}/{date.getDate()}
-        </div>
-        <div className={`text-xs ${isWeekend(date) ? 'text-blue-600' : 'text-neutral-500'}`}>
-          {getWeekday(date)}
-        </div>
-      </>
-    )}
-  </th>
-))}
+                <th
+                  key={index}
+                  className={`border border-neutral-200 px-3 py-2 text-center font-medium min-w-[80px] ${
+                    isWeekend(date) ? 'bg-blue-50' : 'bg-neutral-50'
+                  }`}
+                >
+                  <div className="text-xs text-neutral-600">
+                    {date.getMonth() + 1}/{date.getDate()}
+                  </div>
+                  <div className={`text-xs ${isWeekend(date) ? 'text-blue-600' : 'text-neutral-500'}`}>
+                    {getWeekday(date)}
+                  </div>
+                </th>
+              ))}
             </tr>
           </thead>
           <tbody>
