@@ -31,9 +31,9 @@ export default function ProjectScheduleView({ user, activeBrandTab }: ProjectSch
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    loadProjects();
-    generateDates();
-  }, [activeBrandTab]);
+  loadProjects();
+  generateDates();
+}, [activeBrandTab, viewType]);
 
   useEffect(() => {
     if (projects.length > 0) {
