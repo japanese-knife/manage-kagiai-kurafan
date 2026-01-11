@@ -830,16 +830,58 @@ export default function Dashboard({ onSelectProject, user, onLogout }: Dashboard
                 </label>
                 <select
                   value={newBrandType}
-                  onChange={(e) => setNewBrandType(e.target.value as BrandType)}
+                  onChange={(e) => {
+                    setNewBrandType(e.target.value as BrandType);
+                    setSelectedCategoryId(null);
+                  }}
                   className="w-full px-4 py-3 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-100 focus:border-primary-500 bg-white"
                 >
                   <option value="海外クラファン.com">海外クラファン.com</option>
                   <option value="BRAND-BASE">BRAND-BASE</option>
                 </select>
               </div>
+
+              {newBrandType === 'BRAND-BASE' && (
+                <div>
+                  <label className="block text-sm font-medium text-neutral-700 mb-2.5">
+                    品目を選択 *
+                  </label>
+                  <select
+                    value={selectedCategoryId || ''}
+                    onChange={(e) => setSelectedCategoryId(e.target.value)}
+                    className="w-full px-4 py-3 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-100 focus:border-primary-500 bg-white"
+                    required
+                  >
+                    <option value="">品目を選択してください</option>
+                    {productCategories.map((category) => {
+                      const creator = creators.find(c => c.id === category.creator_id);
+                      return (
+                        <option key={category.id} value={category.id}>
+                          {creator?.name} - {category.name}
+                        </option>
+                      );
+                    })}
+                  </select>
+                  <p className="mt-2 text-sm text-neutral-500">
+                    品目がない場合は、
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setShowCreateForm(false);
+                        setShowCreateCreatorForm(true);
+                      }}
+                      className="text-primary-600 hover:underline ml-1"
+                    >
+                      クリエイターと品目を作成
+                    </button>
+                    してください
+                  </p>
+                </div>
+              )}
+
               <div>
                 <label className="block text-sm font-medium text-neutral-700 mb-2.5">
-                  事業者名 *
+                  {newBrandType === 'BRAND-BASE' ? 'プロジェクト名 *' : '事業者名 *'}
                 </label>
                 <input
                   type="text"
@@ -847,12 +889,12 @@ export default function Dashboard({ onSelectProject, user, onLogout }: Dashboard
                   value={newProjectName}
                   onChange={(e) => setNewProjectName(e.target.value)}
                   className="w-full px-4 py-3 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-100 focus:border-primary-500 bg-white"
-                  placeholder="例: 株式会社RE-IDEA様"
+                  placeholder={newBrandType === 'BRAND-BASE' ? '例: 春夏コレクション2025' : '例: 株式会社RE-IDEA様'}
                 />
               </div>
               <div>
                 <label className="block text-sm font-medium text-neutral-700 mb-2.5">
-                  商品
+                  {newBrandType === 'BRAND-BASE' ? '詳細' : '商品'}
                 </label>
                 <textarea
                   value={newProjectDescription}
@@ -875,6 +917,110 @@ export default function Dashboard({ onSelectProject, user, onLogout }: Dashboard
                     setShowCreateForm(false);
                     setNewProjectName('');
                     setNewProjectDescription('');
+                    setSelectedCategoryId(null);
+                  }}
+                  className="w-full sm:w-auto px-6 py-2.5 bg-white border border-neutral-300 text-neutral-700 font-medium rounded-lg hover:bg-neutral-50"
+                >
+                  キャンセル
+                </button>
+              </div>
+            </form>
+          </div>
+        )}
+
+        {/* クリエイター作成フォーム */}
+        {showCreateCreatorForm && (
+          <div className="bg-white rounded-2xl border border-neutral-200/50 p-4 sm:p-6 md:p-8 mb-6 sm:mb-8 md:mb-10 shadow-lg">
+            <h2 className="text-base sm:text-lg font-semibold text-neutral-900 mb-4 sm:mb-6">
+              新しいクリエイターを作成
+            </h2>
+            <form onSubmit={handleCreateCreator} className="space-y-5">
+              <div>
+                <label className="block text-sm font-medium text-neutral-700 mb-2.5">
+                  クリエイター名 *
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={newCreatorName}
+                  onChange={(e) => setNewCreatorName(e.target.value)}
+                  className="w-full px-4 py-3 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-100 focus:border-primary-500 bg-white"
+                  placeholder="例: 山田太郎"
+                />
+              </div>
+              <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 pt-3">
+                <button
+                  type="submit"
+                  className="w-full sm:w-auto px-6 py-2.5 btn-gradient-animated text-white font-medium rounded-lg shadow-soft-lg"
+                >
+                  作成して品目を追加
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowCreateCreatorForm(false);
+                    setNewCreatorName('');
+                  }}
+                  className="w-full sm:w-auto px-6 py-2.5 bg-white border border-neutral-300 text-neutral-700 font-medium rounded-lg hover:bg-neutral-50"
+                >
+                  キャンセル
+                </button>
+              </div>
+            </form>
+          </div>
+        )}
+
+        {/* 品目作成フォーム */}
+        {showCreateCategoryForm && (
+          <div className="bg-white rounded-2xl border border-neutral-200/50 p-4 sm:p-6 md:p-8 mb-6 sm:mb-8 md:mb-10 shadow-lg">
+            <h2 className="text-base sm:text-lg font-semibold text-neutral-900 mb-4 sm:mb-6">
+              新しい品目を作成
+            </h2>
+            <form onSubmit={handleCreateCategory} className="space-y-5">
+              <div>
+                <label className="block text-sm font-medium text-neutral-700 mb-2.5">
+                  クリエイターを選択 *
+                </label>
+                <select
+                  value={selectedCreatorId || ''}
+                  onChange={(e) => setSelectedCreatorId(e.target.value)}
+                  className="w-full px-4 py-3 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-100 focus:border-primary-500 bg-white"
+                  required
+                >
+                  <option value="">クリエイターを選択してください</option>
+                  {creators.map((creator) => (
+                    <option key={creator.id} value={creator.id}>
+                      {creator.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-neutral-700 mb-2.5">
+                  品目名 *
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={newCategoryName}
+                  onChange={(e) => setNewCategoryName(e.target.value)}
+                  className="w-full px-4 py-3 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-100 focus:border-primary-500 bg-white"
+                  placeholder="例: Tシャツ"
+                />
+              </div>
+              <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 pt-3">
+                <button
+                  type="submit"
+                  className="w-full sm:w-auto px-6 py-2.5 btn-gradient-animated text-white font-medium rounded-lg shadow-soft-lg"
+                >
+                  作成
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowCreateCategoryForm(false);
+                    setNewCategoryName('');
+                    setSelectedCreatorId(null);
                   }}
                   className="w-full sm:w-auto px-6 py-2.5 bg-white border border-neutral-300 text-neutral-700 font-medium rounded-lg hover:bg-neutral-50"
                 >
