@@ -1027,6 +1027,7 @@ export default function Dashboard({ onSelectProject, user, onLogout }: Dashboard
           </div>
         )}
         </div>
+)}
       </main>
       <Footer />
     </div>
