@@ -501,7 +501,6 @@ export default function ProjectScheduleView({ user, activeBrandTab }: ProjectSch
                       className={`border border-neutral-200 p-0 cursor-cell relative ${
                         isSelected ? 'ring-2 ring-primary-500 ring-inset' : ''
                       }`}
-                      style={{ backgroundColor: cell?.backgroundColor || '#ffffff' }}
                       onClick={() => handleCellClick(project.id, date)}
                       onDoubleClick={() => handleCellDoubleClick(project.id, date)}
                       onPaste={(e) => handlePaste(e, project.id, date)}
@@ -513,6 +512,10 @@ export default function ProjectScheduleView({ user, activeBrandTab }: ProjectSch
                       }}
                       tabIndex={0}
                     >
+                      <div 
+                        className="absolute inset-0"
+                        style={{ backgroundColor: cell?.backgroundColor || '#ffffff' }}
+                      />
                       {isEditing ? (
                         <input
                           ref={inputRef}
@@ -528,12 +531,13 @@ export default function ProjectScheduleView({ user, activeBrandTab }: ProjectSch
                               setEditValue('');
                             }
                           }}
-                          className="w-full h-full px-2 py-1 border-0 focus:outline-none text-center"
+                          className="relative z-10 w-full h-full px-2 py-1 border-0 focus:outline-none text-center bg-transparent"
+                          style={{ color: cell?.textColor || '#000000' }}
                         />
                       ) : (
                         <>
                           <div 
-                            className="px-2 py-1 min-h-[32px] flex items-center justify-center text-center"
+                            className="relative z-10 px-2 py-1 min-h-[32px] flex items-center justify-center text-center font-medium"
                             style={{ color: cell?.textColor || '#000000' }}
                           >
                             {cell?.content || ''}
@@ -557,7 +561,7 @@ export default function ProjectScheduleView({ user, activeBrandTab }: ProjectSch
                                         className="w-9 h-9 rounded-lg border-2 border-neutral-300 hover:border-primary-500 hover:scale-110 transition-all shadow-sm"
                                         style={{ backgroundColor: item.color }}
                                       />
-                                      <span className="absolute hidden group-hover:block bottom-full left-1/2 transform -translate-x-1/2 mb-1 px-2 py-1 text-xs bg-neutral-800 text-white rounded whitespace-nowrap">
+                                      <span className="absolute hidden group-hover:block bottom-full left-1/2 transform -translate-x-1/2 mb-1 px-2 py-1 text-xs bg-neutral-800 text-white rounded whitespace-nowrap z-[60]">
                                         {item.name}
                                       </span>
                                     </button>
