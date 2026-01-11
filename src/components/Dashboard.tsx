@@ -663,6 +663,19 @@ export default function Dashboard({ onSelectProject, user, onLogout }: Dashboard
             <form onSubmit={handleCreateProject} className="space-y-5">
               <div>
                 <label className="block text-sm font-medium text-neutral-700 mb-2.5">
+                  ブランド *
+                </label>
+                <select
+                  value={newBrandType}
+                  onChange={(e) => setNewBrandType(e.target.value as BrandType)}
+                  className="w-full px-4 py-3 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-100 focus:border-primary-500 bg-white"
+                >
+                  <option value="海外クラファン.com">海外クラファン.com</option>
+                  <option value="BRAND-BASE">BRAND-BASE</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-neutral-700 mb-2.5">
                   プロジェクト名 *
                 </label>
                 <input
@@ -671,8 +684,7 @@ export default function Dashboard({ onSelectProject, user, onLogout }: Dashboard
                   value={newProjectName}
                   onChange={(e) => setNewProjectName(e.target.value)}
                   className="w-full px-4 py-3 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-100 focus:border-primary-500 bg-white"
-                  placeholder="例: 株式会社RE-IDEA様
-                  "
+                  placeholder="例: 株式会社RE-IDEA様"
                 />
               </div>
               <div>
