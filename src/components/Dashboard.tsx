@@ -155,6 +155,7 @@ export default function Dashboard({ onSelectProject, user, onLogout }: Dashboard
           name: `${project.name}のコピー`,
           description: project.description,
           status: project.status,
+          brand_type: project.brand_type || '海外クラファン.com',
           user_id: user.id,
         })
         .select()
