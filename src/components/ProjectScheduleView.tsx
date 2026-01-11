@@ -1041,7 +1041,6 @@ export default function ProjectScheduleView({ user, activeBrandTab, viewType }: 
       </div>
 
       {activeBrandTab === 'all' ? (
-        // allビューの場合：ブランドごとに独立したスクロールエリア
         <div className="flex flex-col">
           {Object.entries(projectsByBrand).map(([brandName, brandProjects], brandIndex) => (
             brandProjects.length > 0 && (
@@ -1064,7 +1063,6 @@ export default function ProjectScheduleView({ user, activeBrandTab, viewType }: 
           ))}
         </div>
       ) : (
-        // 個別ブランドビューの場合：従来の単一テーブル
         <div className="overflow-x-auto">
           <table className="w-full border-collapse text-sm">
             <thead>
@@ -1091,3 +1089,4 @@ export default function ProjectScheduleView({ user, activeBrandTab, viewType }: 
       </div>
     </div>
   );
+}
