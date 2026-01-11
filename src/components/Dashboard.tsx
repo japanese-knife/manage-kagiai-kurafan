@@ -580,6 +580,7 @@ export default function Dashboard({ onSelectProject, user, onLogout }: Dashboard
         .update({
           name: editProjectName,
           description: editProjectDescription,
+          brand_type: editBrandType,
           updated_at: new Date().toISOString(),
         })
         .eq('id', projectId);
@@ -589,6 +590,7 @@ export default function Dashboard({ onSelectProject, user, onLogout }: Dashboard
       setEditingProjectId(null);
       setEditProjectName('');
       setEditProjectDescription('');
+      setEditBrandType('海外クラファン.com');
       loadProjects();
     } catch (error) {
       console.error('プロジェクト更新エラー:', error);
