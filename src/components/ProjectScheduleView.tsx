@@ -469,6 +469,13 @@ export default function ProjectScheduleView({ user, activeBrandTab, viewType }: 
     return day === 0 || day === 6;
   };
 
+  const isToday = (date: Date): boolean => {
+    const today = new Date();
+    return date.getFullYear() === today.getFullYear() &&
+           date.getMonth() === today.getMonth() &&
+           date.getDate() === today.getDate();
+  };
+
   const exportToCSV = () => {
     let csv = '事業者名,商品';
     dates.forEach(date => {
