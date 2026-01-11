@@ -417,33 +417,27 @@ const loadProjects = async () => {
         .order('created_at', { ascending: true });
 
       if (returnsError) {
-        console.error('リターン内容取得エラー:', returnsError);
-        errors.push(`リターン内容: ${returnsError.message}`);
-      } else if (returns && returns.length > 0) {
-  console.log(`${returns.length}件のリターン内容を複製`);
-  for (const ret of returns) {
-    const { error: returnInsertError } = await supabase
-      .from('returns')
-      .insert({
-        project_id: newProject.id,
-        name: ret.name,
-        price_range: ret.price_range,
-        description: ret.description,
-        status: ret.status,
-        user_id: user.id,
-      });
+  console.error('リターン内容取得エラー:', returnsError);
+  errors.push(`リターン内容: ${returnsError.message}`);
+} else if (returns && returns.length > 0) {
+  const newReturns = returns.map(ret => ({
+    project_id: newProject.id,
+    name: ret.name,
+    price_range: ret.price_range,
+    description: ret.description,
+    status: ret.status,
+    user_id: user.id,
+  }));
 
-    if (returnInsertError) {
-      console.error('リターン内容挿入エラー:', returnInsertError);
-      errors.push(`リターン内容挿入: ${returnInsertError.message}`);
-    }
-    
-    await new Promise(resolve => setTimeout(resolve, 10));
+  const { error: returnInsertError } = await supabase
+    .from('returns')
+    .insert(newReturns);
+
+  if (returnInsertError) {
+    console.error('リターン内容挿入エラー:', returnInsertError);
+    errors.push(`リターン内容: ${returnInsertError.message}`);
   }
-
-      } else {
-        console.log('リターン内容なし');
-      }
+}
 
       // ページデザイン要項を取得して複製
       const { data: designRequirements, error: designReqError } = await supabase
