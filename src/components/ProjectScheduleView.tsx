@@ -70,19 +70,25 @@ export default function ProjectScheduleView({ user, activeBrandTab }: ProjectSch
 };
 
   const loadProjects = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('projects')
-        .select('*')
-        .eq('brand_type', activeBrandTab)
-        .order('name', { ascending: true });
-
-      if (error) throw error;
-      setProjects(data || []);
-    } catch (error) {
-      console.error('プロジェクト読み込みエラー:', error);
+  try {
+    let query = supabase
+      .from('projects')
+      .select('*');
+    
+    // viewTypeが'daily'（PJ全体スケジュール）の場合は全プロジェクト取得
+    // viewTypeが'monthly'の場合は指定ブランドのみ
+    if (viewType === 'monthly') {
+      query = query.eq('brand_type', activeBrandTab);
     }
-  };
+    
+    const { data, error } = await query.order('name', { ascending: true });
+
+    if (error) throw error;
+    setProjects(data || []);
+  } catch (error) {
+    console.error('プロジェクト読み込みエラー:', error);
+  }
+};
 
   const loadSchedules = async () => {
     try {
