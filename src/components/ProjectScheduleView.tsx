@@ -23,6 +23,9 @@ export default function ProjectScheduleView({ user, activeBrandTab, viewType }: 
   const [schedules, setSchedules] = useState<Map<string, ScheduleCell>>(new Map());
   const [dates, setDates] = useState<Date[]>([]);
   const [selectedCell, setSelectedCell] = useState<{ projectId: string; date: string } | null>(null);
+const [selectedCells, setSelectedCells] = useState<Set<string>>(new Set());
+const [isMultiSelecting, setIsMultiSelecting] = useState(false);
+const [selectionStart, setSelectionStart] = useState<{ projectId: string; date: string } | null>(null);
   const [editingCell, setEditingCell] = useState<{ projectId: string; date: string } | null>(null);
   const [editValue, setEditValue] = useState('');
   const [showColorPicker, setShowColorPicker] = useState<{ projectId: string; date: string } | null>(null);
@@ -158,10 +161,53 @@ useEffect(() => {
     return brightness > 155 ? '#000000' : '#ffffff';
   };
 
-  const handleCellClick = (projectId: string, date: Date) => {
-    const dateStr = date.toISOString().split('T')[0];
+  const handleCellClick = (projectId: string, date: Date, e?: React.MouseEvent) => {
+  const dateStr = date.toISOString().split('T')[0];
+  const cellKey = `${projectId}-${dateStr}`;
+  
+  if (e?.shiftKey && selectedCell) {
+    // Shiftキーで範囲選択
+    handleRangeSelection(projectId, dateStr);
+  } else if (e?.ctrlKey || e?.metaKey) {
+    // Ctrl/Cmdキーで複数選択
+    const newSelectedCells = new Set(selectedCells);
+    if (newSelectedCells.has(cellKey)) {
+      newSelectedCells.delete(cellKey);
+    } else {
+      newSelectedCells.add(cellKey);
+    }
+    setSelectedCells(newSelectedCells);
     setSelectedCell({ projectId, date: dateStr });
-  };
+  } else {
+    // 通常選択
+    setSelectedCell({ projectId, date: dateStr });
+    setSelectedCells(new Set([cellKey]));
+  }
+};
+
+const handleRangeSelection = (endProjectId: string, endDate: string) => {
+  if (!selectedCell) return;
+  
+  const startProjectIndex = projects.findIndex(p => p.id === selectedCell.projectId);
+  const endProjectIndex = projects.findIndex(p => p.id === endProjectId);
+  const startDateIndex = dates.findIndex(d => d.toISOString().split('T')[0] === selectedCell.date);
+  const endDateIndex = dates.findIndex(d => d.toISOString().split('T')[0] === endDate);
+  
+  const minProjectIndex = Math.min(startProjectIndex, endProjectIndex);
+  const maxProjectIndex = Math.max(startProjectIndex, endProjectIndex);
+  const minDateIndex = Math.min(startDateIndex, endDateIndex);
+  const maxDateIndex = Math.max(startDateIndex, endDateIndex);
+  
+  const newSelectedCells = new Set<string>();
+  for (let pIndex = minProjectIndex; pIndex <= maxProjectIndex; pIndex++) {
+    for (let dIndex = minDateIndex; dIndex <= maxDateIndex; dIndex++) {
+      const cellKey = `${projects[pIndex].id}-${dates[dIndex].toISOString().split('T')[0]}`;
+      newSelectedCells.add(cellKey);
+    }
+  }
+  
+  setSelectedCells(newSelectedCells);
+};
 
   const handleCellDoubleClick = (projectId: string, date: Date) => {
     const dateStr = date.toISOString().split('T')[0];
