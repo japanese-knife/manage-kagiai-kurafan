@@ -18,9 +18,20 @@ interface ScheduleCell {
   textColor: string;
 }
 
+// ✅ コンポーネント定義の前（export defaultの外）に配置
+const withTimeoutSchedule = <T,>(promise: Promise<T>, timeoutMs: number = 8000): Promise<T> => {
+  return Promise.race([
+    promise,
+    new Promise<T>((_, reject) =>
+      setTimeout(() => reject(new Error(`Timeout after ${timeoutMs}ms`)), timeoutMs)
+    )
+  ]);
+};
+
 export default function ProjectScheduleView({ user, activeBrandTab, viewType }: ProjectScheduleViewProps) {
   const [projects, setProjects] = useState<Project[]>([]);
   const [schedules, setSchedules] = useState<Map<string, ScheduleCell>>(new Map());
+  // ... 以降のコード
   const [dates, setDates] = useState<Date[]>([]);
   const [selectedCell, setSelectedCell] = useState<{ projectId: string; date: string } | null>(null);
   const [selectedCells, setSelectedCells] = useState<Set<string>>(new Set());
