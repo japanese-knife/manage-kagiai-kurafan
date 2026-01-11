@@ -799,11 +799,14 @@ export default function Dashboard({ onSelectProject, user, onLogout }: Dashboard
           </div>
         )}
 
-        {/* スケジュールビュー */}
-        <ProjectScheduleView user={user} activeBrandTab={activeBrandTab} />
+        {/* スケジュールビュー - スケジュールタブ時のみ表示 */}
+{activeMainTab === 'schedule' && (
+  <ProjectScheduleView user={user} activeBrandTab={activeBrandTab} />
+)}
 
-        {/* プロジェクト一覧 */}
-        <div className="mt-8">
+{/* プロジェクト一覧 - プロジェクトタブ時のみ表示 */}
+{activeMainTab === 'projects' && (
+  <div className="mt-8">
           <h2 className="text-lg font-semibold text-neutral-900 mb-6">プロジェクト一覧</h2>
         
         {projects.filter(p => p.brand_type === activeBrandTab).length === 0 ? (
