@@ -293,11 +293,20 @@ const handleRangeSelection = (endProjectId: string, endDate: string) => {
   }
 
   // コピー機能（Ctrl+C または Cmd+C）
-  if ((e.ctrlKey || e.metaKey) && e.key === 'c') {
-    e.preventDefault();
-    handleCopy();
-    return;
-  }
+  // コピー機能（Ctrl+C または Cmd+C）
+if ((e.ctrlKey || e.metaKey) && e.key === 'c') {
+  e.preventDefault();
+  handleCopy();
+  return;
+}
+
+// 全選択解除（Escape）
+if (e.key === 'Escape' && !editingCell) {
+  e.preventDefault();
+  setSelectedCells(new Set());
+  setSelectedCell(null);
+  return;
+}
 
   // セルが選択されていない場合は現在のセルを選択
   if (!selectedCell) {
