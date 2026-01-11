@@ -1027,10 +1027,10 @@ export default function Dashboard({ onSelectProject, user, onLogout }: Dashboard
             })}
           </div>
         )}
-        </div>
-  </div>
-)}
-      </main>
+      </div>
+    </div>
+  )}
+</main>
       <Footer />
     </div>
   );
