@@ -219,15 +219,19 @@ export default function ProjectScheduleView({ user, activeBrandTab }: ProjectSch
     }
   };
 
-  const handleCopy = () => {
-    if (!selectedCell) return;
+  const handleCopy = async () => {
+  if (!selectedCell) return;
 
-    const key = `${selectedCell.projectId}-${selectedCell.date}`;
-    const cell = schedules.get(key);
-    if (cell?.content) {
-      navigator.clipboard.writeText(cell.content);
+  const key = `${selectedCell.projectId}-${selectedCell.date}`;
+  const cell = schedules.get(key);
+  if (cell?.content) {
+    try {
+      await navigator.clipboard.writeText(cell.content);
+    } catch (error) {
+      console.error('コピーエラー:', error);
     }
-  };
+  }
+};
 
   const handlePaste = async (e: React.ClipboardEvent, projectId: string, date: Date) => {
     e.preventDefault();
