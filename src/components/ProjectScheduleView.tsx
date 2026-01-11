@@ -25,6 +25,7 @@ export default function ProjectScheduleView({ user, activeBrandTab }: ProjectSch
   const [editValue, setEditValue] = useState('');
   const [showColorPicker, setShowColorPicker] = useState<{ projectId: string; date: string } | null>(null);
   const [selectedColor, setSelectedColor] = useState('#ffffff');
+  const [copiedCellData, setCopiedCellData] = useState<{ content: string; backgroundColor: string } | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -233,9 +234,15 @@ export default function ProjectScheduleView({ user, activeBrandTab }: ProjectSch
 
     const key = `${selectedCell.projectId}-${selectedCell.date}`;
     const cell = schedules.get(key);
-    if (cell?.content) {
+    if (cell) {
       try {
-        await navigator.clipboard.writeText(cell.content);
+        // セルのデータ（内容と色）を保存
+        setCopiedCellData({
+          content: cell.content || '',
+          backgroundColor: cell.backgroundColor || '#ffffff'
+        });
+        // クリップボードにはテキストのみをコピー
+        await navigator.clipboard.writeText(cell.content || '');
       } catch (error) {
         console.error('コピーエラー:', error);
       }
@@ -244,19 +251,28 @@ export default function ProjectScheduleView({ user, activeBrandTab }: ProjectSch
 
   const handlePaste = async (e: React.ClipboardEvent, projectId: string, date: Date) => {
     e.preventDefault();
-    const pastedText = e.clipboardData.getData('text');
     const dateStr = date.toISOString().split('T')[0];
-    const key = `${projectId}-${dateStr}`;
-    const existingCell = schedules.get(key);
 
     try {
+      let content = '';
+      let backgroundColor = '#ffffff';
+
+      // コピーしたセルデータがある場合は、それを使用（色も含む）
+      if (copiedCellData) {
+        content = copiedCellData.content;
+        backgroundColor = copiedCellData.backgroundColor;
+      } else {
+        // クリップボードからテキストを取得
+        content = e.clipboardData.getData('text');
+      }
+
       const { error } = await supabase
         .from('project_schedules')
         .upsert({
           project_id: projectId,
           date: dateStr,
-          content: pastedText,
-          background_color: existingCell?.backgroundColor || '#ffffff',
+          content: content,
+          background_color: backgroundColor,
           user_id: user.id,
         });
 
@@ -292,10 +308,34 @@ export default function ProjectScheduleView({ user, activeBrandTab }: ProjectSch
   };
 
   const predefinedColors = [
-    '#ffffff', '#fef3c7', '#fecaca', '#fed7aa', '#d9f99d', 
-    '#bbf7d0', '#bfdbfe', '#ddd6fe', '#f5d0fe', '#fecdd3',
-    '#f3f4f6', '#fde68a', '#fca5a5', '#fdba74', '#bef264',
-    '#86efac', '#93c5fd', '#c4b5fd', '#f0abfc', '#fb7185'
+    { name: '白', color: '#ffffff' },
+    { name: '淡黄', color: '#fef3c7' },
+    { name: '淡赤', color: '#fecaca' },
+    { name: '淡橙', color: '#fed7aa' },
+    { name: '淡緑黄', color: '#d9f99d' },
+    { name: '淡緑', color: '#bbf7d0' },
+    { name: '淡青', color: '#bfdbfe' },
+    { name: '淡紫', color: '#ddd6fe' },
+    { name: '淡桃', color: '#f5d0fe' },
+    { name: '淡ピンク', color: '#fecdd3' },
+    { name: 'グレー', color: '#f3f4f6' },
+    { name: '黄', color: '#fde68a' },
+    { name: '赤', color: '#fca5a5' },
+    { name: '橙', color: '#fdba74' },
+    { name: '黄緑', color: '#bef264' },
+    { name: '緑', color: '#86efac' },
+    { name: '青', color: '#93c5fd' },
+    { name: '紫', color: '#c4b5fd' },
+    { name: '桃', color: '#f0abfc' },
+    { name: 'ピンク', color: '#fb7185' },
+    { name: '濃黄', color: '#fbbf24' },
+    { name: '濃赤', color: '#ef4444' },
+    { name: '濃橙', color: '#f97316' },
+    { name: '濃緑', color: '#22c55e' },
+    { name: '濃青', color: '#3b82f6' },
+    { name: '濃紫', color: '#a855f7' },
+    { name: '濃桃', color: '#ec4899' },
+    { name: 'ダーク', color: '#6b7280' },
   ];
 
   const getWeekday = (date: Date): string => {
@@ -448,23 +488,33 @@ export default function ProjectScheduleView({ user, activeBrandTab }: ProjectSch
                           </div>
                           {showColorPicker?.projectId === project.id && showColorPicker?.date === dateStr && (
                             <div
-                              className="absolute z-50 bg-white border border-neutral-300 rounded-lg shadow-xl p-3 top-full left-0 mt-1"
+                              className="absolute z-50 bg-white border-2 border-neutral-300 rounded-xl shadow-2xl p-4 top-full left-0 mt-1 min-w-[280px]"
                               onClick={(e) => e.stopPropagation()}
                             >
-                              <div className="grid grid-cols-5 gap-2 mb-2">
-                                {predefinedColors.map((color) => (
-                                  <button
-                                    key={color}
-                                    onClick={() => handleColorChange(project.id, date, color)}
-                                    className="w-8 h-8 rounded border-2 border-neutral-300 hover:border-primary-500 transition-colors"
-                                    style={{ backgroundColor: color }}
-                                    title={color}
-                                  />
-                                ))}
+                              <div className="mb-3">
+                                <p className="text-xs font-semibold text-neutral-700 mb-2">カラーを選択</p>
+                                <div className="grid grid-cols-7 gap-2">
+                                  {predefinedColors.map((item) => (
+                                    <button
+                                      key={item.color}
+                                      onClick={() => handleColorChange(project.id, date, item.color)}
+                                      className="group relative"
+                                      title={item.name}
+                                    >
+                                      <div
+                                        className="w-9 h-9 rounded-lg border-2 border-neutral-300 hover:border-primary-500 hover:scale-110 transition-all shadow-sm"
+                                        style={{ backgroundColor: item.color }}
+                                      />
+                                      <span className="absolute hidden group-hover:block bottom-full left-1/2 transform -translate-x-1/2 mb-1 px-2 py-1 text-xs bg-neutral-800 text-white rounded whitespace-nowrap">
+                                        {item.name}
+                                      </span>
+                                    </button>
+                                  ))}
+                                </div>
                               </div>
                               <button
                                 onClick={() => setShowColorPicker(null)}
-                                className="w-full px-3 py-1.5 text-xs bg-neutral-100 hover:bg-neutral-200 rounded transition-colors"
+                                className="w-full px-3 py-2 text-sm font-medium bg-neutral-100 hover:bg-neutral-200 rounded-lg transition-colors"
                               >
                                 閉じる
                               </button>
