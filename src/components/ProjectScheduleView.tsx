@@ -484,20 +484,28 @@ export default function ProjectScheduleView({ user, activeBrandTab }: ProjectSch
                 事業者名
               </th>
               {dates.map((date, index) => (
-                <th
-                  key={index}
-                  className={`border border-neutral-200 px-3 py-2 text-center font-medium min-w-[80px] ${
-                    isWeekend(date) ? 'bg-blue-50' : 'bg-neutral-50'
-                  }`}
-                >
-                  <div className="text-xs text-neutral-600">
-                    {date.getMonth() + 1}/{date.getDate()}
-                  </div>
-                  <div className={`text-xs ${isWeekend(date) ? 'text-blue-600' : 'text-neutral-500'}`}>
-                    {getWeekday(date)}
-                  </div>
-                </th>
-              ))}
+  <th
+    key={index}
+    className={`border border-neutral-200 px-3 py-2 text-center font-medium min-w-[80px] ${
+      viewType === 'monthly' ? 'bg-neutral-50' : (isWeekend(date) ? 'bg-blue-50' : 'bg-neutral-50')
+    }`}
+  >
+    {viewType === 'monthly' ? (
+      <div className="text-sm text-neutral-700 font-semibold">
+        {date.getMonth() + 1}月
+      </div>
+    ) : (
+      <>
+        <div className="text-xs text-neutral-600">
+          {date.getMonth() + 1}/{date.getDate()}
+        </div>
+        <div className={`text-xs ${isWeekend(date) ? 'text-blue-600' : 'text-neutral-500'}`}>
+          {getWeekday(date)}
+        </div>
+      </>
+    )}
+  </th>
+))}
             </tr>
           </thead>
           <tbody>
