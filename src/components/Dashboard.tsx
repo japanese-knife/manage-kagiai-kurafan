@@ -568,6 +568,7 @@ export default function Dashboard({ onSelectProject, user, onLogout }: Dashboard
     setEditingProjectId(null);
     setEditProjectName('');
     setEditProjectDescription('');
+    setEditBrandType('海外クラファン.com');
   };
 
   const handleUpdateProject = async (projectId: string) => {
