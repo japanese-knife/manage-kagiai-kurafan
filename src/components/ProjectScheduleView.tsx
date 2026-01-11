@@ -18,7 +18,7 @@ interface ScheduleCell {
   textColor: string;
 }
 
-export default function ProjectScheduleView({ user, activeBrandTab }: ProjectScheduleViewProps) {
+export default function ProjectScheduleView({ user, activeBrandTab, viewType }: ProjectScheduleViewProps) {
   const [projects, setProjects] = useState<Project[]>([]);
   const [schedules, setSchedules] = useState<Map<string, ScheduleCell>>(new Map());
   const [dates, setDates] = useState<Date[]>([]);
