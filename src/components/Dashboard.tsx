@@ -504,34 +504,28 @@ const loadProjects = async () => {
         .order('created_at', { ascending: true });
 
       if (videoReqError) {
-        console.error('掲載動画要項取得エラー:', videoReqError);
-        errors.push(`掲載動画要項: ${videoReqError.message}`);
-      } else if (videoRequirements && videoRequirements.length > 0) {
-  console.log(`${videoRequirements.length}件の掲載動画要項を複製`);
-  for (const req of videoRequirements) {
-    const { error: videoReqInsertError } = await supabase
-      .from('video_requirements')
-      .insert({
-        project_id: newProject.id,
-        video_type: req.video_type,
-        duration: req.duration,
-        required_cuts: req.required_cuts,
-        has_narration: req.has_narration,
-        reference_url: req.reference_url,
-        user_id: user.id,
-      });
+  console.error('掲載動画要項取得エラー:', videoReqError);
+  errors.push(`掲載動画要項: ${videoReqError.message}`);
+} else if (videoRequirements && videoRequirements.length > 0) {
+  const newVideoReqs = videoRequirements.map(req => ({
+    project_id: newProject.id,
+    video_type: req.video_type,
+    duration: req.duration,
+    required_cuts: req.required_cuts,
+    has_narration: req.has_narration,
+    reference_url: req.reference_url,
+    user_id: user.id,
+  }));
 
-    if (videoReqInsertError) {
-      console.error('掲載動画要項挿入エラー:', videoReqInsertError);
-      errors.push(`掲載動画要項挿入: ${videoReqInsertError.message}`);
-    }
-    
-    await new Promise(resolve => setTimeout(resolve, 10));
+  const { error: videoReqInsertError } = await supabase
+    .from('video_requirements')
+    .insert(newVideoReqs);
+
+  if (videoReqInsertError) {
+    console.error('掲載動画要項挿入エラー:', videoReqInsertError);
+    errors.push(`掲載動画要項: ${videoReqInsertError.message}`);
   }
-
-      } else {
-        console.log('掲載動画要項なし');
-      }
+}
 
       // 画像アセットを取得して複製
       console.log('画像アセットを複製中...');
