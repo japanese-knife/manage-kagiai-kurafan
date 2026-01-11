@@ -736,11 +736,17 @@ export default function ProjectScheduleView({ user, activeBrandTab, viewType }: 
                                 </div>
                               </div>
                               <button
-                                onClick={() => setShowColorPicker(null)}
-                                className="w-full px-3 py-2 text-sm font-medium bg-neutral-100 hover:bg-neutral-200 rounded-lg transition-colors"
-                              >
-                                閉じる
-                              </button>
+  onClick={(e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setShowColorPicker(null);
+  }}
+  onMouseDown={(e) => e.stopPropagation()}
+  type="button"
+  className="w-full px-3 py-2 text-sm font-medium bg-neutral-100 hover:bg-neutral-200 rounded-lg transition-colors"
+>
+  閉じる
+</button>
                             </div>
                           )}
                         </>
