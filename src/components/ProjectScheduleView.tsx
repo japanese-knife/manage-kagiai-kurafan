@@ -50,11 +50,14 @@ const [selectionStart, setSelectionStart] = useState<{ projectId: string; date: 
   }
 }, [editingCell]);
 
+const hasScrolledToToday = useRef(false);
+
 useEffect(() => {
-  // 日次ビューで初回読み込み時に当日の列を中央に配置
-  if (viewType === 'daily' && dates.length > 0) {
+  // 日次ビューで初回読み込み時のみ当日の列を中央に配置
+  if (viewType === 'daily' && dates.length > 0 && !hasScrolledToToday.current) {
     const todayIndex = dates.findIndex(date => isToday(date));
     if (todayIndex !== -1) {
+      hasScrolledToToday.current = true;
       setTimeout(() => {
         const tableContainer = document.querySelector('.overflow-x-auto');
         const todayHeader = document.querySelectorAll('thead th')[todayIndex + 1]; // +1 は「事業者名」列の分
@@ -71,7 +74,12 @@ useEffect(() => {
       }, 100);
     }
   }
-}, [dates, viewType]);
+}, [dates.length, viewType]);
+
+// viewTypeが変わったらリセット
+useEffect(() => {
+  hasScrolledToToday.current = false;
+}, [viewType]);
 
   const generateDates = () => {
     if (viewType === 'monthly') {
