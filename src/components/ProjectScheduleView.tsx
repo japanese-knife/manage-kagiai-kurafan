@@ -234,27 +234,29 @@ export default function ProjectScheduleView({ user, activeBrandTab }: ProjectSch
 };
 
   const handlePaste = async (e: React.ClipboardEvent, projectId: string, date: Date) => {
-    e.preventDefault();
-    const pastedText = e.clipboardData.getData('text');
-    const dateStr = date.toISOString().split('T')[0];
+  e.preventDefault();
+  const pastedText = e.clipboardData.getData('text');
+  const dateStr = date.toISOString().split('T')[0];
+  const key = `${projectId}-${dateStr}`;
+  const existingCell = schedules.get(key);
 
-    try {
-      const { error } = await supabase
-        .from('project_schedules')
-        .upsert({
-          project_id: projectId,
-          date: dateStr,
-          content: pastedText,
-          background_color: '#ffffff',
-          user_id: user.id,
-        });
+  try {
+    const { error } = await supabase
+      .from('project_schedules')
+      .upsert({
+        project_id: projectId,
+        date: dateStr,
+        content: pastedText,
+        background_color: existingCell?.backgroundColor || '#ffffff',
+        user_id: user.id,
+      });
 
-      if (error) throw error;
-      await loadSchedules();
-    } catch (error) {
-      console.error('ペーストエラー:', error);
-    }
-  };
+    if (error) throw error;
+    await loadSchedules();
+  } catch (error) {
+    console.error('ペーストエラー:', error);
+  }
+};
 
   const getWeekday = (date: Date): string => {
     const weekdays = ['日', '月', '火', '水', '木', '金', '土'];
