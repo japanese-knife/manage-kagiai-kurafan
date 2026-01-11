@@ -567,8 +567,145 @@ useEffect(() => {
         </div>
       </div>
 
-      <div className="overflow-x-auto">
-        <table className="w-full border-collapse text-sm">
+      {activeBrandTab === 'all' && maxVisibleProjects ? (
+  // ガントチャート表示（ブランド別カード）
+  <div className="space-y-6">
+    {/* 海外クラファン.com セクション */}
+    {(() => {
+      const kaigaiProjects = projects.filter(p => p.brand_type === '海外クラファン.com');
+      return kaigaiProjects.length > 0 && (
+        <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl border-2 border-blue-200 overflow-hidden">
+          <div className="bg-gradient-to-r from-blue-600 to-indigo-600 px-6 py-3 border-b-2 border-blue-300">
+            <h3 className="text-lg font-bold text-white">海外クラファン.com</h3>
+          </div>
+          <div className="overflow-x-auto" style={{ maxHeight: maxVisibleProjects * 40 + 100 + 'px' }}>
+            <table className="w-full border-collapse text-sm">
+              <thead className="sticky top-0 z-10">
+                <tr>
+                  <th className="sticky left-0 z-20 bg-blue-50 border border-blue-200 px-4 py-2 text-left font-semibold text-neutral-900 min-w-[200px]">
+                    事業者名
+                  </th>
+                  {dates.map((date, index) => (
+                    <th
+                      key={index}
+                      className={`border border-blue-200 px-3 py-2 text-center font-medium min-w-[80px] ${
+                        viewType === 'daily' && isToday(date) 
+                          ? 'bg-yellow-100 border-yellow-400 border-2' 
+                          : viewType === 'daily' && isWeekend(date) 
+                            ? 'bg-blue-100' 
+                            : 'bg-blue-50'
+                      }`}
+                    >
+                      {viewType === 'monthly' ? (
+                        <>
+                          <div className="text-xs text-neutral-600">
+                            {date.getFullYear()}年
+                          </div>
+                          <div className="text-xs text-neutral-600">
+                            {date.getMonth() + 1}月
+                          </div>
+                        </>
+                      ) : (
+                        <>
+                          <div className={`text-xs ${isToday(date) ? 'font-bold text-yellow-700' : 'text-neutral-600'}`}>
+                            {date.getMonth() + 1}/{date.getDate()}
+                          </div>
+                          <div className={`text-xs ${
+                            isToday(date) 
+                              ? 'font-bold text-yellow-700' 
+                              : isWeekend(date) 
+                                ? 'text-blue-600' 
+                                : 'text-neutral-500'
+                          }`}>
+                            {getWeekday(date)}
+                          </div>
+                        </>
+                      )}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {kaigaiProjects.map((project) => {
+                  return renderProjectRow(project);
+                })}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      );
+    })()}
+
+    {/* BRAND-BASE セクション */}
+    {(() => {
+      const brandBaseProjects = projects.filter(p => p.brand_type === 'BRAND-BASE');
+      return brandBaseProjects.length > 0 && (
+        <div className="bg-gradient-to-br from-purple-50 to-pink-50 rounded-xl border-2 border-purple-200 overflow-hidden">
+          <div className="bg-gradient-to-r from-purple-600 to-pink-600 px-6 py-3 border-b-2 border-purple-300">
+            <h3 className="text-lg font-bold text-white">BRAND-BASE</h3>
+          </div>
+          <div className="overflow-x-auto" style={{ maxHeight: maxVisibleProjects * 40 + 100 + 'px' }}>
+            <table className="w-full border-collapse text-sm">
+              <thead className="sticky top-0 z-10">
+                <tr>
+                  <th className="sticky left-0 z-20 bg-purple-50 border border-purple-200 px-4 py-2 text-left font-semibold text-neutral-900 min-w-[200px]">
+                    事業者名
+                  </th>
+                  {dates.map((date, index) => (
+                    <th
+                      key={index}
+                      className={`border border-purple-200 px-3 py-2 text-center font-medium min-w-[80px] ${
+                        viewType === 'daily' && isToday(date) 
+                          ? 'bg-yellow-100 border-yellow-400 border-2' 
+                          : viewType === 'daily' && isWeekend(date) 
+                            ? 'bg-purple-100' 
+                            : 'bg-purple-50'
+                      }`}
+                    >
+                      {viewType === 'monthly' ? (
+                        <>
+                          <div className="text-xs text-neutral-600">
+                            {date.getFullYear()}年
+                          </div>
+                          <div className="text-xs text-neutral-600">
+                            {date.getMonth() + 1}月
+                          </div>
+                        </>
+                      ) : (
+                        <>
+                          <div className={`text-xs ${isToday(date) ? 'font-bold text-yellow-700' : 'text-neutral-600'}`}>
+                            {date.getMonth() + 1}/{date.getDate()}
+                          </div>
+                          <div className={`text-xs ${
+                            isToday(date) 
+                              ? 'font-bold text-yellow-700' 
+                              : isWeekend(date) 
+                                ? 'text-purple-600' 
+                                : 'text-neutral-500'
+                          }`}>
+                            {getWeekday(date)}
+                          </div>
+                        </>
+                      )}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {brandBaseProjects.map((project) => {
+                  return renderProjectRow(project);
+                })}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      );
+    })()}
+  </div>
+) : (
+  // 通常表示（既存のテーブル）
+  <div className="overflow-x-auto">
+    <table className="w-full border-collapse text-sm">
           <thead>
   <tr>
     <th className="sticky left-0 z-20 bg-neutral-50 border border-neutral-200 px-4 py-2 text-left font-semibold text-neutral-900 min-w-[200px]">
