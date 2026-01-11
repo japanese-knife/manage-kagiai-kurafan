@@ -764,12 +764,16 @@ export default function Dashboard({ onSelectProject, user, onLogout }: Dashboard
           </div>
         )}
 
-        {/* スケジュールビュー */}
-        <ProjectScheduleView user={user} activeBrandTab={activeBrandTab} />
+        {/* スケジュールとプロジェクト一覧を横並びに配置 */}
+        <div className="flex gap-6">
+          {/* スケジュールビュー（左側） */}
+          <div className="w-80 flex-shrink-0">
+            <ProjectScheduleView user={user} />
+          </div>
 
-        {/* プロジェクト一覧 */}
-        <div className="mt-8">
-          <h2 className="text-lg font-semibold text-neutral-900 mb-6">プロジェクト一覧</h2>
+          {/* プロジェクト一覧（右側） */}
+          <div className="flex-1 min-w-0">
+            <h2 className="text-lg font-semibold text-neutral-900 mb-6">プロジェクト一覧</h2>
         
         {projects.filter(p => p.brand_type === activeBrandTab).length === 0 ? (
           <div className="text-center py-16 sm:py-20 md:py-24 px-4">
