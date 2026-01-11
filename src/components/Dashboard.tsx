@@ -85,6 +85,7 @@ export default function Dashboard({ onSelectProject, user, onLogout }: Dashboard
           name: newProjectName,
           description: newProjectDescription,
           status: '進行中',
+          brand_type: newBrandType,
           user_id: user.id,
         })
         .select()
@@ -94,6 +95,7 @@ export default function Dashboard({ onSelectProject, user, onLogout }: Dashboard
 
       setNewProjectName('');
       setNewProjectDescription('');
+      setNewBrandType('海外クラファン.com');
       setShowCreateForm(false);
       loadProjects();
     } catch (error) {
