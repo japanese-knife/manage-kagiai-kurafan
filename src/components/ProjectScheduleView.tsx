@@ -154,18 +154,25 @@ export default function ProjectScheduleView({ user, activeBrandTab }: ProjectSch
   };
 
   const handleKeyDown = (e: React.KeyboardEvent, projectId: string, dateIndex: number) => {
-    if (editingCell) {
-      if (e.key === 'Enter') {
-        handleCellBlur();
-      } else if (e.key === 'Escape') {
-        setEditingCell(null);
-        setEditValue('');
-      }
-      return;
+  if (editingCell) {
+    if (e.key === 'Enter') {
+      handleCellBlur();
+    } else if (e.key === 'Escape') {
+      setEditingCell(null);
+      setEditValue('');
     }
+    return;
+  }
 
-    // セル間の移動
-    if (!selectedCell) return;
+  // コピー機能（Ctrl+C または Cmd+C）
+  if ((e.ctrlKey || e.metaKey) && e.key === 'c') {
+    e.preventDefault();
+    handleCopy();
+    return;
+  }
+
+  // セル間の移動
+  if (!selectedCell) return;
 
     const projectIndex = projects.findIndex(p => p.id === selectedCell.projectId);
     
