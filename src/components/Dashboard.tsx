@@ -1,1553 +1,869 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { User } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabase';
-import { Project, Task, ProjectStatus, BrandType } from '../types';
-import { FolderKanban, Plus, ArrowRight, Calendar, CheckSquare, LogOut, Trash2, Edit2, Copy } from 'lucide-react';
-import Footer from './Footer';
-import ProjectScheduleView from './ProjectScheduleView';
+import { Project, BrandType } from '../types';
+import { Calendar, Copy, Download } from 'lucide-react';
 
-interface DashboardProps {
-  onSelectProject: (project: Project) => void;
+interface ProjectScheduleViewProps {
   user: User;
-  onLogout: () => void;
+  activeBrandTab: BrandType | 'all';
+  viewType: 'daily' | 'monthly';
 }
 
-interface ProjectStats {
+interface ScheduleCell {
   projectId: string;
-  totalTasks: number;
-  completedTasks: number;
-  progress: number;
+  date: string;
+  content: string;
+  backgroundColor: string;
+  textColor: string;
 }
 
-export default function Dashboard({ onSelectProject, user, onLogout }: DashboardProps) {
+export default function ProjectScheduleView({ user, activeBrandTab, viewType }: ProjectScheduleViewProps) {
   const [projects, setProjects] = useState<Project[]>([]);
-  const [projectStats, setProjectStats] = useState<Map<string, ProjectStats>>(new Map());
-  const [loading, setLoading] = useState(true);
-  const [showCreateForm, setShowCreateForm] = useState(false);
-  const [newProjectName, setNewProjectName] = useState('');
-  const [newProjectDescription, setNewProjectDescription] = useState('');
-  const [newBrandType, setNewBrandType] = useState<BrandType>('海外クラファン.com');
-  const [activeTab, setActiveTab] = useState<'schedule' | 'projects'>('schedule');
-  const [activeBrandTab, setActiveBrandTab] = useState<BrandType>('海外クラファン.com');
-  const [editingProjectId, setEditingProjectId] = useState<string | null>(null);
-  const [editProjectName, setEditProjectName] = useState('');
-  const [editProjectDescription, setEditProjectDescription] = useState('');
-  const [editBrandType, setEditBrandType] = useState<BrandType>('海外クラファン.com');
-  
-  // BRAND-BASE用の新しいstate
-  const [creators, setCreators] = useState<Creator[]>([]);
-  const [productCategories, setProductCategories] = useState<ProductCategory[]>([]);
-  const [showCreateCreatorForm, setShowCreateCreatorForm] = useState(false);
-  const [showCreateCategoryForm, setShowCreateCategoryForm] = useState(false);
-  const [selectedCreatorId, setSelectedCreatorId] = useState<string | null>(null);
-  const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null);
-  const [newCreatorName, setNewCreatorName] = useState('');
-  const [newCategoryName, setNewCategoryName] = useState('');
+  const [schedules, setSchedules] = useState<Map<string, ScheduleCell>>(new Map());
+  const [dates, setDates] = useState<Date[]>([]);
+  const [selectedCell, setSelectedCell] = useState<{ projectId: string; date: string } | null>(null);
+  const [selectedCells, setSelectedCells] = useState<Set<string>>(new Set());
+  const [editingCell, setEditingCell] = useState<{ projectId: string; date: string } | null>(null);
+  const [editValue, setEditValue] = useState('');
+  const [showColorPicker, setShowColorPicker] = useState<{ projectId: string; date: string } | null>(null);
+  const [copiedCellData, setCopiedCellData] = useState<any>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const hasScrolledToToday = useRef(false);
 
   useEffect(() => {
     loadProjects();
-    loadCreators();
-    loadProductCategories();
-  }, []);
+    generateDates();
+  }, [activeBrandTab, viewType]);
 
-  const loadCreators = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('creators')
-        .select('*')
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-      setCreators(data || []);
-    } catch (error) {
-      console.error('クリエイター読み込みエラー:', error);
+  useEffect(() => {
+    if (projects.length > 0) {
+      loadSchedules();
     }
-  };
+  }, [projects]);
 
-  const loadProductCategories = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('product_categories')
-        .select('*')
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-      setProductCategories(data || []);
-    } catch (error) {
-      console.error('品目読み込みエラー:', error);
+  useEffect(() => {
+    if (editingCell && inputRef.current) {
+      inputRef.current.focus();
     }
-  };
+  }, [editingCell]);
 
-  const handleCreateCreator = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newCreatorName.trim()) return;
-
-    try {
-      const { data, error } = await supabase
-        .from('creators')
-        .insert({
-          name: newCreatorName,
-          user_id: user.id,
-        })
-        .select()
-        .single();
-
-      if (error) throw error;
-
-      setNewCreatorName('');
-      setShowCreateCreatorForm(false);
-      setSelectedCreatorId(data.id);
-      setShowCreateCategoryForm(true);
-      loadCreators();
-    } catch (error) {
-      console.error('クリエイター作成エラー:', error);
-      alert('クリエイターの作成に失敗しました');
+  useEffect(() => {
+    // 日次ビューで初回読み込み時のみ当日の列を中央に配置
+    if (viewType === 'daily' && dates.length > 0 && !hasScrolledToToday.current) {
+      const todayIndex = dates.findIndex(date => isToday(date));
+      if (todayIndex !== -1) {
+        hasScrolledToToday.current = true;
+        setTimeout(() => {
+          const tableContainer = document.querySelector('.overflow-x-auto');
+          const todayHeader = document.querySelectorAll('thead th')[todayIndex + 1];
+          
+          if (tableContainer && todayHeader) {
+            const containerWidth = tableContainer.clientWidth;
+            const headerLeft = (todayHeader as HTMLElement).offsetLeft;
+            const headerWidth = (todayHeader as HTMLElement).offsetWidth;
+            
+            const scrollLeft = headerLeft - (containerWidth / 2) + (headerWidth / 2);
+            tableContainer.scrollLeft = scrollLeft;
+          }
+        }, 100);
+      }
     }
-  };
+  }, [dates.length, viewType]);
 
-  const handleCreateCategory = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newCategoryName.trim() || !selectedCreatorId) return;
+  useEffect(() => {
+    hasScrolledToToday.current = false;
+  }, [viewType]);
 
-    try {
-      const { error } = await supabase
-        .from('product_categories')
-        .insert({
-          creator_id: selectedCreatorId,
-          name: newCategoryName,
-          user_id: user.id,
-        });
-
-      if (error) throw error;
-
-      setNewCategoryName('');
-      setShowCreateCategoryForm(false);
-      setSelectedCreatorId(null);
-      loadProductCategories();
-    } catch (error) {
-      console.error('品目作成エラー:', error);
-      alert('品目の作成に失敗しました');
+  const generateDates = () => {
+    if (viewType === 'monthly') {
+      const today = new Date();
+      const datesArray: Date[] = [];
+      for (let i = 0; i < 12; i++) {
+        const date = new Date(today.getFullYear(), today.getMonth() + i, 1);
+        datesArray.push(date);
+      }
+      setDates(datesArray);
+    } else {
+      const today = new Date();
+      const datesArray: Date[] = [];
+      for (let i = -30; i <= 60; i++) {
+        const date = new Date(today);
+        date.setDate(today.getDate() + i);
+        datesArray.push(date);
+      }
+      setDates(datesArray);
     }
   };
 
   const loadProjects = async () => {
-    try {
-      const { data: projectsData, error: projectsError } = await supabase
-        .from('projects')
-        .select('*')
-        .order('updated_at', { ascending: false });
-
-      if (projectsError) throw projectsError;
-
-      setProjects(projectsData || []);
-
-      const statsMap = new Map<string, ProjectStats>();
-      for (const project of projectsData || []) {
-        const { data: tasksData } = await supabase
-          .from('tasks')
-          .select('status')
-          .eq('project_id', project.id);
-
-        const total = tasksData?.length || 0;
-        const completed = tasksData?.filter((t: Task) => t.status === '完了').length || 0;
-        const progress = total > 0 ? Math.round((completed / total) * 100) : 0;
-
-        statsMap.set(project.id, {
-          projectId: project.id,
-          totalTasks: total,
-          completedTasks: completed,
-          progress,
-        });
-      }
-
-      setProjectStats(statsMap);
-    } catch (error) {
-      console.error('プロジェクト読み込みエラー:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleCreateProject = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    if (!newProjectName.trim()) return;
-
-    // BRAND-BASEの場合は品目IDが必要
-    if (newBrandType === 'BRAND-BASE' && !selectedCategoryId) {
-      alert('品目を選択してください');
-      return;
-    }
-
-    try {
-      const projectData: any = {
-        name: newProjectName,
-        description: newProjectDescription,
-        status: '進行中',
-        brand_type: newBrandType,
-        user_id: user.id,
-      };
-
-      if (newBrandType === 'BRAND-BASE') {
-        projectData.product_category_id = selectedCategoryId;
-      }
-
-      const { data, error } = await supabase
-        .from('projects')
-        .insert(projectData)
-        .select()
-        .single();
-
-      if (error) throw error;
-
-      setNewProjectName('');
-      setNewProjectDescription('');
-      setNewBrandType('海外クラファン.com');
-      setSelectedCategoryId(null);
-      setShowCreateForm(false);
-      loadProjects();
-    } catch (error) {
-      console.error('プロジェクト作成エラー:', error);
-    }
-  };
-
-  const handleStatusChange = async (projectId: string, newStatus: ProjectStatus) => {
-    try {
-      const { error } = await supabase
-        .from('projects')
-        .update({ status: newStatus, updated_at: new Date().toISOString() })
-        .eq('id', projectId);
-
-      if (error) throw error;
-
-      loadProjects();
-    } catch (error) {
-      console.error('ステータス更新エラー:', error);
-    }
-  };
-
-  const handleDeleteProject = async (projectId: string) => {
-    if (!confirm('このプロジェクトを削除してもよろしいですか？関連するタスクもすべて削除されます。')) {
-      return;
-    }
-
-    try {
-      const { error } = await supabase
-        .from('projects')
-        .delete()
-        .eq('id', projectId);
-
-      if (error) throw error;
-
-      loadProjects();
-    } catch (error) {
-      console.error('プロジェクト削除エラー:', error);
-      alert('プロジェクトの削除に失敗しました');
-    }
-  };
-
-  const handleDuplicateProject = async (project: Project, e: React.MouseEvent) => {
-    e.stopPropagation();
+  try {
+    let query = supabase
+      .from('projects')
+      .select('*');
     
-    if (!confirm(`「${project.name}」を複製しますか？全てのセクション内容（タスク、資料、打ち合わせ、リターン、各種要項など）が複製されます。`)) {
+    if (activeBrandTab !== 'all') {
+      query = query.eq('brand_type', activeBrandTab);
+    }
+    
+    const { data, error } = await query.order('created_at', { ascending: false });
+
+    if (error) throw error;
+    
+    // activeBrandTab が 'all' の場合、ブランド別にグループ化してソート
+    if (activeBrandTab === 'all' && data) {
+      const sortedData = data.sort((a, b) => {
+        // まず brand_type で比較（海外クラファン.com が先）
+        if (a.brand_type !== b.brand_type) {
+          return a.brand_type === '海外クラファン.com' ? -1 : 1;
+        }
+        // 同じブランド内では created_at で降順（最近追加されたものが上）
+        return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+      });
+      setProjects(sortedData);
+    } else {
+      setProjects(data || []);
+    }
+  } catch (error) {
+    console.error('プロジェクト読み込みエラー:', error);
+  }
+};
+
+  const loadSchedules = async () => {
+    try {
+      const projectIds = projects.map(p => p.id);
+      const { data, error } = await supabase
+        .from('project_schedules')
+        .select('*')
+        .in('project_id', projectIds);
+
+      if (error) throw error;
+
+      const scheduleMap = new Map<string, ScheduleCell>();
+      (data || []).forEach((schedule) => {
+        const key = `${schedule.project_id}-${schedule.date}`;
+        const bgColor = schedule.background_color || '#ffffff';
+        const autoTextColor = getTextColorForBackground(bgColor);
+        scheduleMap.set(key, {
+          projectId: schedule.project_id,
+          date: schedule.date,
+          content: schedule.content || '',
+          backgroundColor: bgColor,
+          textColor: schedule.text_color || autoTextColor,
+        });
+      });
+
+      setSchedules(scheduleMap);
+    } catch (error) {
+      console.error('スケジュール読み込みエラー:', error);
+    }
+  };
+
+  const getCellKey = (projectId: string, date: Date): string => {
+    return `${projectId}-${date.toISOString().split('T')[0]}`;
+  };
+
+  const getTextColorForBackground = (bgColor: string): string => {
+    const hex = bgColor.replace('#', '');
+    const r = parseInt(hex.substr(0, 2), 16);
+    const g = parseInt(hex.substr(2, 2), 16);
+    const b = parseInt(hex.substr(4, 2), 16);
+    const brightness = (r * 299 + g * 587 + b * 114) / 1000;
+    return brightness > 155 ? '#000000' : '#ffffff';
+  };
+
+  const isToday = (date: Date): boolean => {
+    const today = new Date();
+    return date.getFullYear() === today.getFullYear() &&
+           date.getMonth() === today.getMonth() &&
+           date.getDate() === today.getDate();
+  };
+
+  const handleCellClick = (projectId: string, date: Date, e?: React.MouseEvent) => {
+    const dateStr = date.toISOString().split('T')[0];
+    const cellKey = `${projectId}-${dateStr}`;
+    
+    if (e?.shiftKey && selectedCell) {
+      handleRangeSelection(projectId, dateStr);
+    } else if (e?.ctrlKey || e?.metaKey) {
+      const newSelectedCells = new Set(selectedCells);
+      if (newSelectedCells.has(cellKey)) {
+        newSelectedCells.delete(cellKey);
+      } else {
+        newSelectedCells.add(cellKey);
+      }
+      setSelectedCells(newSelectedCells);
+      setSelectedCell({ projectId, date: dateStr });
+    } else {
+      setSelectedCell({ projectId, date: dateStr });
+      setSelectedCells(new Set([cellKey]));
+    }
+  };
+
+  const handleRangeSelection = (endProjectId: string, endDate: string) => {
+    if (!selectedCell) return;
+    
+    const startProjectIndex = projects.findIndex(p => p.id === selectedCell.projectId);
+    const endProjectIndex = projects.findIndex(p => p.id === endProjectId);
+    const startDateIndex = dates.findIndex(d => d.toISOString().split('T')[0] === selectedCell.date);
+    const endDateIndex = dates.findIndex(d => d.toISOString().split('T')[0] === endDate);
+    
+    const minProjectIndex = Math.min(startProjectIndex, endProjectIndex);
+    const maxProjectIndex = Math.max(startProjectIndex, endProjectIndex);
+    const minDateIndex = Math.min(startDateIndex, endDateIndex);
+    const maxDateIndex = Math.max(startDateIndex, endDateIndex);
+    
+    const newSelectedCells = new Set<string>();
+    for (let pIndex = minProjectIndex; pIndex <= maxProjectIndex; pIndex++) {
+      for (let dIndex = minDateIndex; dIndex <= maxDateIndex; dIndex++) {
+        const cellKey = `${projects[pIndex].id}-${dates[dIndex].toISOString().split('T')[0]}`;
+        newSelectedCells.add(cellKey);
+      }
+    }
+    
+    setSelectedCells(newSelectedCells);
+  };
+
+  const handleCellDoubleClick = (projectId: string, date: Date) => {
+    const dateStr = date.toISOString().split('T')[0];
+    const key = getCellKey(projectId, date);
+    const cell = schedules.get(key);
+    
+    setEditingCell({ projectId, date: dateStr });
+    setEditValue(cell?.content || '');
+  };
+
+  const handleCellBlur = async () => {
+    if (!editingCell) return;
+
+    const key = `${editingCell.projectId}-${editingCell.date}`;
+    const existingCell = schedules.get(key);
+
+    try {
+      if (editValue.trim() === '') {
+        if (existingCell) {
+          await supabase
+            .from('project_schedules')
+            .delete()
+            .eq('project_id', editingCell.projectId)
+            .eq('date', editingCell.date);
+          
+          const updatedSchedules = new Map(schedules);
+          updatedSchedules.delete(key);
+          setSchedules(updatedSchedules);
+        }
+      } else {
+        const bgColor = existingCell?.backgroundColor || '#ffffff';
+        const txtColor = existingCell?.textColor || getTextColorForBackground(bgColor);
+        
+        const updateData: any = {
+          project_id: editingCell.projectId,
+          date: editingCell.date,
+          content: editValue,
+          background_color: bgColor,
+          text_color: txtColor,
+          user_id: user.id,
+        };
+
+        const { error } = await supabase
+          .from('project_schedules')
+          .upsert(updateData, {
+            onConflict: 'project_id,date'
+          });
+
+        if (error) throw error;
+        
+        const updatedSchedules = new Map(schedules);
+        updatedSchedules.set(key, {
+          projectId: editingCell.projectId,
+          date: editingCell.date,
+          content: editValue,
+          backgroundColor: bgColor,
+          textColor: txtColor,
+        });
+        setSchedules(updatedSchedules);
+      }
+    } catch (error) {
+      console.error('スケジュール保存エラー:', error);
+      alert('スケジュールの保存に失敗しました');
+    }
+
+    setEditingCell(null);
+    setEditValue('');
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent, projectId: string, dateIndex: number) => {
+    if (editingCell) {
+      if (e.key === 'Enter') {
+        handleCellBlur();
+      } else if (e.key === 'Escape') {
+        setEditingCell(null);
+        setEditValue('');
+      }
       return;
     }
 
-    const errors: string[] = [];
+    if ((e.ctrlKey || e.metaKey) && e.key === 'c') {
+      e.preventDefault();
+      handleCopy();
+      return;
+    }
+
+    if (e.key === 'Escape' && !editingCell) {
+      e.preventDefault();
+      setSelectedCells(new Set());
+      setSelectedCell(null);
+      return;
+    }
+
+    if (!selectedCell) {
+      const dateStr = dates[dateIndex].toISOString().split('T')[0];
+      setSelectedCell({ projectId, date: dateStr });
+      return;
+    }
+
+    const currentProjectIndex = projects.findIndex(p => p.id === selectedCell.projectId);
+    const currentDateIndex = dates.findIndex(d => d.toISOString().split('T')[0] === selectedCell.date);
+    
+    switch (e.key) {
+      case 'ArrowUp':
+        e.preventDefault();
+        if (currentProjectIndex > 0) {
+          setSelectedCell({ 
+            projectId: projects[currentProjectIndex - 1].id, 
+            date: selectedCell.date 
+          });
+          setTimeout(() => {
+            const newCell = document.querySelector(
+              `[data-cell-id="${projects[currentProjectIndex - 1].id}-${selectedCell.date}"]`
+            ) as HTMLElement;
+            newCell?.focus();
+          }, 0);
+        }
+        break;
+      case 'ArrowDown':
+        e.preventDefault();
+        if (currentProjectIndex < projects.length - 1) {
+          setSelectedCell({ 
+            projectId: projects[currentProjectIndex + 1].id, 
+            date: selectedCell.date 
+          });
+          setTimeout(() => {
+            const newCell = document.querySelector(
+              `[data-cell-id="${projects[currentProjectIndex + 1].id}-${selectedCell.date}"]`
+            ) as HTMLElement;
+            newCell?.focus();
+          }, 0);
+        }
+        break;
+      case 'ArrowLeft':
+        e.preventDefault();
+        if (currentDateIndex > 0) {
+          const newDate = dates[currentDateIndex - 1].toISOString().split('T')[0];
+          setSelectedCell({ 
+            projectId: selectedCell.projectId, 
+            date: newDate
+          });
+          setTimeout(() => {
+            const newCell = document.querySelector(
+              `[data-cell-id="${selectedCell.projectId}-${newDate}"]`
+            ) as HTMLElement;
+            newCell?.focus();
+          }, 0);
+        }
+        break;
+      case 'ArrowRight':
+        e.preventDefault();
+        if (currentDateIndex < dates.length - 1) {
+          const newDate = dates[currentDateIndex + 1].toISOString().split('T')[0];
+          setSelectedCell({ 
+            projectId: selectedCell.projectId, 
+            date: newDate
+          });
+          setTimeout(() => {
+            const newCell = document.querySelector(
+              `[data-cell-id="${selectedCell.projectId}-${newDate}"]`
+            ) as HTMLElement;
+            newCell?.focus();
+          }, 0);
+        }
+        break;
+      case 'Enter':
+        e.preventDefault();
+        handleCellDoubleClick(selectedCell.projectId, new Date(selectedCell.date));
+        break;
+      case 'Delete':
+      case 'Backspace':
+        e.preventDefault();
+        handleCellDoubleClick(selectedCell.projectId, new Date(selectedCell.date));
+        setEditValue('');
+        break;
+    }
+  };
+
+  const handleCopy = async () => {
+    if (selectedCells.size === 0) return;
 
     try {
-      // プロジェクトを複製
-      const { data: newProject, error: projectError } = await supabase
-        .from('projects')
-        .insert({
-          name: `${project.name}のコピー`,
-          description: project.description,
-          status: project.status,
-          brand_type: project.brand_type || '海外クラファン.com',
-          user_id: user.id,
-        })
-        .select()
-        .single();
+      const cellsData = Array.from(selectedCells).map(key => {
+        const cell = schedules.get(key);
+        return {
+          key,
+          content: cell?.content || '',
+          backgroundColor: cell?.backgroundColor || '#ffffff',
+          textColor: cell?.textColor || '#000000'
+        };
+      });
+      
+      setCopiedCellData({
+        content: cellsData.map(c => c.content).join('\t'),
+        backgroundColor: cellsData[0].backgroundColor,
+        textColor: cellsData[0].textColor,
+        isMultiple: selectedCells.size > 1,
+        cellsData: cellsData
+      });
+      
+      await navigator.clipboard.writeText(cellsData.map(c => c.content).join('\t'));
+    } catch (error) {
+      console.error('コピーエラー:', error);
+    }
+  };
 
-      if (projectError) {
-        console.error('プロジェクト作成エラー:', projectError);
-        throw projectError;
-      }
+  const handlePaste = async (e: React.ClipboardEvent, projectId: string, date: Date) => {
+    e.preventDefault();
+    
+    const targetCells = selectedCells.size > 0 ? Array.from(selectedCells) : [`${projectId}-${date.toISOString().split('T')[0]}`];
 
-      // 元のプロジェクトのタスクを取得
-      const { data: tasks, error: tasksError } = await supabase
-        .from('tasks')
-        .select('*')
-        .eq('project_id', project.id)
-        .order('created_at', { ascending: true });
-
-      if (tasksError) throw tasksError;
-
-      // タスクIDのマッピング（元のタスクID → 新しいタスクID）
-      const taskIdMap = new Map<string, string>();
-
-      // タスクを複製
-      if (tasks && tasks.length > 0) {
-        for (const task of tasks) {
-          const { data: newTask, error: taskInsertError } = await supabase
-            .from('tasks')
-            .insert({
-              project_id: newProject.id,
-              title: task.title,
-              description: task.description,
-              status: task.status,
-              priority: task.priority,
-              due_date: task.due_date,
-              user_id: user.id,
-            })
-            .select()
-            .single();
-
-          if (taskInsertError) throw taskInsertError;
-
-          // 元のタスクIDと新しいタスクIDをマッピング
-          taskIdMap.set(task.id, newTask.id);
-
-          // サブタスクを取得して複製
-          const { data: subtasks, error: subtasksError } = await supabase
-            .from('subtasks')
-            .select('*')
-            .eq('task_id', task.id)
-            .order('created_at', { ascending: true });
-
-          if (!subtasksError && subtasks && subtasks.length > 0) {
-            const newSubtasks = subtasks.map(subtask => ({
-              task_id: newTask.id,
-              title: subtask.title,
-              completed: subtask.completed,
-              user_id: user.id,
-            }));
-
-            const { error: subtaskInsertError } = await supabase
-              .from('subtasks')
-              .insert(newSubtasks);
-
-            if (subtaskInsertError) {
-              console.error('サブタスク複製エラー:', subtaskInsertError);
+    try {
+      if (copiedCellData && copiedCellData.isMultiple && copiedCellData.cellsData) {
+        const cellsData = copiedCellData.cellsData;
+        
+        for (const targetKey of targetCells) {
+          const [targetProjectId, targetDateStr] = targetKey.split('-').reduce((acc, part, idx, arr) => {
+            if (idx < arr.length - 3) {
+              acc[0] = acc[0] ? `${acc[0]}-${part}` : part;
+            } else {
+              acc[1] = acc[1] ? `${acc[1]}-${part}` : part;
             }
-          }
+            return acc;
+          }, ['', '']);
+          
+          const sourceData = cellsData[0];
+          
+          const updateData: any = {
+            project_id: targetProjectId,
+            date: targetDateStr,
+            content: sourceData.content,
+            background_color: sourceData.backgroundColor,
+            text_color: sourceData.textColor,
+            user_id: user.id,
+          };
 
-          // タスクメモを取得して複製
-          const { data: notes, error: notesError } = await supabase
-            .from('task_notes')
-            .select('*')
-            .eq('task_id', task.id)
-            .order('created_at', { ascending: true });
-
-          if (!notesError && notes && notes.length > 0) {
-            const newNotes = notes.map(note => ({
-              task_id: newTask.id,
-              content: note.content,
-              user_id: user.id,
-            }));
-
-            const { error: noteInsertError } = await supabase
-              .from('task_notes')
-              .insert(newNotes);
-
-            if (noteInsertError) {
-              console.error('メモ複製エラー:', noteInsertError);
+          await supabase
+            .from('project_schedules')
+            .upsert(updateData, {
+              onConflict: 'project_id,date'
+            });
+        }
+      } else if (copiedCellData) {
+        for (const targetKey of targetCells) {
+          const [targetProjectId, targetDateStr] = targetKey.split('-').reduce((acc, part, idx, arr) => {
+            if (idx < arr.length - 3) {
+              acc[0] = acc[0] ? `${acc[0]}-${part}` : part;
+            } else {
+              acc[1] = acc[1] ? `${acc[1]}-${part}` : part;
             }
-          }
+            return acc;
+          }, ['', '']);
+          
+          const updateData: any = {
+            project_id: targetProjectId,
+            date: targetDateStr,
+            content: copiedCellData.content,
+            background_color: copiedCellData.backgroundColor,
+            text_color: copiedCellData.textColor,
+            user_id: user.id,
+          };
+
+          await supabase
+            .from('project_schedules')
+            .upsert(updateData, {
+              onConflict: 'project_id,date'
+            });
+        }
+      } else {
+        const content = e.clipboardData.getData('text');
+        const backgroundColor = '#ffffff';
+        const textColor = getTextColorForBackground(backgroundColor);
+        
+        for (const targetKey of targetCells) {
+          const [targetProjectId, targetDateStr] = targetKey.split('-').reduce((acc, part, idx, arr) => {
+            if (idx < arr.length - 3) {
+              acc[0] = acc[0] ? `${acc[0]}-${part}` : part;
+            } else {
+              acc[1] = acc[1] ? `${acc[1]}-${part}` : part;
+            }
+            return acc;
+          }, ['', '']);
+          
+          const updateData: any = {
+            project_id: targetProjectId,
+            date: targetDateStr,
+            content: content,
+            background_color: backgroundColor,
+            text_color: textColor,
+            user_id: user.id,
+          };
+
+          await supabase
+            .from('project_schedules')
+            .upsert(updateData);
         }
       }
 
-      // プロジェクトメモを取得して複製
-      const { data: projectNotes, error: projectNotesError } = await supabase
-        .from('project_notes')
-        .select('*')
-        .eq('project_id', project.id)
-        .order('created_at', { ascending: true });
-
-      if (!projectNotesError && projectNotes && projectNotes.length > 0) {
-  for (const note of projectNotes) {
-    const { error: projectNoteInsertError } = await supabase
-      .from('project_notes')
-      .insert({
-        project_id: newProject.id,
-        content: note.content,
-        user_id: user.id,
-      });
-
-    if (projectNoteInsertError) {
-      console.error('プロジェクトメモ複製エラー:', projectNoteInsertError);
-    }
-    
-    await new Promise(resolve => setTimeout(resolve, 10));
-  }
-}
-
-      // スケジュールを取得して複製
-      const { data: schedules, error: schedulesError } = await supabase
-        .from('schedules')
-        .select('*')
-        .eq('project_id', project.id)
-        .order('created_at', { ascending: true });
-
-      if (!schedulesError && schedules && schedules.length > 0) {
-  for (const schedule of schedules) {
-    const { error: scheduleInsertError } = await supabase
-      .from('schedules')
-      .insert({
-        project_id: newProject.id,
-        content: schedule.content,
-        milestone: schedule.milestone,
-        user_id: user.id,
-      });
-
-    if (scheduleInsertError) {
-      console.error('スケジュール複製エラー:', scheduleInsertError);
-    }
-    
-    // 順序を確実に保持するため少し待機
-    await new Promise(resolve => setTimeout(resolve, 10));
-  }
-}
-
-      // 資料一覧を取得して複製
-      const { data: documents, error: documentsError } = await supabase
-        .from('documents')
-        .select('*')
-        .eq('project_id', project.id)
-        .order('created_at', { ascending: true });
-
-      if (!documentsError && documents && documents.length > 0) {
-  for (const doc of documents) {
-    const { error: documentInsertError } = await supabase
-      .from('documents')
-      .insert({
-        project_id: newProject.id,
-        name: doc.name,
-        url: doc.url,
-        memo: doc.memo,
-        user_id: user.id,
-      });
-
-    if (documentInsertError) {
-      console.error('資料一覧複製エラー:', documentInsertError);
-    }
-    
-    await new Promise(resolve => setTimeout(resolve, 10));
-  }
-}
-
-      // 打ち合わせ内容を取得して複製
-      console.log('打ち合わせ内容を複製中...');
-      const { data: meetings, error: meetingsError } = await supabase
-        .from('meetings')
-        .select('*')
-        .eq('project_id', project.id)
-        .order('created_at', { ascending: true });
-
-      if (meetingsError) {
-        console.error('打ち合わせ内容取得エラー:', meetingsError);
-        errors.push(`打ち合わせ内容: ${meetingsError.message}`);
-      } else if (meetings && meetings.length > 0) {
-  console.log(`${meetings.length}件の打ち合わせ内容を複製`);
-  for (const meeting of meetings) {
-    const { error: meetingInsertError } = await supabase
-      .from('meetings')
-      .insert({
-        project_id: newProject.id,
-        date: meeting.date,
-        participants: meeting.participants,
-        summary: meeting.summary,
-        decisions: meeting.decisions,
-        user_id: user.id,
-      });
-
-    if (meetingInsertError) {
-      console.error('打ち合わせ内容挿入エラー:', meetingInsertError);
-      errors.push(`打ち合わせ内容挿入: ${meetingInsertError.message}`);
-    }
-    
-    await new Promise(resolve => setTimeout(resolve, 10));
-  }
-
-      } else {
-        console.log('打ち合わせ内容なし');
-      }
-
-      // リターン内容を取得して複製
-      console.log('リターン内容を複製中...');
-      const { data: returns, error: returnsError } = await supabase
-        .from('returns')
-        .select('*')
-        .eq('project_id', project.id)
-        .order('created_at', { ascending: true });
-
-      if (returnsError) {
-        console.error('リターン内容取得エラー:', returnsError);
-        errors.push(`リターン内容: ${returnsError.message}`);
-      } else if (returns && returns.length > 0) {
-  console.log(`${returns.length}件のリターン内容を複製`);
-  for (const ret of returns) {
-    const { error: returnInsertError } = await supabase
-      .from('returns')
-      .insert({
-        project_id: newProject.id,
-        name: ret.name,
-        price_range: ret.price_range,
-        description: ret.description,
-        status: ret.status,
-        user_id: user.id,
-      });
-
-    if (returnInsertError) {
-      console.error('リターン内容挿入エラー:', returnInsertError);
-      errors.push(`リターン内容挿入: ${returnInsertError.message}`);
-    }
-    
-    await new Promise(resolve => setTimeout(resolve, 10));
-  }
-
-      } else {
-        console.log('リターン内容なし');
-      }
-
-      // ページデザイン要項を取得して複製
-      const { data: designRequirements, error: designReqError } = await supabase
-        .from('design_requirements')
-        .select('*')
-        .eq('project_id', project.id)
-        .order('created_at', { ascending: true });
-
-      if (!designReqError && designRequirements && designRequirements.length > 0) {
-  for (const req of designRequirements) {
-    const { error: designReqInsertError } = await supabase
-      .from('design_requirements')
-      .insert({
-        project_id: newProject.id,
-        name: req.name,
-        url: req.url,
-        memo: req.memo,
-        user_id: user.id,
-      });
-
-    if (designReqInsertError) {
-      console.error('ページデザイン要項複製エラー:', designReqInsertError);
-    }
-    
-    await new Promise(resolve => setTimeout(resolve, 10));
-  }
-}
-
-      // 掲載文章要項を取得して複製
-      console.log('掲載文章要項を複製中...');
-      const { data: textContentRequirements, error: textContentReqError } = await supabase
-        .from('text_content_requirements')
-        .select('*')
-        .eq('project_id', project.id)
-        .order('created_at', { ascending: true });
-
-      if (textContentReqError) {
-        console.error('掲載文章要項取得エラー:', textContentReqError);
-        errors.push(`掲載文章要項: ${textContentReqError.message}`);
-      } else if (textContentRequirements && textContentRequirements.length > 0) {
-  console.log(`${textContentRequirements.length}件の掲載文章要項を複製`);
-  for (const req of textContentRequirements) {
-    const { error: textContentReqInsertError } = await supabase
-      .from('text_content_requirements')
-      .insert({
-        project_id: newProject.id,
-        name: req.name,
-        url: req.url,
-        memo: req.memo,
-        user_id: user.id,
-      });
-
-    if (textContentReqInsertError) {
-      console.error('掲載文章要項挿入エラー:', textContentReqInsertError);
-      errors.push(`掲載文章要項挿入: ${textContentReqInsertError.message}`);
-    }
-    
-    await new Promise(resolve => setTimeout(resolve, 10));
-  }
-  console.log('掲載文章要項の複製が完了しました');
-
-      } else {
-        console.log('掲載文章要項なし');
-      }
-
-      // 掲載動画要項を取得して複製
-      console.log('掲載動画要項を複製中...');
-      const { data: videoRequirements, error: videoReqError } = await supabase
-        .from('video_requirements')
-        .select('*')
-        .eq('project_id', project.id)
-        .order('created_at', { ascending: true });
-
-      if (videoReqError) {
-        console.error('掲載動画要項取得エラー:', videoReqError);
-        errors.push(`掲載動画要項: ${videoReqError.message}`);
-      } else if (videoRequirements && videoRequirements.length > 0) {
-  console.log(`${videoRequirements.length}件の掲載動画要項を複製`);
-  for (const req of videoRequirements) {
-    const { error: videoReqInsertError } = await supabase
-      .from('video_requirements')
-      .insert({
-        project_id: newProject.id,
-        video_type: req.video_type,
-        duration: req.duration,
-        required_cuts: req.required_cuts,
-        has_narration: req.has_narration,
-        reference_url: req.reference_url,
-        user_id: user.id,
-      });
-
-    if (videoReqInsertError) {
-      console.error('掲載動画要項挿入エラー:', videoReqInsertError);
-      errors.push(`掲載動画要項挿入: ${videoReqInsertError.message}`);
-    }
-    
-    await new Promise(resolve => setTimeout(resolve, 10));
-  }
-
-      } else {
-        console.log('掲載動画要項なし');
-      }
-
-      // 画像アセットを取得して複製
-      console.log('画像アセットを複製中...');
-      const { data: imageAssets, error: imageAssetsError } = await supabase
-        .from('image_assets')
-        .select('*')
-        .eq('project_id', project.id)
-        .order('created_at', { ascending: true });
-
-      if (imageAssetsError) {
-        console.error('画像アセット取得エラー:', imageAssetsError);
-        errors.push(`画像アセット: ${imageAssetsError.message}`);
-      } else if (imageAssets && imageAssets.length > 0) {
-  console.log(`${imageAssets.length}件の画像アセットを複製`);
-  for (const asset of imageAssets) {
-    const { error: imageAssetsInsertError } = await supabase
-      .from('image_assets')
-      .insert({
-        project_id: newProject.id,
-        name: asset.name,
-        purpose: asset.purpose,
-        url: asset.url,
-        status: asset.status,
-        user_id: user.id,
-      });
-
-    if (imageAssetsInsertError) {
-      console.error('画像アセット挿入エラー:', imageAssetsInsertError);
-      errors.push(`画像アセット挿入: ${imageAssetsInsertError.message}`);
-    }
-    
-    await new Promise(resolve => setTimeout(resolve, 10));
-  }
-} else {
-        console.log('画像アセットなし');
-      }
-
-      // エラーがあった場合は警告を表示、なければ成功メッセージ
-      if (errors.length > 0) {
-        const errorMessage = `プロジェクトは複製されましたが、一部のセクションで問題が発生しました:\n\n${errors.join('\n')}`;
-        alert(errorMessage);
-        console.error('複製時のエラー一覧:', errors);
-      } else {
-        alert('プロジェクトを複製しました');
-      }
-      
-      loadProjects();
+      await loadSchedules();
     } catch (error) {
-      console.error('プロジェクト複製エラー:', error);
-      alert('プロジェクトの複製に失敗しました。詳細はコンソールを確認してください。');
+      console.error('ペーストエラー:', error);
     }
   };
-  
-  const handleStartEdit = (project: Project) => {
-    setEditingProjectId(project.id);
-    setEditProjectName(project.name);
-    setEditProjectDescription(project.description || '');
-    setEditBrandType(project.brand_type || '海外クラファン.com');
-  };
 
-  const handleCancelEdit = () => {
-    setEditingProjectId(null);
-    setEditProjectName('');
-    setEditProjectDescription('');
-    setEditBrandType('海外クラファン.com');
-  };
-
-  const handleUpdateProject = async (projectId: string) => {
-    if (!editProjectName.trim()) return;
+  const handleColorChange = async (projectId: string, date: Date, color: string, textColor: string) => {
+    const dateStr = date.toISOString().split('T')[0];
+    const clickedCellKey = `${projectId}-${dateStr}`;
+    
+    const targetCells = selectedCells.size > 0 && selectedCells.has(clickedCellKey) 
+      ? Array.from(selectedCells) 
+      : [clickedCellKey];
 
     try {
-      const { error } = await supabase
-        .from('projects')
-        .update({
-          name: editProjectName,
-          description: editProjectDescription,
-          brand_type: editBrandType,
-          updated_at: new Date().toISOString(),
-        })
-        .eq('id', projectId);
+      const updatedSchedules = new Map(schedules);
+      
+      for (const cellKey of targetCells) {
+        const parts = cellKey.split('-');
+        const targetDateStr = parts.slice(-3).join('-');
+        const targetProjectId = parts.slice(0, -3).join('-');
+        
+        const existingCell = schedules.get(cellKey);
+        
+        const updateData: any = {
+          project_id: targetProjectId,
+          date: targetDateStr,
+          content: existingCell?.content || '',
+          background_color: color,
+          text_color: textColor,
+          user_id: user.id,
+        };
 
-      if (error) throw error;
+        const { error } = await supabase
+          .from('project_schedules')
+          .upsert(updateData, {
+            onConflict: 'project_id,date'
+          });
 
-      setEditingProjectId(null);
-      setEditProjectName('');
-      setEditProjectDescription('');
-      setEditBrandType('海外クラファン.com');
-      loadProjects();
+        if (error) {
+          console.error('Supabaseエラー詳細:', error);
+          throw error;
+        }
+        
+        updatedSchedules.set(cellKey, {
+          projectId: targetProjectId,
+          date: targetDateStr,
+          content: existingCell?.content || '',
+          backgroundColor: color,
+          textColor: textColor,
+        });
+      }
+      
+      setSchedules(updatedSchedules);
+      setShowColorPicker(null);
     } catch (error) {
-      console.error('プロジェクト更新エラー:', error);
-      alert('プロジェクトの更新に失敗しました');
+      console.error('色変更エラー:', error);
+      alert(`色の変更に失敗しました: ${error instanceof Error ? error.message : '不明なエラー'}`);
     }
   };
-  
-  const getProjectsByStatus = (status: ProjectStatus): Project[] => {
-    return projects.filter((p) => p.status === status && p.brand_type === activeBrandTab);
-  };
-  
-  const getProjectCountByBrand = (brandType: BrandType): number => {
-    return projects.filter((p) => p.brand_type === brandType).length;
+
+  const predefinedColors = [
+    { name: '白', color: '#ffffff', textColor: '#000000' },
+    { name: '淡黄', color: '#fef3c7', textColor: '#000000' },
+    { name: '淡赤', color: '#fecaca', textColor: '#000000' },
+    { name: '淡橙', color: '#fed7aa', textColor: '#000000' },
+    { name: '淡緑黄', color: '#d9f99d', textColor: '#000000' },
+    { name: '淡緑', color: '#bbf7d0', textColor: '#000000' },
+    { name: '淡青', color: '#bfdbfe', textColor: '#000000' },
+    { name: '淡紫', color: '#ddd6fe', textColor: '#000000' },
+    { name: '淡桃', color: '#f5d0fe', textColor: '#000000' },
+    { name: '淡ピンク', color: '#fecdd3', textColor: '#000000' },
+    { name: 'グレー', color: '#f3f4f6', textColor: '#000000' },
+    { name: '黄', color: '#fde68a', textColor: '#000000' },
+    { name: '赤', color: '#fca5a5', textColor: '#000000' },
+    { name: '橙', color: '#fdba74', textColor: '#000000' },
+    { name: '黄緑', color: '#bef264', textColor: '#000000' },
+    { name: '緑', color: '#86efac', textColor: '#000000' },
+    { name: '青', color: '#93c5fd', textColor: '#000000' },
+    { name: '紫', color: '#c4b5fd', textColor: '#000000' },
+    { name: '桃', color: '#f0abfc', textColor: '#000000' },
+    { name: 'ピンク', color: '#fb7185', textColor: '#000000' },
+    { name: '濃黄', color: '#fbbf24', textColor: '#000000' },
+    { name: '濃赤', color: '#ef4444', textColor: '#ffffff' },
+    { name: '濃橙', color: '#f97316', textColor: '#ffffff' },
+    { name: '濃緑', color: '#22c55e', textColor: '#ffffff' },
+    { name: '濃青', color: '#3b82f6', textColor: '#ffffff' },
+    { name: '濃紫', color: '#a855f7', textColor: '#ffffff' },
+    { name: '濃桃', color: '#ec4899', textColor: '#ffffff' },
+    { name: 'ダーク', color: '#6b7280', textColor: '#ffffff' },
+  ];
+
+  const getWeekday = (date: Date): string => {
+    const weekdays = ['日', '月', '火', '水', '木', '金', '土'];
+    return weekdays[date.getDay()];
   };
 
-  if (loading) {
+  const isWeekend = (date: Date): boolean => {
+    const day = date.getDay();
+    return day === 0 || day === 6;
+  };
+
+  const exportToCSV = () => {
+    let csv = '事業者名,商品';
+    dates.forEach(date => {
+      if (viewType === 'monthly') {
+        csv += `,${date.getFullYear()}年${date.getMonth() + 1}月`;
+      } else {
+        csv += `,${date.getMonth() + 1}/${date.getDate()}`;
+      }
+    });
+    csv += '\n';
+
+    projects.forEach(project => {
+      csv += `${project.name},`;
+      dates.forEach(date => {
+        const key = getCellKey(project.id, date);
+        const cell = schedules.get(key);
+        const content = cell?.content || '';
+        csv += `"${content.replace(/"/g, '""')}",`;
+      });
+      csv += '\n';
+    });
+
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    const brandName = activeBrandTab === 'all' ? 'all_projects' : activeBrandTab;
+    const viewTypeName = viewType === 'monthly' ? 'monthly' : 'daily';
+    link.download = `schedule_${brandName}_${viewTypeName}_${new Date().toISOString().split('T')[0]}.csv`;
+    link.click();
+  };
+
+  if (projects.length === 0) {
     return (
-      <div className="min-h-screen bg-white flex items-center justify-center">
-        <div className="text-neutral-600">読み込み中...</div>
+      <div className="text-center py-12 text-neutral-500">
+        このブランドにはプロジェクトがありません
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
-      <header className="bg-white/80 backdrop-blur-sm border-b border-neutral-200/50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8 lg:px-12 py-6 sm:py-8 md:py-10">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between w-full sm:relative gap-4 sm:gap-0">
-            <div className="flex items-center justify-center order-1 sm:order-2 sm:absolute sm:left-1/2 sm:transform sm:-translate-x-1/2">
-              <img
-                src="/kaigai-kurafan-logo.png"
-                alt="海外クラファン.com"
-                className="h-8 sm:h-10 md:h-12 w-auto"
-              />
-            </div>
-            <div className="flex items-center space-x-3 sm:space-x-4 flex-1 order-2 sm:order-1">
-              <div className="w-10 h-10 sm:w-11 sm:h-11 bg-primary-50 rounded-xl flex items-center justify-center">
-                <FolderKanban className="w-5 h-5 sm:w-6 sm:h-6 text-primary-600" />
-              </div>
-              <div>
-                <h1 className="text-lg sm:text-xl md:text-2xl font-semibold text-neutral-900 tracking-tight">
-                  プロジェクト管理
-                </h1>
-                <p className="text-xs sm:text-sm text-neutral-500 mt-1 sm:mt-1.5">
-                  {projects.length}件のプロジェクト
-                </p>
-              </div>
-            </div>
-            <div className="flex items-center gap-2 sm:gap-3 flex-1 justify-end order-3 sm:order-3">
-              <button
-                onClick={() => setShowCreateForm(true)}
-                className="inline-flex items-center justify-center px-4 sm:px-5 py-2 sm:py-2.5 btn-gradient-animated text-white text-sm font-medium rounded-lg shadow-soft-lg"
-              >
-                <Plus className="w-4 h-4 mr-1.5 sm:mr-2" />
-                <span className="hidden sm:inline">新規プロジェクト</span>
-              </button>
-              <button
-                onClick={onLogout}
-                className="inline-flex items-center justify-center px-3 sm:px-4 py-2 sm:py-2.5 text-neutral-600 hover:text-neutral-900 hover:bg-neutral-100 text-sm font-medium rounded-lg transition-all"
-              >
-                <LogOut className="w-4 h-4 sm:mr-2" />
-                <span className="hidden sm:inline">ログアウト</span>
-              </button>
-            </div>
-          </div>
+    <div className="bg-white rounded-2xl border border-neutral-200/50 shadow-lg overflow-hidden">
+      <div className="p-4 border-b border-neutral-200 flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <Calendar className="w-5 h-5 text-primary-600" />
+          <h2 className="text-lg font-semibold text-neutral-900">
+            プロジェクトスケジュール
+          </h2>
         </div>
-      </header>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={handleCopy}
+            disabled={selectedCells.size === 0}
+            className="p-2 text-neutral-600 hover:text-primary-600 hover:bg-primary-50 rounded-lg transition-colors disabled:opacity-30"
+            title="コピー (Ctrl+C)"
+          >
+            <Copy className="w-4 h-4" />
+          </button>
+          <button
+            onClick={exportToCSV}
+            className="p-2 text-neutral-600 hover:text-primary-600 hover:bg-primary-50 rounded-lg transition-colors"
+            title="CSVエクスポート"
+          >
+            <Download className="w-4 h-4" />
+          </button>
+        </div>
+      </div>
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8 lg:px-12 py-6 sm:py-8 md:py-12">
-        {/* タブナビゲーション */}
-<div className="flex items-center gap-2 mb-6 sm:mb-8 border-b border-neutral-200">
- <button
-  onClick={() => setActiveTab('schedule')}
-  className={`px-4 sm:px-6 py-3 text-sm sm:text-base font-medium transition-all relative ${
-    activeTab === 'schedule'
-      ? 'text-primary-600'
-      : 'text-neutral-500 hover:text-neutral-700'
-  }`}
->
-  ガントチャート
-  {activeTab === 'schedule' && (
-    <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary-600" />
-  )}
-</button>
-  <button
-    onClick={() => {
-      setActiveTab('projects');
-      setActiveBrandTab('海外クラファン.com');
-    }}
-    className={`px-4 sm:px-6 py-3 text-sm sm:text-base font-medium transition-all relative ${
-      activeTab === 'projects' && activeBrandTab === '海外クラファン.com'
-        ? 'text-primary-600'
-        : 'text-neutral-500 hover:text-neutral-700'
-    }`}
-  >
-    海外クラファン.com
-    <span className="ml-2 px-2 py-0.5 text-xs font-medium bg-neutral-100 text-neutral-600 rounded-full">
-      {getProjectCountByBrand('海外クラファン.com')}
-    </span>
-    {activeTab === 'projects' && activeBrandTab === '海外クラファン.com' && (
-      <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary-600" />
-    )}
-  </button>
-  <button
-    onClick={() => {
-      setActiveTab('projects');
-      setActiveBrandTab('BRAND-BASE');
-    }}
-    className={`px-4 sm:px-6 py-3 text-sm sm:text-base font-medium transition-all relative ${
-      activeTab === 'projects' && activeBrandTab === 'BRAND-BASE'
-        ? 'text-primary-600'
-        : 'text-neutral-500 hover:text-neutral-700'
-    }`}
-  >
-    BRAND-BASE
-    <span className="ml-2 px-2 py-0.5 text-xs font-medium bg-neutral-100 text-neutral-600 rounded-full">
-      {getProjectCountByBrand('BRAND-BASE')}
-    </span>
-    {activeTab === 'projects' && activeBrandTab === 'BRAND-BASE' && (
-      <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary-600" />
-    )}
-  </button>
-</div>
-
-        {showCreateForm && (
-          <div className="bg-white rounded-2xl border border-neutral-200/50 p-4 sm:p-6 md:p-8 mb-6 sm:mb-8 md:mb-10 shadow-lg">
-            <h2 className="text-base sm:text-lg font-semibold text-neutral-900 mb-4 sm:mb-6">
-              新しいプロジェクトを作成
-            </h2>
-            <form onSubmit={handleCreateProject} className="space-y-5">
-              <div>
-                <label className="block text-sm font-medium text-neutral-700 mb-2.5">
-                  タイプ *
-                </label>
-                <select
-                  value={newBrandType}
-                  onChange={(e) => {
-                    setNewBrandType(e.target.value as BrandType);
-                    setSelectedCategoryId(null);
-                  }}
-                  className="w-full px-4 py-3 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-100 focus:border-primary-500 bg-white"
+      <div className="overflow-x-auto">
+        <table className="w-full border-collapse text-sm">
+          <thead>
+            <tr>
+              <th className="sticky left-0 z-20 bg-neutral-50 border border-neutral-200 px-4 py-2 text-left font-semibold text-neutral-900 min-w-[200px]">
+                事業者名
+              </th>
+              {dates.map((date, index) => (
+                <th
+                  key={index}
+                  className={`border border-neutral-200 px-3 py-2 text-center font-medium min-w-[80px] ${
+                    viewType === 'daily' && isToday(date) 
+                      ? 'bg-yellow-100 border-yellow-400 border-2' 
+                      : viewType === 'daily' && isWeekend(date) 
+                        ? 'bg-blue-50' 
+                        : 'bg-neutral-50'
+                  }`}
                 >
-                  <option value="海外クラファン.com">海外クラファン.com</option>
-                  <option value="BRAND-BASE">BRAND-BASE</option>
-                </select>
-              </div>
+                  {viewType === 'monthly' ? (
+                    <>
+                      <div className="text-xs text-neutral-600">
+                        {date.getFullYear()}年
+                      </div>
+                      <div className="text-xs text-neutral-600">
+                        {date.getMonth() + 1}月
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <div className={`text-xs ${isToday(date) ? 'font-bold text-yellow-700' : 'text-neutral-600'}`}>
+                        {date.getMonth() + 1}/{date.getDate()}
+                      </div>
+                      <div className={`text-xs ${
+                        isToday(date) 
+                          ? 'font-bold text-yellow-700' 
+                          : isWeekend(date) 
+                            ? 'text-blue-600' 
+                            : 'text-neutral-500'
+                      }`}>
+                        {getWeekday(date)}
+                      </div>
+                    </>
+                  )}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {projects.map((project) => (
+              <tr key={project.id} className="hover:bg-neutral-50/50">
+                <td className="sticky left-0 z-10 bg-white border border-neutral-200 px-4 py-2 font-medium text-neutral-900">
+                  {project.name}
+                </td>
+                {dates.map((date, dateIndex) => {
+                  const key = getCellKey(project.id, date);
+                  const cell = schedules.get(key);
+                  const dateStr = date.toISOString().split('T')[0];
+                  const cellKey = `${project.id}-${dateStr}`;
+                  const isSelected = selectedCells.has(cellKey);
+                  const isPrimarySelected = selectedCell?.projectId === project.id && selectedCell?.date === dateStr;
+                  const isEditing = editingCell?.projectId === project.id && editingCell?.date === dateStr;
 
-              {newBrandType === 'BRAND-BASE' && (
-                <div>
-                  <label className="block text-sm font-medium text-neutral-700 mb-2.5">
-                    品目を選択 *
-                  </label>
-                  <select
-                    value={selectedCategoryId || ''}
-                    onChange={(e) => setSelectedCategoryId(e.target.value)}
-                    className="w-full px-4 py-3 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-100 focus:border-primary-500 bg-white"
-                    required
-                  >
-                    <option value="">品目を選択してください</option>
-                    {productCategories.map((category) => {
-                      const creator = creators.find(c => c.id === category.creator_id);
-                      return (
-                        <option key={category.id} value={category.id}>
-                          {creator?.name} - {category.name}
-                        </option>
-                      );
-                    })}
-                  </select>
-                  <p className="mt-2 text-sm text-neutral-500">
-                    品目がない場合は、
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setShowCreateForm(false);
-                        setShowCreateCreatorForm(true);
+                  return (
+                    <td
+                      key={dateIndex}
+                      data-cell-id={`${project.id}-${dateStr}`}
+                      className={`p-0 cursor-cell relative ${
+                        isPrimarySelected
+                          ? 'border-4 border-primary-600 shadow-lg' 
+                          : isSelected
+                            ? 'border-2 border-primary-400 bg-primary-50/30'
+                            : 'border border-neutral-200'
+                      }`}
+                      onClick={(e) => handleCellClick(project.id, date, e)}
+                      onDoubleClick={() => handleCellDoubleClick(project.id, date)}
+                      onPaste={(e) => handlePaste(e, project.id, date)}
+                      onKeyDown={(e) => handleKeyDown(e, project.id, dateIndex)}
+                      onContextMenu={(e) => {
+                        e.preventDefault();
+                        setShowColorPicker({ projectId: project.id, date: dateStr });
                       }}
-                      className="text-primary-600 hover:underline ml-1"
+                      tabIndex={0}
                     >
-                      クリエイターと品目を作成
-                    </button>
-                    してください
-                  </p>
-                </div>
-              )}
-
-              <div>
-                <label className="block text-sm font-medium text-neutral-700 mb-2.5">
-                  {newBrandType === 'BRAND-BASE' ? 'プロジェクト名 *' : '事業者名 *'}
-                </label>
-                <input
-                  type="text"
-                  required
-                  value={newProjectName}
-                  onChange={(e) => setNewProjectName(e.target.value)}
-                  className="w-full px-4 py-3 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-100 focus:border-primary-500 bg-white"
-                  placeholder={newBrandType === 'BRAND-BASE' ? '例: 春夏コレクション2025' : '例: 株式会社RE-IDEA様'}
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-neutral-700 mb-2.5">
-                  {newBrandType === 'BRAND-BASE' ? '詳細' : '商品'}
-                </label>
-                <textarea
-                  value={newProjectDescription}
-                  onChange={(e) => setNewProjectDescription(e.target.value)}
-                  className="w-full px-4 py-3 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-100 focus:border-primary-500 bg-white resize-none"
-                  rows={3}
-                  placeholder="プロジェクトの概要や目的"
-                />
-              </div>
-              <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 pt-3">
-                <button
-                  type="submit"
-                  className="w-full sm:w-auto px-6 py-2.5 btn-gradient-animated text-white font-medium rounded-lg shadow-soft-lg"
-                >
-                  作成
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setShowCreateForm(false);
-                    setNewProjectName('');
-                    setNewProjectDescription('');
-                    setSelectedCategoryId(null);
-                  }}
-                  className="w-full sm:w-auto px-6 py-2.5 bg-white border border-neutral-300 text-neutral-700 font-medium rounded-lg hover:bg-neutral-50"
-                >
-                  キャンセル
-                </button>
-              </div>
-            </form>
-          </div>
-        )}
-
-        {/* クリエイター作成フォーム */}
-        {showCreateCreatorForm && (
-          <div className="bg-white rounded-2xl border border-neutral-200/50 p-4 sm:p-6 md:p-8 mb-6 sm:mb-8 md:mb-10 shadow-lg">
-            <h2 className="text-base sm:text-lg font-semibold text-neutral-900 mb-4 sm:mb-6">
-              新しいクリエイターを作成
-            </h2>
-            <form onSubmit={handleCreateCreator} className="space-y-5">
-              <div>
-                <label className="block text-sm font-medium text-neutral-700 mb-2.5">
-                  クリエイター名 *
-                </label>
-                <input
-                  type="text"
-                  required
-                  value={newCreatorName}
-                  onChange={(e) => setNewCreatorName(e.target.value)}
-                  className="w-full px-4 py-3 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-100 focus:border-primary-500 bg-white"
-                  placeholder="例: 山田太郎"
-                />
-              </div>
-              <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 pt-3">
-                <button
-                  type="submit"
-                  className="w-full sm:w-auto px-6 py-2.5 btn-gradient-animated text-white font-medium rounded-lg shadow-soft-lg"
-                >
-                  作成して品目を追加
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setShowCreateCreatorForm(false);
-                    setNewCreatorName('');
-                  }}
-                  className="w-full sm:w-auto px-6 py-2.5 bg-white border border-neutral-300 text-neutral-700 font-medium rounded-lg hover:bg-neutral-50"
-                >
-                  キャンセル
-                </button>
-              </div>
-            </form>
-          </div>
-        )}
-
-        {/* 品目作成フォーム */}
-        {showCreateCategoryForm && (
-          <div className="bg-white rounded-2xl border border-neutral-200/50 p-4 sm:p-6 md:p-8 mb-6 sm:mb-8 md:mb-10 shadow-lg">
-            <h2 className="text-base sm:text-lg font-semibold text-neutral-900 mb-4 sm:mb-6">
-              新しい品目を作成
-            </h2>
-            <form onSubmit={handleCreateCategory} className="space-y-5">
-              <div>
-                <label className="block text-sm font-medium text-neutral-700 mb-2.5">
-                  クリエイターを選択 *
-                </label>
-                <select
-                  value={selectedCreatorId || ''}
-                  onChange={(e) => setSelectedCreatorId(e.target.value)}
-                  className="w-full px-4 py-3 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-100 focus:border-primary-500 bg-white"
-                  required
-                >
-                  <option value="">クリエイターを選択してください</option>
-                  {creators.map((creator) => (
-                    <option key={creator.id} value={creator.id}>
-                      {creator.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-neutral-700 mb-2.5">
-                  品目名 *
-                </label>
-                <input
-                  type="text"
-                  required
-                  value={newCategoryName}
-                  onChange={(e) => setNewCategoryName(e.target.value)}
-                  className="w-full px-4 py-3 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-100 focus:border-primary-500 bg-white"
-                  placeholder="例: Tシャツ"
-                />
-              </div>
-              <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 pt-3">
-                <button
-                  type="submit"
-                  className="w-full sm:w-auto px-6 py-2.5 btn-gradient-animated text-white font-medium rounded-lg shadow-soft-lg"
-                >
-                  作成
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setShowCreateCategoryForm(false);
-                    setNewCategoryName('');
-                    setSelectedCreatorId(null);
-                  }}
-                  className="w-full sm:w-auto px-6 py-2.5 bg-white border border-neutral-300 text-neutral-700 font-medium rounded-lg hover:bg-neutral-50"
-                >
-                  キャンセル
-                </button>
-              </div>
-            </form>
-          </div>
-        )}
-
-        {/* スケジュールタブの内容 */}
-{activeTab === 'schedule' && (
-  <div className="space-y-8">
-    <div>
-      <h2 className="text-lg font-semibold text-neutral-900 mb-6">全体ガントチャート</h2>
-      <ProjectScheduleView user={user} activeBrandTab="all" viewType="daily" />
-    </div>
-    <div>
-      <h2 className="text-lg font-semibold text-neutral-900 mb-6">BRAND-BASE 年間スケジュール</h2>
-      <ProjectScheduleView user={user} activeBrandTab="BRAND-BASE" viewType="monthly" />
-    </div>
-  </div>
-)}
-
-{/* プロジェクト一覧タブの内容 */}
-{activeTab === 'projects' && (
-  <div className="mt-8">
-    <h2 className="text-lg font-semibold text-neutral-900 mb-6">
-      {activeBrandTab === 'BRAND-BASE' ? 'クリエイター一覧' : 'プロジェクト一覧'}
-    </h2>
-
-    {activeBrandTab === 'BRAND-BASE' ? (
-      // BRAND-BASE用: クリエイターごとにグループ化
-      <>
-        {creators.length === 0 ? (
-          <div className="text-center py-16 sm:py-20 md:py-24 px-4">
-            <div className="w-16 h-16 sm:w-20 sm:h-20 bg-neutral-100 rounded-2xl flex items-center justify-center mx-auto mb-4 sm:mb-6">
-              <FolderKanban className="w-8 h-8 sm:w-10 sm:h-10 text-neutral-400" />
-            </div>
-            <h2 className="text-base sm:text-lg font-semibold text-neutral-900 mb-2">
-              クリエイターがありません
-            </h2>
-            <p className="text-sm sm:text-base text-neutral-500 mb-6 sm:mb-8 leading-relaxed">
-              新しいクリエイターを作成して始めましょう
-            </p>
-            <button
-              onClick={() => setShowCreateCreatorForm(true)}
-              className="inline-flex items-center px-5 sm:px-6 py-2 sm:py-2.5 btn-gradient-animated text-white text-sm font-medium rounded-lg shadow-soft-lg"
-            >
-              <Plus className="w-4 h-4 mr-1.5 sm:mr-2" />
-              クリエイターを作成
-            </button>
-          </div>
-        ) : (
-          <div className="space-y-8 sm:space-y-10 md:space-y-12">
-            {creators.map((creator) => {
-              const creatorCategories = productCategories.filter(cat => cat.creator_id === creator.id);
-              const creatorProjects = projects.filter(p => {
-                const category = productCategories.find(cat => cat.id === p.product_category_id);
-                return category?.creator_id === creator.id;
-              });
-
-              if (creatorProjects.length === 0 && creatorCategories.length === 0) return null;
-
-              return (
-                <div key={creator.id} className="bg-white rounded-2xl border border-neutral-200/50 p-6 shadow-lg">
-                  <div className="flex items-center justify-between mb-6">
-                    <div>
-                      <h3 className="text-xl font-bold text-neutral-900">{creator.name}</h3>
-                      <p className="text-sm text-neutral-500 mt-1">
-                        {creatorCategories.length}品目 · {creatorProjects.length}プロジェクト
-                      </p>
-                    </div>
-                    <button
-                      onClick={() => {
-                        setSelectedCreatorId(creator.id);
-                        setShowCreateCategoryForm(true);
-                      }}
-                      className="px-4 py-2 text-sm font-medium text-primary-600 hover:bg-primary-50 rounded-lg transition-colors"
-                    >
-                      品目を追加
-                    </button>
-                  </div>
-
-                  {creatorCategories.map((category) => {
-                    const categoryProjects = projects.filter(p => p.product_category_id === category.id);
-                    
-                    return (
-                      <div key={category.id} className="mb-6 last:mb-0">
-                        <div className="flex items-center justify-between mb-4">
-                          <div className="flex items-center">
-                            <h4 className="text-base font-semibold text-neutral-800">
-                              {category.name}
-                            </h4>
-                            <span className="ml-2 px-2 py-0.5 text-xs font-medium bg-neutral-100 text-neutral-600 rounded-full">
-                              {categoryProjects.length}
-                            </span>
-                          </div>
-                          <button
-                            onClick={() => {
-                              setSelectedCategoryId(category.id);
-                              setNewBrandType('BRAND-BASE');
-                              setShowCreateForm(true);
+                      <div 
+                        className="absolute inset-0 z-0"
+                        style={{ backgroundColor: cell?.backgroundColor || '#ffffff' }}
+                      />
+                      
+                      <div className="relative z-10">
+                        {isEditing ? (
+                          <input
+                            ref={inputRef}
+                            type="text"
+                            value={editValue}
+                            onChange={(e) => setEditValue(e.target.value)}
+                            onBlur={handleCellBlur}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter') {
+                                handleCellBlur();
+                              } else if (e.key === 'Escape') {
+                                setEditingCell(null);
+                                setEditValue('');
+                              }
                             }}
-                            className="text-sm text-primary-600 hover:text-primary-700 font-medium"
-                          >
-                            + プロジェクト追加
-                          </button>
-                        </div>
-
-                        {categoryProjects.length === 0 ? (
-                          <div className="text-center py-8 bg-neutral-50 rounded-lg border-2 border-dashed border-neutral-200">
-                            <p className="text-sm text-neutral-500">プロジェクトがありません</p>
-                          </div>
+                            className="w-full h-full px-2 py-1 border-0 focus:outline-none text-center bg-transparent"
+                            style={{ color: cell?.textColor || '#000000' }}
+                          />
                         ) : (
-                          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                            {categoryProjects.map((project) => {
-                              const stats = projectStats.get(project.id);
-                              const lastUpdated = new Date(project.updated_at).toLocaleDateString('ja-JP');
-
-                              return (
-                                <div
-                                  key={project.id}
-                                  className="bg-neutral-50 rounded-xl border border-neutral-200 hover:border-primary-300 hover:shadow-lg transition-all group cursor-pointer"
-                                  onClick={() => onSelectProject(project)}
-                                >
-                                  <div className="p-5">
-                                    {editingProjectId === project.id ? (
-                                      <div 
-                                        className="space-y-4"
-                                        onClick={(e) => e.stopPropagation()}
-                                      >
-                                        <div>
-                                          <label className="block text-sm font-medium text-neutral-700 mb-2">
-                                            プロジェクト名
-                                          </label>
-                                          <input
-                                            type="text"
-                                            value={editProjectName}
-                                            onChange={(e) => setEditProjectName(e.target.value)}
-                                            className="w-full px-3 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-100 focus:border-primary-500"
-                                          />
-                                        </div>
-                                        <div>
-                                          <label className="block text-sm font-medium text-neutral-700 mb-2">
-                                            詳細
-                                          </label>
-                                          <textarea
-                                            value={editProjectDescription}
-                                            onChange={(e) => setEditProjectDescription(e.target.value)}
-                                            className="w-full px-3 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-100 focus:border-primary-500 resize-none"
-                                            rows={2}
-                                          />
-                                        </div>
-                                        <div className="flex gap-2">
-                                          <button
-                                            onClick={() => handleUpdateProject(project.id)}
-                                            className="flex-1 px-4 py-2 bg-primary-600 text-white text-sm font-medium rounded-lg hover:bg-primary-700"
-                                          >
-                                            保存
-                                          </button>
-                                          <button
-                                            onClick={handleCancelEdit}
-                                            className="flex-1 px-4 py-2 bg-white border border-neutral-300 text-neutral-700 text-sm font-medium rounded-lg hover:bg-neutral-50"
-                                          >
-                                            キャンセル
-                                          </button>
-                                        </div>
-                                      </div>
-                                    ) : (
-                                      <>
-                                        <div className="flex items-start justify-between mb-4">
-                                          <div className="flex-1">
-                                            <h5 className="text-sm font-semibold text-neutral-900 mb-1 group-hover:text-primary-600 transition-colors">
-                                              {project.name}
-                                            </h5>
-                                            {project.description && (
-                                              <p className="text-xs text-neutral-600 line-clamp-2">
-                                                {project.description}
-                                              </p>
-                                            )}
-                                          </div>
-                                          <div className="flex items-center gap-1 ml-2">
-                                            <button
-                                              onClick={(e) => {
-                                                e.stopPropagation();
-                                                handleStartEdit(project);
-                                              }}
-                                              className="p-1 text-neutral-500 hover:text-primary-600 hover:bg-primary-50 rounded transition-colors"
-                                              title="編集"
-                                            >
-                                              <Edit2 className="w-3.5 h-3.5" />
-                                            </button>
-                                            <button
-                                              onClick={(e) => handleDuplicateProject(project, e)}
-                                              className="p-1 text-neutral-500 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors"
-                                              title="複製"
-                                            >
-                                              <Copy className="w-3.5 h-3.5" />
-                                            </button>
-                                            <button
-                                              onClick={(e) => {
-                                                e.stopPropagation();
-                                                handleDeleteProject(project.id);
-                                              }}
-                                              className="p-1 text-neutral-500 hover:text-red-600 hover:bg-red-50 rounded transition-colors"
-                                              title="削除"
-                                            >
-                                              <Trash2 className="w-3.5 h-3.5" />
-                                            </button>
-                                            <select
-                                              value={project.status}
-                                              onChange={(e) => {
-                                                e.stopPropagation();
-                                                handleStatusChange(project.id, e.target.value as ProjectStatus);
-                                              }}
-                                              onClick={(e) => e.stopPropagation()}
-                                              className={`px-2 py-0.5 text-xs font-medium rounded-full border-0 cursor-pointer ${
-                                                project.status === '完了'
-                                                  ? 'bg-green-50 text-green-700'
-                                                  : project.status === '保留'
-                                                  ? 'bg-yellow-50 text-yellow-700'
-                                                  : 'bg-primary-50 text-primary-700'
-                                              }`}
-                                            >
-                                              <option value="進行中">進行中</option>
-                                              <option value="保留">保留</option>
-                                              <option value="完了">完了</option>
-                                            </select>
-                                          </div>
-                                        </div>
-
-                                        <div className="space-y-3 mt-4">
-                                          {stats && stats.totalTasks > 0 && (
-                                            <>
-                                              <div className="flex items-center justify-between text-xs">
-                                                <span className="text-neutral-600">進捗</span>
-                                                <span className="font-semibold text-primary-600">
-                                                  {stats.progress}%
-                                                </span>
-                                              </div>
-                                              <div className="w-full bg-neutral-200 rounded-full h-1.5">
-                                                <div
-                                                  className="bg-gradient-to-r from-primary-600 to-primary-500 h-1.5 rounded-full transition-all"
-                                                  style={{ width: `${stats.progress}%` }}
-                                                />
-                                              </div>
-                                              <div className="flex items-center text-xs text-neutral-600">
-                                                <CheckSquare className="w-3.5 h-3.5 mr-1.5" />
-                                                {stats.completedTasks} / {stats.totalTasks}
-                                              </div>
-                                            </>
-                                          )}
-
-                                          <div className="pt-3 border-t border-neutral-200 flex items-center justify-between">
-                                            <div className="flex items-center text-xs text-neutral-500">
-                                              <Calendar className="w-3 h-3 mr-1.5" />
-                                              {lastUpdated}
-                                            </div>
-                                            <div className="text-xs text-primary-600 font-medium flex items-center">
-                                              詳細
-                                              <ArrowRight className="w-3 h-3 ml-0.5" />
-                                            </div>
-                                          </div>
-                                        </div>
-                                      </>
-                                    )}
-                                  </div>
-                                </div>
-                              );
-                            })}
+                          <div 
+                            className="px-2 py-1 min-h-[32px] flex items-center justify-center text-center"
+                            style={{ color: cell?.textColor || '#000000' }}
+                          >
+                            {cell?.content || ''}
                           </div>
                         )}
                       </div>
-                    );
-                  })}
-
-                  {creatorCategories.length === 0 && (
-                    <div className="text-center py-8 bg-neutral-50 rounded-lg border-2 border-dashed border-neutral-200">
-                      <p className="text-sm text-neutral-500 mb-3">品目がありません</p>
-                      <button
-                        onClick={() => {
-                          setSelectedCreatorId(creator.id);
-                          setShowCreateCategoryForm(true);
-                        }}
-                        className="text-sm text-primary-600 hover:text-primary-700 font-medium"
-                      >
-                        + 品目を追加
-                      </button>
-                    </div>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-        )}
-      </>
-    ) : (
-      // 海外クラファン.com用: 従来通りのステータス別表示
-      <>
-        {projects.filter(p => p.brand_type === activeBrandTab).length === 0 ? (
-          <div className="text-center py-16 sm:py-20 md:py-24 px-4">
-            <div className="w-16 h-16 sm:w-20 sm:h-20 bg-neutral-100 rounded-2xl flex items-center justify-center mx-auto mb-4 sm:mb-6">
-              <FolderKanban className="w-8 h-8 sm:w-10 sm:h-10 text-neutral-400" />
-            </div>
-            <h2 className="text-base sm:text-lg font-semibold text-neutral-900 mb-2">
-              プロジェクトがありません
-            </h2>
-            <p className="text-sm sm:text-base text-neutral-500 mb-6 sm:mb-8 leading-relaxed">
-              新しいプロジェクトを作成して始めましょう
-            </p>
-            <button
-              onClick={() => setShowCreateForm(true)}
-              className="inline-flex items-center px-5 sm:px-6 py-2 sm:py-2.5 btn-gradient-animated text-white text-sm font-medium rounded-lg shadow-soft-lg"
-            >
-              <Plus className="w-4 h-4 mr-1.5 sm:mr-2" />
-              プロジェクトを作成
-            </button>
-          </div>
-        ) : (
-          <div className="space-y-8 sm:space-y-10 md:space-y-12">
-            {(['進行中', '保留', '完了'] as ProjectStatus[]).map((status) => {
-              const statusProjects = getProjectsByStatus(status);
-              if (statusProjects.length === 0) return null;
-
-              return (
-                <div key={status}>
-                  <div className="flex items-center mb-4 sm:mb-6">
-                    <h2 className="text-sm sm:text-base font-semibold text-neutral-900">
-                      {status}
-                    </h2>
-                    <span className="ml-2 sm:ml-3 px-2 sm:px-3 py-0.5 sm:py-1 text-xs font-medium bg-neutral-100 text-neutral-600 rounded-full">
-                      {statusProjects.length}
-                    </span>
-                  </div>
-
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5 md:gap-6">
-                    {statusProjects.map((project) => {
-                      const stats = projectStats.get(project.id);
-                      const lastUpdated = new Date(project.updated_at).toLocaleDateString('ja-JP');
-
-                      return (
+                      
+                      {showColorPicker?.projectId === project.id && showColorPicker?.date === dateStr && (
                         <div
-                          key={project.id}
-                          className="bg-white rounded-2xl border border-neutral-200/50 hover:border-primary-300 hover:shadow-xl transition-all group cursor-pointer"
-                          onClick={() => onSelectProject(project)}
+                          className="absolute z-50 bg-white border-2 border-neutral-300 rounded-xl shadow-2xl p-4 top-full left-0 mt-1 min-w-[280px]"
+                          onClick={(e) => e.stopPropagation()}
                         >
-                          <div className="p-6">
-                            {editingProjectId === project.id ? (
-                              <div 
-                                className="space-y-4"
-                                onClick={(e) => e.stopPropagation()}
-                              >
-                                <div>
-                                  <label className="block text-sm font-medium text-neutral-700 mb-2">
-                                    タイプ
-                                  </label>
-                                  <select
-                                    value={editBrandType}
-                                    onChange={(e) => setEditBrandType(e.target.value as BrandType)}
-                                    className="w-full px-3 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-100 focus:border-primary-500"
-                                  >
-                                    <option value="海外クラファン.com">海外クラファン.com</option>
-                                    <option value="BRAND-BASE">BRAND-BASE</option>
-                                  </select>
-                                </div>
-                                <div>
-                                  <label className="block text-sm font-medium text-neutral-700 mb-2">
-                                    事業者名
-                                  </label>
-                                  <input
-                                    type="text"
-                                    value={editProjectName}
-                                    onChange={(e) => setEditProjectName(e.target.value)}
-                                    className="w-full px-3 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-100 focus:border-primary-500"
+                          <div className="mb-3">
+                            <p className="text-xs font-semibold text-neutral-700 mb-2">
+                              {selectedCells.size > 1 ? `${selectedCells.size}個のセルの色を変更` : 'カラーを選択'}
+                            </p>
+                            <div className="grid grid-cols-7 gap-2">
+                              {predefinedColors.map((item) => (
+                                <button
+                                  key={item.color}
+                                  onClick={() => handleColorChange(project.id, date, item.color, item.textColor)}
+                                  className="group relative"
+                                  title={item.name}
+                                >
+                                  <div
+                                    className="w-9 h-9 rounded-lg border-2 border-neutral-300 hover:border-primary-500 hover:scale-110 transition-all shadow-sm"
+                                    style={{ backgroundColor: item.color }}
                                   />
-                                </div>
-                                <div>
-                                  <label className="block text-sm font-medium text-neutral-700 mb-2">
-                                    商品
-                                  </label>
-                                  <textarea
-                                    value={editProjectDescription}
-                                    onChange={(e) => setEditProjectDescription(e.target.value)}
-                                    className="w-full px-3 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-100 focus:border-primary-500 resize-none"
-                                    rows={2}
-                                  />
-                                </div>
-                                <div className="flex gap-2">
-                                  <button
-                                    onClick={() => handleUpdateProject(project.id)}
-                                    className="flex-1 px-4 py-2 bg-primary-600 text-white text-sm font-medium rounded-lg hover:bg-primary-700"
-                                  >
-                                    保存
-                                  </button>
-                                  <button
-                                    onClick={handleCancelEdit}
-                                    className="flex-1 px-4 py-2 bg-white border border-neutral-300 text-neutral-700 text-sm font-medium rounded-lg hover:bg-neutral-50"
-                                  >
-                                    キャンセル
-                                  </button>
-                                </div>
-                              </div>
-                            ) : (
-                              <>
-                                <div className="flex items-start justify-between mb-4">
-                                  <div className="flex-1">
-                                    <h3 className="text-base font-semibold text-neutral-900 mb-2 group-hover:text-primary-600 transition-colors">
-                                      {project.name}
-                                    </h3>
-                                    {project.description && (
-                                      <p className="text-sm text-neutral-600 line-clamp-2 leading-relaxed">
-                                        {project.description}
-                                      </p>
-                                    )}
-                                  </div>
-                                  <div className="flex items-center gap-2 ml-3">
-                                    <button
-                                      onClick={(e) => {
-                                        e.stopPropagation();
-                                        handleStartEdit(project);
-                                      }}
-                                      className="p-1.5 text-neutral-500 hover:text-primary-600 hover:bg-primary-50 rounded-lg transition-colors"
-                                      title="編集"
-                                    >
-                                      <Edit2 className="w-4 h-4" />
-                                    </button>
-                                    <button
-                                      onClick={(e) => handleDuplicateProject(project, e)}
-                                      className="p-1.5 text-neutral-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-                                      title="複製"
-                                    >
-                                      <Copy className="w-4 h-4" />
-                                    </button>
-                                    <button
-                                      onClick={(e) => {
-                                        e.stopPropagation();
-                                        handleDeleteProject(project.id);
-                                      }}
-                                      className="p-1.5 text-neutral-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                                      title="削除"
-                                    >
-                                      <Trash2 className="w-4 h-4" />
-                                    </button>
-                                    <select
-                                      value={project.status}
-                                      onChange={(e) => {
-                                        e.stopPropagation();
-                                        handleStatusChange(project.id, e.target.value as ProjectStatus);
-                                      }}
-                                      onClick={(e) => e.stopPropagation()}
-                                      className={`px-3 py-1 text-xs font-medium rounded-full border-0 cursor-pointer ${
-                                        project.status === '完了'
-                                          ? 'bg-green-50 text-green-700'
-                                          : project.status === '保留'
-                                          ? 'bg-yellow-50 text-yellow-700'
-                                          : 'bg-primary-50 text-primary-700'
-                                      }`}
-                                    >
-                                      <option value="進行中">進行中</option>
-                                      <option value="保留">保留</option>
-                                      <option value="完了">完了</option>
-                                    </select>
-                                  </div>
-                                </div>
-
-                                <div className="space-y-4 mt-5">
-                                  {stats && stats.totalTasks > 0 && (
-                                    <>
-                                      <div className="flex items-center justify-between text-sm">
-                                        <span className="text-neutral-600 font-medium">進捗率</span>
-                                        <span className="font-semibold text-primary-600">
-                                          {stats.progress}%
-                                        </span>
-                                      </div>
-                                      <div className="w-full bg-neutral-100 rounded-full h-2 overflow-hidden">
-                                        <div
-                                          className="bg-gradient-to-r from-primary-600 to-primary-500 h-2 rounded-full transition-all duration-300"
-                                          style={{ width: `${stats.progress}%` }}
-                                        />
-                                      </div>
-                                      <div className="flex items-center text-sm text-neutral-600">
-                                        <CheckSquare className="w-4 h-4 mr-2 text-neutral-500" />
-                                        {stats.completedTasks} / {stats.totalTasks} タスク完了
-                                      </div>
-                                    </>
-                                  )}
-
-                                  {(!stats || stats.totalTasks === 0) && (
-                                    <div className="text-sm text-neutral-500">
-                                      タスクがまだありません
-                                    </div>
-                                  )}
-
-                                  <div className="pt-4 border-t border-neutral-100 flex items-center justify-between">
-                                    <div className="flex items-center text-xs text-neutral-500">
-                                      <Calendar className="w-3.5 h-3.5 mr-2" />
-                                      {lastUpdated}
-                                    </div>
-                                    <div className="text-xs text-primary-600 font-medium flex items-center group-hover:translate-x-0.5 transition-transform">
-                                      詳細
-                                      <ArrowRight className="w-3.5 h-3.5 ml-1" />
-                                    </div>
-                                  </div>
-                                </div>
-                              </>
-                            )}
+                                  <span className="absolute hidden group-hover:block bottom-full left-1/2 transform -translate-x-1/2 mb-1 px-2 py-1 text-xs bg-neutral-800 text-white rounded whitespace-nowrap">
+                                    {item.name}
+                                  </span>
+                                </button>
+                              ))}
+                            </div>
                           </div>
+                          <button
+                            onClick={() => setShowColorPicker(null)}
+                            className="w-full px-3 py-2 text-sm font-medium bg-neutral-100 hover:bg-neutral-200 rounded-lg transition-colors"
+                          >
+                            閉じる
+                          </button>
                         </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        )}
-      </>
-    )}
-  </div>
-)}
-      </main>
-      <Footer />
+                      )}
+                    </td>
+                  );
+                })}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      <div className="p-3 border-t border-neutral-200 bg-neutral-50 text-xs text-neutral-600">
+        <div className="flex flex-wrap gap-x-4 gap-y-1">
+          <span>• ダブルクリックで編集</span>
+          <span>• 右クリックで色選択</span>
+          <span>• 矢印キーで移動</span>
+          <span>• Enterで編集開始</span>
+          <span>• Ctrl+クリックで複数選択</span>
+          <span>• Shiftで範囲選択</span>
+          <span>• Ctrl+C でコピー</span>
+          <span>• Ctrl+V でペースト</span>
+        </div>
+      </div>
     </div>
   );
 }
