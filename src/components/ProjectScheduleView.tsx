@@ -647,22 +647,23 @@ export default function ProjectScheduleView({ user, activeBrandTab, viewType }: 
 
                   return (
                     <td
-                      key={dateIndex}
-                      className={`border border-neutral-200 p-0 cursor-cell relative ${
-                        isSelected ? 'ring-2 ring-primary-500 ring-inset' : ''
-                      }`}
-                      style={{ backgroundColor: cell?.backgroundColor || '#ffffff' }}
-                      onClick={() => handleCellClick(project.id, date)}
-                      onDoubleClick={() => handleCellDoubleClick(project.id, date)}
-                      onPaste={(e) => handlePaste(e, project.id, date)}
-                      onKeyDown={(e) => handleKeyDown(e, project.id, dateIndex)}
-                      onContextMenu={(e) => {
-                        e.preventDefault();
-                        setShowColorPicker({ projectId: project.id, date: dateStr });
-                        setSelectedColor(cell?.backgroundColor || '#ffffff');
-                      }}
-                      tabIndex={0}
-                    >
+  key={dateIndex}
+  data-project-id={project.id}
+  data-date={dateStr}
+  className={`border border-neutral-200 p-0 cursor-cell relative ${
+    isSelected ? 'ring-2 ring-primary-500 ring-inset' : ''
+  }`}
+  onClick={() => handleCellClick(project.id, date)}
+  onDoubleClick={() => handleCellDoubleClick(project.id, date)}
+  onPaste={(e) => handlePaste(e, project.id, date)}
+  onKeyDown={(e) => handleKeyDown(e, project.id, dateIndex)}
+  onContextMenu={(e) => {
+    e.preventDefault();
+    setShowColorPicker({ projectId: project.id, date: dateStr });
+    setSelectedColor(cell?.backgroundColor || '#ffffff');
+  }}
+  tabIndex={0}
+>
                       {isEditing ? (
                         <input
                           ref={inputRef}
