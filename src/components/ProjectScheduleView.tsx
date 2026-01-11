@@ -14,6 +14,7 @@ interface ScheduleCell {
   date: string;
   content: string;
   backgroundColor: string;
+  textColor: string;
 }
 
 export default function ProjectScheduleView({ user, activeBrandTab }: ProjectScheduleViewProps) {
@@ -25,7 +26,7 @@ export default function ProjectScheduleView({ user, activeBrandTab }: ProjectSch
   const [editValue, setEditValue] = useState('');
   const [showColorPicker, setShowColorPicker] = useState<{ projectId: string; date: string } | null>(null);
   const [selectedColor, setSelectedColor] = useState('#ffffff');
-  const [copiedCellData, setCopiedCellData] = useState<{ content: string; backgroundColor: string } | null>(null);
+  const [copiedCellData, setCopiedCellData] = useState<{ content: string; backgroundColor: string; textColor: string } | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -89,6 +90,7 @@ export default function ProjectScheduleView({ user, activeBrandTab }: ProjectSch
           date: schedule.date,
           content: schedule.content || '',
           backgroundColor: schedule.background_color || '#ffffff',
+          textColor: schedule.text_color || '#000000',
         });
       });
 
@@ -141,6 +143,7 @@ export default function ProjectScheduleView({ user, activeBrandTab }: ProjectSch
             date: editingCell.date,
             content: editValue,
             background_color: existingCell?.backgroundColor || '#ffffff',
+            text_color: existingCell?.textColor || '#000000',
             user_id: user.id,
           });
 
@@ -236,10 +239,11 @@ export default function ProjectScheduleView({ user, activeBrandTab }: ProjectSch
     const cell = schedules.get(key);
     if (cell) {
       try {
-        // セルのデータ（内容と色）を保存
+        // セルのデータ（内容、背景色、文字色）を保存
         setCopiedCellData({
           content: cell.content || '',
-          backgroundColor: cell.backgroundColor || '#ffffff'
+          backgroundColor: cell.backgroundColor || '#ffffff',
+          textColor: cell.textColor || '#000000'
         });
         // クリップボードにはテキストのみをコピー
         await navigator.clipboard.writeText(cell.content || '');
@@ -256,11 +260,13 @@ export default function ProjectScheduleView({ user, activeBrandTab }: ProjectSch
     try {
       let content = '';
       let backgroundColor = '#ffffff';
+      let textColor = '#000000';
 
       // コピーしたセルデータがある場合は、それを使用（色も含む）
       if (copiedCellData) {
         content = copiedCellData.content;
         backgroundColor = copiedCellData.backgroundColor;
+        textColor = copiedCellData.textColor;
       } else {
         // クリップボードからテキストを取得
         content = e.clipboardData.getData('text');
@@ -273,6 +279,7 @@ export default function ProjectScheduleView({ user, activeBrandTab }: ProjectSch
           date: dateStr,
           content: content,
           background_color: backgroundColor,
+          text_color: textColor,
           user_id: user.id,
         });
 
@@ -283,7 +290,7 @@ export default function ProjectScheduleView({ user, activeBrandTab }: ProjectSch
     }
   };
 
-  const handleColorChange = async (projectId: string, date: Date, color: string) => {
+  const handleColorChange = async (projectId: string, date: Date, color: string, textColor: string) => {
     const dateStr = date.toISOString().split('T')[0];
     const key = `${projectId}-${dateStr}`;
     const existingCell = schedules.get(key);
@@ -296,6 +303,7 @@ export default function ProjectScheduleView({ user, activeBrandTab }: ProjectSch
           date: dateStr,
           content: existingCell?.content || '',
           background_color: color,
+          text_color: textColor,
           user_id: user.id,
         });
 
@@ -308,34 +316,34 @@ export default function ProjectScheduleView({ user, activeBrandTab }: ProjectSch
   };
 
   const predefinedColors = [
-    { name: '白', color: '#ffffff' },
-    { name: '淡黄', color: '#fef3c7' },
-    { name: '淡赤', color: '#fecaca' },
-    { name: '淡橙', color: '#fed7aa' },
-    { name: '淡緑黄', color: '#d9f99d' },
-    { name: '淡緑', color: '#bbf7d0' },
-    { name: '淡青', color: '#bfdbfe' },
-    { name: '淡紫', color: '#ddd6fe' },
-    { name: '淡桃', color: '#f5d0fe' },
-    { name: '淡ピンク', color: '#fecdd3' },
-    { name: 'グレー', color: '#f3f4f6' },
-    { name: '黄', color: '#fde68a' },
-    { name: '赤', color: '#fca5a5' },
-    { name: '橙', color: '#fdba74' },
-    { name: '黄緑', color: '#bef264' },
-    { name: '緑', color: '#86efac' },
-    { name: '青', color: '#93c5fd' },
-    { name: '紫', color: '#c4b5fd' },
-    { name: '桃', color: '#f0abfc' },
-    { name: 'ピンク', color: '#fb7185' },
-    { name: '濃黄', color: '#fbbf24' },
-    { name: '濃赤', color: '#ef4444' },
-    { name: '濃橙', color: '#f97316' },
-    { name: '濃緑', color: '#22c55e' },
-    { name: '濃青', color: '#3b82f6' },
-    { name: '濃紫', color: '#a855f7' },
-    { name: '濃桃', color: '#ec4899' },
-    { name: 'ダーク', color: '#6b7280' },
+    { name: '白', color: '#ffffff', textColor: '#000000' },
+    { name: '淡黄', color: '#fef3c7', textColor: '#000000' },
+    { name: '淡赤', color: '#fecaca', textColor: '#000000' },
+    { name: '淡橙', color: '#fed7aa', textColor: '#000000' },
+    { name: '淡緑黄', color: '#d9f99d', textColor: '#000000' },
+    { name: '淡緑', color: '#bbf7d0', textColor: '#000000' },
+    { name: '淡青', color: '#bfdbfe', textColor: '#000000' },
+    { name: '淡紫', color: '#ddd6fe', textColor: '#000000' },
+    { name: '淡桃', color: '#f5d0fe', textColor: '#000000' },
+    { name: '淡ピンク', color: '#fecdd3', textColor: '#000000' },
+    { name: 'グレー', color: '#f3f4f6', textColor: '#000000' },
+    { name: '黄', color: '#fde68a', textColor: '#000000' },
+    { name: '赤', color: '#fca5a5', textColor: '#000000' },
+    { name: '橙', color: '#fdba74', textColor: '#000000' },
+    { name: '黄緑', color: '#bef264', textColor: '#000000' },
+    { name: '緑', color: '#86efac', textColor: '#000000' },
+    { name: '青', color: '#93c5fd', textColor: '#000000' },
+    { name: '紫', color: '#c4b5fd', textColor: '#000000' },
+    { name: '桃', color: '#f0abfc', textColor: '#000000' },
+    { name: 'ピンク', color: '#fb7185', textColor: '#000000' },
+    { name: '濃黄', color: '#fbbf24', textColor: '#000000' },
+    { name: '濃赤', color: '#ef4444', textColor: '#ffffff' },
+    { name: '濃橙', color: '#f97316', textColor: '#ffffff' },
+    { name: '濃緑', color: '#22c55e', textColor: '#ffffff' },
+    { name: '濃青', color: '#3b82f6', textColor: '#ffffff' },
+    { name: '濃紫', color: '#a855f7', textColor: '#ffffff' },
+    { name: '濃桃', color: '#ec4899', textColor: '#ffffff' },
+    { name: 'ダーク', color: '#6b7280', textColor: '#ffffff' },
   ];
 
   const getWeekday = (date: Date): string => {
@@ -483,7 +491,10 @@ export default function ProjectScheduleView({ user, activeBrandTab }: ProjectSch
                         />
                       ) : (
                         <>
-                          <div className="px-2 py-1 min-h-[32px] flex items-center justify-center text-center">
+                          <div 
+                            className="px-2 py-1 min-h-[32px] flex items-center justify-center text-center"
+                            style={{ color: cell?.textColor || '#000000' }}
+                          >
                             {cell?.content || ''}
                           </div>
                           {showColorPicker?.projectId === project.id && showColorPicker?.date === dateStr && (
@@ -497,7 +508,7 @@ export default function ProjectScheduleView({ user, activeBrandTab }: ProjectSch
                                   {predefinedColors.map((item) => (
                                     <button
                                       key={item.color}
-                                      onClick={() => handleColorChange(project.id, date, item.color)}
+                                      onClick={() => handleColorChange(project.id, date, item.color, item.textColor)}
                                       className="group relative"
                                       title={item.name}
                                     >
