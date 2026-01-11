@@ -402,36 +402,28 @@ if (e.key === 'Escape' && !editingCell) {
   if (selectedCells.size === 0) return;
 
   try {
-    if (selectedCells.size === 1) {
-      // 単一セルのコピー
-      const cellKey = Array.from(selectedCells)[0];
-      const cell = schedules.get(cellKey);
-      if (cell) {
-        setCopiedCellData({
-          content: cell.content || '',
-          backgroundColor: cell.backgroundColor || '#ffffff',
-          textColor: cell.textColor || '#000000'
-        });
-        await navigator.clipboard.writeText(cell.content || '');
-      }
-    } else {
-      // 複数セルのコピー（TSV形式）
-      const cellsArray = Array.from(selectedCells).map(key => {
-        const cell = schedules.get(key);
-        return {
-          key,
-          content: cell?.content || '',
-          backgroundColor: cell?.backgroundColor || '#ffffff',
-          textColor: cell?.textColor || '#000000'
-        };
-      });
-      
-      const text = cellsArray.map(c => c.content).join('\t');
-      await navigator.clipboard.writeText(text);
-      
-      // 複数セルの場合はデータ構造を保存
-      setCopiedCellData(null); // 複数セルの場合は特別な処理が必要なのでnull
-    }
+    // 選択されたセルのデータを取得
+    const cellsData = Array.from(selectedCells).map(key => {
+      const cell = schedules.get(key);
+      return {
+        key,
+        content: cell?.content || '',
+        backgroundColor: cell?.backgroundColor || '#ffffff',
+        textColor: cell?.textColor || '#000000'
+      };
+    });
+    
+    // 複数セルのデータを保存（色情報も含む）
+    setCopiedCellData({
+      content: cellsData.map(c => c.content).join('\t'),
+      backgroundColor: cellsData[0].backgroundColor,
+      textColor: cellsData[0].textColor,
+      isMultiple: selectedCells.size > 1,
+      cellsData: cellsData
+    } as any);
+    
+    // クリップボードにはテキストのみ
+    await navigator.clipboard.writeText(cellsData.map(c => c.content).join('\t'));
   } catch (error) {
     console.error('コピーエラー:', error);
   }
