@@ -96,24 +96,24 @@ export default function ProjectScheduleView({ user, activeBrandTab, viewType }: 
     }
   };
 
-  const loadProjects = async () => {
-    try {
-      let query = supabase
-        .from('projects')
-        .select('*');
-      
-      if (activeBrandTab !== 'all') {
-        query = query.eq('brand_type', activeBrandTab);
-      }
-      
-      const { data, error } = await query.order('name', { ascending: true });
-
-      if (error) throw error;
-      setProjects(data || []);
-    } catch (error) {
-      console.error('プロジェクト読み込みエラー:', error);
+  const loadProjects = useCallback(async () => {
+  try {
+    let query = supabase
+      .from('projects')
+      .select('*');
+    
+    if (activeBrandTab !== 'all') {
+      query = query.eq('brand_type', activeBrandTab);
     }
-  };
+    
+    const { data, error } = await query.order('name', { ascending: true });
+
+    if (error) throw error;
+    setProjects(data || []);
+  } catch (error) {
+    console.error('プロジェクト読み込みエラー:', error);
+  }
+}, [activeBrandTab]);
 
   const loadSchedules = async () => {
     try {
