@@ -534,7 +534,6 @@ export default function ProjectScheduleView({ user, activeBrandTab, viewType }: 
 
                   return (
                     <td
-                      <td
   key={dateIndex}
   className={`border border-neutral-200 p-0 cursor-cell relative ${
     isSelected ? 'ring-2 ring-primary-500 ring-inset' : ''
