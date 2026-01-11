@@ -795,6 +795,14 @@ onClick={(e) => handleCellClick(project.id, date, e)}
                       
                       {/* カラーピッカー（最前面） */}
                       {showColorPicker?.projectId === project.id && showColorPicker?.date === dateStr && (
+  <div
+    className="absolute z-50 bg-white border-2 border-neutral-300 rounded-xl shadow-2xl p-4 top-full left-0 mt-1 min-w-[280px]"
+    onClick={(e) => e.stopPropagation()}
+  >
+    <div className="mb-3">
+      <p className="text-xs font-semibold text-neutral-700 mb-2">
+        {selectedCells.size > 1 ? `${selectedCells.size}個のセルの色を変更` : 'カラーを選択'}
+      </p>
                         <div
                           className="absolute z-50 bg-white border-2 border-neutral-300 rounded-xl shadow-2xl p-4 top-full left-0 mt-1 min-w-[280px]"
                           onClick={(e) => e.stopPropagation()}
