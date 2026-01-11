@@ -106,19 +106,19 @@ export default function ProjectScheduleView({ user, activeBrandTab, viewType }: 
       query = query.eq('brand_type', activeBrandTab);
     }
     
-    const { data, error } = await query.order('created_at', { ascending: true });
+    const { data, error } = await query.order('created_at', { ascending: false });
 
     if (error) throw error;
     
-    // activeBrandTab が 'all' の場合、ブランド別にソート
+    // activeBrandTab が 'all' の場合、ブランド別にグループ化してソート
     if (activeBrandTab === 'all' && data) {
       const sortedData = data.sort((a, b) => {
         // まず brand_type で比較（海外クラファン.com が先）
         if (a.brand_type !== b.brand_type) {
           return a.brand_type === '海外クラファン.com' ? -1 : 1;
         }
-        // 同じブランド内では created_at で昇順（追加された順）
-        return new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
+        // 同じブランド内では created_at で降順（最近追加されたものが上）
+        return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
       });
       setProjects(sortedData);
     } else {
