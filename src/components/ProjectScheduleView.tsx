@@ -697,11 +697,13 @@ const isPrimarySelected = selectedCell?.projectId === project.id && selectedCell
   key={dateIndex}
   data-cell-id={`${project.id}-${dateStr}`}
   className={`p-0 cursor-cell relative ${
-    isSelected 
-      ? 'border-4 border-primary-600 shadow-lg' 
+  isPrimarySelected
+    ? 'border-4 border-primary-600 shadow-lg' 
+    : isSelected
+      ? 'border-2 border-primary-400 bg-primary-50/30'
       : 'border border-neutral-200'
-  }`}
-  onClick={() => handleCellClick(project.id, date)}
+}`}
+onClick={(e) => handleCellClick(project.id, date, e)}
   onDoubleClick={() => handleCellDoubleClick(project.id, date)}
   onPaste={(e) => handlePaste(e, project.id, date)}
   onKeyDown={(e) => handleKeyDown(e, project.id, dateIndex)}
