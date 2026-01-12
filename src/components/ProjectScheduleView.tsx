@@ -55,8 +55,6 @@ export default function ProjectScheduleView({ user, activeBrandTab, viewType, on
   }, [editingCell]);
 
   useEffect(() => {
-    // 日次ビューで初回読み込み時のみ当日の列を中央に配置
-    useEffect(() => {
   // 日次ビューで初回読み込み時のみ当日の列を中央に配置
   if (viewType === 'daily' && dates.length > 0 && !hasScrolledToToday.current) {
     const todayIndex = dates.findIndex(date => isToday(date));
