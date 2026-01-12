@@ -808,10 +808,10 @@ export default function ProjectScheduleView({ user, activeBrandTab, viewType, on
           <td className="sticky left-[200px] z-10 bg-white border border-neutral-200 px-2 py-2 text-center shadow-sm">
   <button
     onClick={() => onSelectProject(project)}
-    className="px-2 py-1 text-xs text-neutral-600 hover:text-primary-600 hover:underline transition-colors"
+    className="px-2 py-1 text-xs text-primary-600 underline hover:text-primary-700 hover:no-underline transition-colors"
     title="プロジェクトを開く"
   >
-    →
+    開く
   </button>
 </td>
           
