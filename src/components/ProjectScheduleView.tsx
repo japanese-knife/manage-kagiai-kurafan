@@ -806,6 +806,39 @@ export default function ProjectScheduleView({ user, activeBrandTab, viewType, on
             )}
           </td>
           
+          <td className="sticky left-[200px] z-10 bg-white border border-neutral-200 px-2 py-2 text-center shadow-sm">
+            <button
+              onClick={() => onSelectProject(project)}
+              className="px-3 py-1.5 bg-primary-600 text-white text-xs font-medium rounded-lg hover:bg-primary-700 transition-colors"
+            >
+              開く
+            </button>
+          </td>
+            {activeBrandTab === 'BRAND-BASE' ? (
+              <>
+                {project.creatorName && (
+                  <div className="text-sm font-semibold text-primary-600 mb-1">
+                    {project.creatorName}
+                  </div>
+                )}
+                {project.brandName && (
+                  <div className="font-medium text-neutral-900">
+                    {project.brandName}
+                  </div>
+                )}
+              </>
+            ) : (
+              <>
+                <div className="font-medium">{project.name}</div>
+                {project.description && (
+                  <div className="text-xs text-neutral-500 mt-1 line-clamp-2">
+                    {project.description}
+                  </div>
+                )}
+              </>
+            )}
+          </td>
+          
             {dates.map((date, dateIndex) => {
               const key = getCellKey(project.id, date);
               const cell = schedules.get(key);
