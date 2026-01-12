@@ -780,19 +780,13 @@ export default function ProjectScheduleView({ user, activeBrandTab, viewType }: 
             {activeBrandTab === 'BRAND-BASE' ? (
               <>
                 {project.creatorName && (
-                  <div className="text-xs font-semibold text-primary-600 mb-1">
+                  <div className="text-sm font-semibold text-primary-600 mb-1">
                     {project.creatorName}
                   </div>
                 )}
                 {project.brandName && (
-                  <div className="font-medium text-neutral-900 mb-1">
+                  <div className="font-medium text-neutral-900">
                     {project.brandName}
-                  </div>
-                )}
-                <div className="text-xs text-neutral-600">{project.name}</div>
-                {project.description && (
-                  <div className="text-xs text-neutral-500 mt-1 line-clamp-2">
-                    {project.description}
                   </div>
                 )}
               </>
