@@ -18,6 +18,23 @@ export interface ProductCategory {
   updated_at: string;
 }
 
+export interface Creator {
+  id: string;
+  name: string;
+  user_id: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ProductCategory {
+  id: string;
+  creator_id: string;
+  name: string;
+  user_id: string;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface ProjectSchedule {
   id: string;
   project_id: string;
