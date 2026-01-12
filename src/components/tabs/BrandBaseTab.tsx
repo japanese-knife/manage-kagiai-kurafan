@@ -182,6 +182,86 @@ export default function BrandBaseTab({
     setProjectStats(statsMap);
   };
 
+  const handleCreateCreator = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newCreatorName.trim()) return;
+
+    try {
+      const { error } = await supabase
+        .from('creators')
+        .insert({
+          name: newCreatorName,
+          description: newCreatorDescription,
+          user_id: user.id,
+        });
+
+      if (error) throw error;
+
+      setNewCreatorName('');
+      setNewCreatorDescription('');
+      setShowNewCreatorForm(false);
+      loadCreators();
+    } catch (error) {
+      console.error('クリエイター作成エラー:', error);
+      alert('クリエイターの作成に失敗しました');
+    }
+  };
+
+  const handleDeleteCreator = async (creatorId: string) => {
+    if (!confirm('このクリエイターを削除してもよろしいですか？関連するブランドとの紐付けも削除されます。')) {
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from('creators')
+        .delete()
+        .eq('id', creatorId);
+
+      if (error) throw error;
+
+      loadCreators();
+    } catch (error) {
+      console.error('クリエイター削除エラー:', error);
+      alert('クリエイターの削除に失敗しました');
+    }
+  };
+
+  const handleLinkBrandToCreator = async (creatorId: string, brandId: string) => {
+    try {
+      const { error } = await supabase
+        .from('creator_brands')
+        .insert({
+          creator_id: creatorId,
+          brand_id: brandId,
+        });
+
+      if (error) throw error;
+
+      loadBrands();
+    } catch (error) {
+      console.error('ブランドリンクエラー:', error);
+      alert('ブランドの紐付けに失敗しました');
+    }
+  };
+
+  const handleUnlinkBrandFromCreator = async (creatorId: string, brandId: string) => {
+    try {
+      const { error } = await supabase
+        .from('creator_brands')
+        .delete()
+        .eq('creator_id', creatorId)
+        .eq('brand_id', brandId);
+
+      if (error) throw error;
+
+      loadBrands();
+    } catch (error) {
+      console.error('ブランドリンク解除エラー:', error);
+      alert('ブランドの紐付け解除に失敗しました');
+    }
+  };
+
   const handleCreateBrand = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newBrandName.trim()) return;
