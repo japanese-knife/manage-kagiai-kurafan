@@ -150,7 +150,7 @@ function BrandInfoTable({ user, categoryId, categoryName, creatorName, onDeleteC
   };
 
   const handleDeleteProject = async (projectName: string) => {
-    if (!confirm(`プロジェクト列「${projectName}」を削除しますか？`)) return;
+  if (!confirm(`プロジェクト列「${projectName}」を削除しますか？`)) return;
 
     setProjectColumns(projectColumns.filter(p => p !== projectName));
 
