@@ -92,20 +92,20 @@ export default function BrandBaseTab({
   }, [projects]);
 
   const loadCreators = async () => {
-    try {
-      const { data: creatorsData, error: creatorsError } = await supabase
-        .from('creators')
-        .select('*')
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: false });
+  try {
+    const { data: creatorsData, error: creatorsError } = await supabase
+      .from('creators')
+      .select('*')
+      // .eq('user_id', user.id) ← この行を削除
+      .order('created_at', { ascending: false });
 
-      if (creatorsError) throw creatorsError;
+    if (creatorsError) throw creatorsError;
 
-      setCreators(creatorsData || []);
-    } catch (error) {
-      console.error('クリエイター読み込みエラー:', error);
-    }
-  };
+    setCreators(creatorsData || []);
+  } catch (error) {
+    console.error('クリエイター読み込みエラー:', error);
+  }
+};
 
   const loadBrands = async () => {
     try {
