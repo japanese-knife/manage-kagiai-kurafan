@@ -1545,6 +1545,8 @@ export default function BrandBaseTab({
           )}
         </>
       )}
+
+      {/* 旧クリエイター/品目一覧ビュー（プロジェクト一覧） - 削除または非表示 */}
     </div>
   );
 }
