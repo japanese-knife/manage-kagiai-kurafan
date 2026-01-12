@@ -65,30 +65,35 @@ function BrandInfoTable({ user, categoryId, categoryName, creatorName, onDeleteC
   };
 
   const handleAddBrand = async () => {
-    if (!newBrandName.trim()) return;
+  if (!newBrandName.trim()) return;
 
-    try {
-      const { error } = await supabase
-        .from('brand_infos')
-        .insert({
-          category_id: categoryId,
-          brand_name: newBrandName,
-          brand_theme: '',
-          special_feature: '',
-          projects: {},
-          user_id: user.id,
-        });
+  try {
+    const { data, error } = await supabase
+      .from('brand_infos')
+      .insert({
+        category_id: categoryId,
+        brand_name: newBrandName,
+        brand_theme: '',
+        special_feature: '',
+        projects: {},
+        user_id: user.id,
+      })
+      .select();
 
-      if (error) throw error;
-
-      setNewBrandName('');
-      setShowAddBrand(false);
-      loadBrandInfos();
-    } catch (error) {
-      console.error('ブランド追加エラー:', error);
-      alert('ブランドの追加に失敗しました');
+    if (error) {
+      console.error('Supabaseエラー詳細:', error);
+      throw error;
     }
-  };
+
+    console.log('ブランド追加成功:', data);
+    setNewBrandName('');
+    setShowAddBrand(false);
+    loadBrandInfos();
+  } catch (error) {
+    console.error('ブランド追加エラー:', error);
+    alert(`ブランドの追加に失敗しました: ${error instanceof Error ? error.message : '不明なエラー'}`);
+  }
+};
 
   const handleAddProject = async () => {
     if (!newProjectName.trim()) return;
