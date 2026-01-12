@@ -183,29 +183,34 @@ export default function BrandBaseTab({
   };
 
   const handleCreateCreator = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newCreatorName.trim()) return;
+  e.preventDefault();
+  if (!newCreatorName.trim()) return;
 
-    try {
-      const { error } = await supabase
-        .from('creators')
-        .insert({
-          name: newCreatorName,
-          description: newCreatorDescription,
-          user_id: user.id,
-        });
+  try {
+    const { data, error } = await supabase
+      .from('creators')
+      .insert({
+        name: newCreatorName,
+        description: newCreatorDescription,
+        user_id: user.id,
+      })
+      .select();
 
-      if (error) throw error;
-
-      setNewCreatorName('');
-      setNewCreatorDescription('');
-      setShowNewCreatorForm(false);
-      loadCreators();
-    } catch (error) {
-      console.error('クリエイター作成エラー:', error);
-      alert('クリエイターの作成に失敗しました');
+    if (error) {
+      console.error('Supabase エラー詳細:', error);
+      alert(`クリエイターの作成に失敗しました:\n${error.message}\nコード: ${error.code}\n詳細: ${error.details || 'なし'}`);
+      throw error;
     }
-  };
+
+    console.log('クリエイター作成成功:', data);
+    setNewCreatorName('');
+    setNewCreatorDescription('');
+    setShowNewCreatorForm(false);
+    loadCreators();
+  } catch (error: any) {
+    console.error('クリエイター作成エラー:', error);
+  }
+};
 
   const handleDeleteCreator = async (creatorId: string) => {
     if (!confirm('このクリエイターを削除してもよろしいですか？関連するブランドとの紐付けも削除されます。')) {
