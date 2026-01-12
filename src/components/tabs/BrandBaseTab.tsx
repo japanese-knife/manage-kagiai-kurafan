@@ -775,38 +775,183 @@ export default function BrandBaseTab({
   return (
     <div className="mt-8">
       {/* ビュー切り替えボタン */}
-      <div className="flex items-center gap-3 mb-6">
+      return (
+    <div className="mt-8">
+      {/* 戻るボタン（ブランド一覧表示時のみ） */}
+      {view === 'brands' && selectedCreatorId && (
         <button
-          onClick={() => setView('brands')}
-          className={`px-6 py-3 text-sm font-medium rounded-lg transition-all ${
-            view === 'brands'
-              ? 'bg-primary-600 text-white shadow-lg'
-              : 'bg-white border border-neutral-200 text-neutral-700 hover:border-primary-300 hover:bg-primary-50'
-          }`}
+          onClick={() => {
+            setView('creators');
+            setSelectedCreatorId(null);
+          }}
+          className="inline-flex items-center px-4 py-2 mb-6 text-sm font-medium text-neutral-700 hover:text-neutral-900 hover:bg-neutral-100 rounded-lg transition-all"
         >
-          ブランド一覧
-          <span className={`ml-2 px-2 py-0.5 text-xs font-medium rounded-full ${
-            view === 'brands'
-              ? 'bg-white/20 text-white'
-              : 'bg-neutral-100 text-neutral-600'
-          }`}>
-            {brands.length}
-          </span>
+          <ArrowRight className="w-4 h-4 mr-2 rotate-180" />
+          クリエイター一覧に戻る
         </button>
-        <button
-          onClick={() => setView('creators')}
-          className={`px-6 py-3 text-sm font-medium rounded-lg transition-all ${
-            view === 'creators'
-              ? 'bg-primary-600 text-white shadow-lg'
-              : 'bg-white border border-neutral-200 text-neutral-700 hover:border-primary-300 hover:bg-primary-50'
-          }`}
-        >
-          クリエイター/品目一覧
-        </button>
-      </div>
+      )}
 
-      {/* クリエイター/品目一覧ビュー */}
+      {/* クリエイター一覧ビュー */}
       {view === 'creators' && (
+        <>
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-lg font-semibold text-neutral-900">クリエイター一覧</h2>
+            <button
+              onClick={() => setShowNewCreatorForm(true)}
+              className="inline-flex items-center px-4 py-2 bg-primary-600 text-white text-sm font-medium rounded-lg hover:bg-primary-700"
+            >
+              <Plus className="w-4 h-4 mr-2" />
+              新規クリエイター
+            </button>
+          </div>
+
+          {showNewCreatorForm && (
+            <div className="bg-white rounded-lg border border-neutral-200 p-6 mb-6">
+              <h3 className="text-base font-semibold text-neutral-900 mb-4">新規クリエイター作成</h3>
+              <form onSubmit={handleCreateCreator} className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-neutral-700 mb-2">
+                    クリエイター名 *
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={newCreatorName}
+                    onChange={(e) => setNewCreatorName(e.target.value)}
+                    className="w-full px-3 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-100 focus:border-primary-500"
+                    placeholder="例: 山田太郎"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-neutral-700 mb-2">
+                    説明
+                  </label>
+                  <textarea
+                    value={newCreatorDescription}
+                    onChange={(e) => setNewCreatorDescription(e.target.value)}
+                    className="w-full px-3 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-100 focus:border-primary-500 resize-none"
+                    rows={3}
+                    placeholder="クリエイターの説明や特徴"
+                  />
+                </div>
+                <div className="flex gap-2">
+                  <button
+                    type="submit"
+                    className="px-4 py-2 bg-primary-600 text-white text-sm font-medium rounded-lg hover:bg-primary-700"
+                  >
+                    作成
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowNewCreatorForm(false);
+                      setNewCreatorName('');
+                      setNewCreatorDescription('');
+                    }}
+                    className="px-4 py-2 bg-white border border-neutral-300 text-neutral-700 text-sm font-medium rounded-lg hover:bg-neutral-50"
+                  >
+                    キャンセル
+                  </button>
+                </div>
+              </form>
+            </div>
+          )}
+
+          {creators.length === 0 ? (
+            <div className="text-center py-16 px-4">
+              <div className="w-16 h-16 bg-neutral-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                <FolderKanban className="w-8 h-8 text-neutral-400" />
+              </div>
+              <h2 className="text-base font-semibold text-neutral-900 mb-2">
+                クリエイターがありません
+              </h2>
+              <p className="text-sm text-neutral-500 mb-6">
+                新しいクリエイターを作成して始めましょう
+              </p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5 md:gap-6">
+              {creators.map((creator) => {
+                const linkedBrandIds = creatorBrands.get(creator.id) || [];
+                const linkedBrands = brands.filter(b => linkedBrandIds.includes(b.id));
+
+                return (
+                  <div
+                    key={creator.id}
+                    className="bg-white rounded-2xl border border-neutral-200/50 hover:border-primary-300 hover:shadow-xl transition-all group"
+                  >
+                    <div className="p-6">
+                      <div className="flex items-start justify-between mb-4">
+                        <div className="flex-1">
+                          <h3 className="text-base font-semibold text-neutral-900 mb-2">
+                            {creator.name}
+                          </h3>
+                          {creator.description && (
+                            <p className="text-sm text-neutral-600 line-clamp-2 leading-relaxed">
+                              {creator.description}
+                            </p>
+                          )}
+                        </div>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDeleteCreator(creator.id);
+                          }}
+                          className="p-1.5 text-neutral-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                          title="削除"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
+
+                      <div className="space-y-3 mt-5">
+                        <div className="flex items-center justify-between text-sm">
+                          <span className="text-neutral-600 font-medium">ブランド数</span>
+                          <span className="font-semibold text-primary-600">
+                            {linkedBrands.length}
+                          </span>
+                        </div>
+
+                        {linkedBrands.length > 0 && (
+                          <div className="pt-3 border-t border-neutral-100">
+                            <div className="text-xs text-neutral-500 mb-2">登録ブランド</div>
+                            <div className="space-y-1">
+                              {linkedBrands.slice(0, 3).map((brand) => (
+                                <div key={brand.id} className="text-sm text-neutral-700">
+                                  • {brand.name}
+                                </div>
+                              ))}
+                              {linkedBrands.length > 3 && (
+                                <div className="text-xs text-neutral-500">
+                                  他 {linkedBrands.length - 3} 件
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        )}
+
+                        <button
+                          onClick={() => {
+                            setSelectedCreatorId(creator.id);
+                            setView('brands');
+                          }}
+                          className="w-full mt-4 px-4 py-2.5 bg-primary-600 text-white text-sm font-medium rounded-lg hover:bg-primary-700 transition-colors flex items-center justify-center"
+                        >
+                          ブランドを管理
+                          <ArrowRight className="w-4 h-4 ml-2" />
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </>
+      )}
+
+      {/* ブランド一覧ビュー（元のコードを流用） */}
+      {view === 'brands' && selectedCreatorId && (
         <>
           {brandbaseProjects.length === 0 ? (
             <div className="text-center py-16 sm:py-20 md:py-24 px-4">
