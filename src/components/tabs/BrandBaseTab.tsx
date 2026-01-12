@@ -90,6 +90,22 @@ export default function BrandBaseTab({
     loadBrands();
   }, [projects]);
 
+  const loadCreators = async () => {
+    try {
+      const { data: creatorsData, error: creatorsError } = await supabase
+        .from('creators')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false });
+
+      if (creatorsError) throw creatorsError;
+
+      setCreators(creatorsData || []);
+    } catch (error) {
+      console.error('クリエイター読み込みエラー:', error);
+    }
+  };
+
   const loadBrands = async () => {
     try {
       const { data: brandsData, error: brandsError } = await supabase
@@ -101,6 +117,23 @@ export default function BrandBaseTab({
       if (brandsError) throw brandsError;
 
       setBrands(brandsData || []);
+
+      // クリエイターとブランドの紐付けを取得
+      const { data: creatorBrandData, error: creatorBrandError } = await supabase
+        .from('creator_brands')
+        .select('*');
+
+      if (creatorBrandError) throw creatorBrandError;
+
+      const creatorBrandMap = new Map<string, string[]>();
+      creatorBrandData?.forEach((link: CreatorBrand) => {
+        if (!creatorBrandMap.has(link.creator_id)) {
+          creatorBrandMap.set(link.creator_id, []);
+        }
+        creatorBrandMap.get(link.creator_id)?.push(link.brand_id);
+      });
+
+      setCreatorBrands(creatorBrandMap);
 
       // ブランドとプロジェクトの紐付けを取得
       const { data: linkData, error: linkError } = await supabase
