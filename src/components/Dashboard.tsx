@@ -1081,22 +1081,14 @@ const handleCreateCategory = async (e: React.FormEvent) => {
           >
             クリエイター一覧
           </button>
-          {selectedCreatorForView && (
-            <>
-              <span className="text-neutral-400">/</span>
-              <button
-                onClick={() => {
-                  setBrandBaseView('categories');
-                  setSelectedCategoryForView(null);
-                }}
-                className={`hover:text-primary-600 transition-colors ${
-                  brandBaseView === 'categories' ? 'text-primary-600 font-semibold' : 'text-neutral-600'
-                }`}
-              >
-                {creators.find(c => c.id === selectedCreatorForView)?.name} の品目
-              </button>
-            </>
-          )}
+          {selectedCategoryForView && (
+  <>
+    <span className="text-neutral-400">/</span>
+    <span className="text-primary-600 font-semibold">
+      {creators.find(c => c.id === selectedCreatorForView)?.name} - {productCategories.find(c => c.id === selectedCategoryForView)?.name}
+    </span>
+  </>
+)}
           {selectedCategoryForView && (
             <>
               <span className="text-neutral-400">/</span>
