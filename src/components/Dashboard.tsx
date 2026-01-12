@@ -99,56 +99,60 @@ export default function Dashboard({ onSelectProject, user, onLogout }: Dashboard
   };
 
   const handleCreateCreator = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newCreatorName.trim() || !newCategoryName.trim()) {
-      alert('クリエイター名と品目名を入力してください');
-      return;
+  e.preventDefault();
+  if (!newCreatorName.trim() || !newCategoryName.trim()) {
+    alert('クリエイター名と品目名を入力してください');
+    return;
+  }
+
+  try {
+    // クリエイターを作成
+    const { data: creatorData, error: creatorError } = await supabase
+      .from('creators')
+      .insert({
+        name: newCreatorName,
+        user_id: user.id,
+      })
+      .select()
+      .single();
+
+    if (creatorError) {
+      console.error('Supabaseクリエイター作成エラー:', creatorError);
+      throw creatorError;
     }
 
-    try {
-      // クリエイターを作成
-      const { data: creatorData, error: creatorError } = await supabase
-        .from('creators')
-        .insert({
-          name: newCreatorName,
-          user_id: user.id,
-        })
-        .select()
-        .single();
+    // 品目を作成
+    const { data: categoryData, error: categoryError } = await supabase
+      .from('product_categories')
+      .insert({
+        creator_id: creatorData.id,
+        name: newCategoryName,
+        user_id: user.id,
+      })
+      .select()
+      .single();
 
-      if (creatorError) {
-        console.error('Supabaseクリエイター作成エラー:', creatorError);
-        throw creatorError;
-      }
-
-      // 品目を作成
-      const { data: categoryData, error: categoryError } = await supabase
-        .from('product_categories')
-        .insert({
-          creator_id: creatorData.id,
-          name: newCategoryName,
-          user_id: user.id,
-        })
-        .select()
-        .single();
-
-      if (categoryError) {
-        console.error('Supabase品目作成エラー:', categoryError);
-        throw categoryError;
-      }
-
-      console.log('クリエイター・品目作成成功:', creatorData, categoryData);
-      setNewCreatorName('');
-      setNewCategoryName('');
-      setShowCreateCreatorForm(false);
-      await loadCreators();
-      await loadProductCategories();
-      alert('クリエイターと品目を作成しました');
-    } catch (error) {
-      console.error('作成エラー:', error);
-      alert(`作成に失敗しました: ${error instanceof Error ? error.message : '不明なエラー'}`);
+    if (categoryError) {
+      console.error('Supabase品目作成エラー:', categoryError);
+      throw categoryError;
     }
-  };
+
+    console.log('クリエイター・品目作成成功:', creatorData, categoryData);
+    setNewCreatorName('');
+    setNewCategoryName('');
+    setShowCreateCreatorForm(false);
+    await loadCreators();
+    await loadProductCategories();
+    // クリエイター作成後、そのクリエイターと品目を自動的に選択して詳細画面へ
+    setSelectedCreatorForView(creatorData.id);
+    setSelectedCategoryForView(categoryData.id);
+    setBrandBaseView('category-detail');
+    alert('クリエイターと品目を作成しました');
+  } catch (error) {
+    console.error('作成エラー:', error);
+    alert(`作成に失敗しました: ${error instanceof Error ? error.message : '不明なエラー'}`);
+  }
+};
 
   const handleCreateCategory = async (e: React.FormEvent) => {
     e.preventDefault();
