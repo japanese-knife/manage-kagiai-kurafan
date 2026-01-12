@@ -1146,18 +1146,7 @@ const handleCreateCategory = async (e: React.FormEvent) => {
                       key={creator.id}
                       className="bg-white rounded-2xl border border-neutral-200/50 hover:border-primary-300 hover:shadow-xl transition-all group p-6"
                     >
-                      <div 
-  className="flex items-start justify-between mb-4 cursor-pointer"
-  onClick={() => {
-    setSelectedCreatorForView(creator.id);
-    // クリエイターに紐づく最初の品目を自動選択
-    const firstCategory = creatorCategories[0];
-    if (firstCategory) {
-      setSelectedCategoryForView(firstCategory.id);
-      setBrandBaseView('category-detail');
-    }
-  }}
->
+                      assName="flex items-start justify-between mb-4 cursor-pointer"
   <div className="flex-1">
     <h3 className="text-lg font-bold text-neutral-900 mb-2 group-hover:text-primary-600 transition-colors">
       {creator.name}
