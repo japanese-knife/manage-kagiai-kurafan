@@ -58,6 +58,7 @@ export default function BrandBaseTab({
   onProjectsChange 
 }: BrandBaseTabProps) {
   const [view, setView] = useState<'creators' | 'brands'>('creators');
+const [creatorsDisplayMode, setCreatorsDisplayMode] = useState<'creators' | 'projects'>('creators');
 const [brandsDisplayMode, setBrandsDisplayMode] = useState<'brands' | 'projects'>('brands');
   const [creators, setCreators] = useState<Creator[]>([]);
   const [selectedCreatorId, setSelectedCreatorId] = useState<string | null>(null);
