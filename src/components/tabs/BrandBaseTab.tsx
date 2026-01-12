@@ -987,7 +987,7 @@ const [editBrandFeatures, setEditBrandFeatures] = useState('');
 )}
       
 {/* クリエイター一覧ビュー */}
-{view === 'creators' && displayMode === 'creators' && (
+{view === 'creators' && (
   <>
     <div className="flex items-center justify-between mb-6">
       <h2 className="text-lg font-semibold text-neutral-900">クリエイター一覧</h2>
