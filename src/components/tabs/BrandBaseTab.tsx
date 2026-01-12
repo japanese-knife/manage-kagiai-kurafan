@@ -1181,7 +1181,12 @@ const [editBrandFeatures, setEditBrandFeatures] = useState('');
     {/* 表示モード切り替えボタン */}
     <div className="flex items-center gap-3 mb-6">
   <button
-    onClick={() => setCreatorsDisplayMode('creators')}
+  onClick={(e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    console.log('クリエイター一覧ボタンクリック');
+    setCreatorsDisplayMode('creators');
+  }}
     className={`px-6 py-2.5 text-sm font-medium rounded-lg transition-all ${
       creatorsDisplayMode === 'creators'
         ? 'bg-primary-600 text-white'
