@@ -621,7 +621,8 @@ export default function Dashboard({ onSelectProject, user, onLogout }: Dashboard
   }
 };
 
-  const handleDeleteCreator = async (creatorId: string) => {
+  // 新規追加:
+const handleDeleteCreator = async (creatorId: string) => {
   try {
     const { error } = await supabase
       .from('creators')
