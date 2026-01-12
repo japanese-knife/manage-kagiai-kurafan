@@ -264,25 +264,39 @@ export default function BrandBaseTab({
 
   const handleCreateBrand = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newBrandName.trim()) return;
+    if (!newBrandName.trim() || !selectedCreatorId) return;
 
     try {
-      const { error } = await supabase
+      // ブランドを作成
+      const { data: newBrand, error: brandError } = await supabase
         .from('brands')
         .insert({
           name: newBrandName,
           theme: newBrandTheme,
           features: newBrandFeatures,
           user_id: user.id,
+        })
+        .select()
+        .single();
+
+      if (brandError) throw brandError;
+
+      // クリエイターとブランドを紐付け
+      const { error: linkError } = await supabase
+        .from('creator_brands')
+        .insert({
+          creator_id: selectedCreatorId,
+          brand_id: newBrand.id,
         });
 
-      if (error) throw error;
+      if (linkError) throw linkError;
 
       setNewBrandName('');
       setNewBrandTheme('');
       setNewBrandFeatures('');
       setShowNewBrandForm(false);
       loadBrands();
+      alert('ブランドを作成しました');
     } catch (error) {
       console.error('ブランド作成エラー:', error);
       alert('ブランドの作成に失敗しました');
