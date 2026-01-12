@@ -24,7 +24,7 @@ interface ProjectWithBrandInfo extends Project {
 }
 
 export default function ProjectScheduleView({ user, activeBrandTab, viewType }: ProjectScheduleViewProps) {
-  const [projects, setProjects] = useState<Project[]>([]);
+  const [projects, setProjects] = useState<ProjectWithBrandInfo[]>([]);
   const [schedules, setSchedules] = useState<Map<string, ScheduleCell>>(new Map());
   const [dates, setDates] = useState<Date[]>([]);
   const [selectedCell, setSelectedCell] = useState<{ projectId: string; date: string } | null>(null);
