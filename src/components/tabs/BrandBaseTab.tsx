@@ -233,6 +233,45 @@ export default function BrandBaseTab({
     }
   };
 
+  const handleCreateAndLinkProject = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newProjectNameInModal.trim() || !selectedBrandForLink) return;
+
+    try {
+      const { data: newProject, error: projectError } = await supabase
+        .from('projects')
+        .insert({
+          name: newProjectNameInModal,
+          description: newProjectDescriptionInModal,
+          status: '進行中',
+          brand_type: 'BRAND-BASE',
+          user_id: user.id,
+        })
+        .select()
+        .single();
+
+      if (projectError) throw projectError;
+
+      const { error: linkError } = await supabase
+        .from('brand_projects')
+        .insert({
+          brand_id: selectedBrandForLink,
+          project_id: newProject.id,
+        });
+
+      if (linkError) throw linkError;
+
+      setNewProjectNameInModal('');
+      setNewProjectDescriptionInModal('');
+      setShowNewProjectInModal(false);
+      onProjectsChange();
+      loadBrands();
+    } catch (error) {
+      console.error('プロジェクト作成エラー:', error);
+      alert('プロジェクトの作成に失敗しました');
+    }
+  };
+
   const handleStatusChange = async (projectId: string, newStatus: ProjectStatus) => {
     try {
       const { error } = await supabase
