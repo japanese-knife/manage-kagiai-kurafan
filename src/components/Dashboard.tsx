@@ -47,6 +47,7 @@ export default function Dashboard({ onSelectProject, user, onLogout }: Dashboard
   const [selectedCategoryForView, setSelectedCategoryForView] = useState<string | null>(null);
   const [showDeleteCreatorConfirm, setShowDeleteCreatorConfirm] = useState<string | null>(null);
   const [showDeleteCategoryConfirm, setShowDeleteCategoryConfirm] = useState<string | null>(null);
+  const [brandInfos, setBrandInfos] = useState<BrandInfo[]>([]);
 
   useEffect(() => {
     loadProjects();
