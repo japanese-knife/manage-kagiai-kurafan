@@ -42,9 +42,11 @@ export default function Dashboard({ onSelectProject, user, onLogout }: Dashboard
   const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null);
   const [newCreatorName, setNewCreatorName] = useState('');
   const [newCategoryName, setNewCategoryName] = useState('');
-  const [brandBaseView, setBrandBaseView] = useState<'creators' | 'categories' | 'projects'>('creators');
+  const [brandBaseView, setBrandBaseView] = useState<'creators' | 'category-detail'>('creators');
   const [selectedCreatorForView, setSelectedCreatorForView] = useState<string | null>(null);
   const [selectedCategoryForView, setSelectedCategoryForView] = useState<string | null>(null);
+  const [showDeleteCreatorConfirm, setShowDeleteCreatorConfirm] = useState<string | null>(null);
+  const [showDeleteCategoryConfirm, setShowDeleteCategoryConfirm] = useState<string | null>(null);
 
   useEffect(() => {
     loadProjects();
