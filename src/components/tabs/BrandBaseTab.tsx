@@ -1291,7 +1291,12 @@ export default function BrandBaseTab({
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-neutral-200">
-                    {brands.map((brand) => {
+                    {brands
+                      .filter(brand => {
+                        const linkedBrandIds = creatorBrands.get(selectedCreatorId!) || [];
+                        return linkedBrandIds.includes(brand.id);
+                      })
+                      .map((brand) => {
                       const linkedProjectIds = brandProjects.get(brand.id) || [];
                       const linkedProjects = projects.filter(p => linkedProjectIds.includes(p.id));
 
