@@ -594,25 +594,59 @@ export default function BrandBaseTab({
 
   const brandbaseProjects = projects.filter(p => p.brand_type === 'BRAND-BASE');
 
-  if (brandbaseProjects.length === 0) {
-    return (
-      <div className="text-center py-16 sm:py-20 md:py-24 px-4">
-        <div className="w-16 h-16 sm:w-20 sm:h-20 bg-neutral-100 rounded-2xl flex items-center justify-center mx-auto mb-4 sm:mb-6">
-          <FolderKanban className="w-8 h-8 sm:w-10 sm:h-10 text-neutral-400" />
-        </div>
-        <h2 className="text-base sm:text-lg font-semibold text-neutral-900 mb-2">
-          プロジェクトがありません
-        </h2>
-        <p className="text-sm sm:text-base text-neutral-500 mb-6 sm:mb-8 leading-relaxed">
-          新しいプロジェクトを作成して始めましょう
-        </p>
-      </div>
-    );
-  }
-
   return (
     <div className="mt-8">
-      <h2 className="text-lg font-semibold text-neutral-900 mb-6">プロジェクト一覧</h2>
+      {/* ビュー切り替えタブ */}
+      <div className="flex items-center gap-2 mb-6 border-b border-neutral-200">
+        <button
+          onClick={() => setView('creators')}
+          className={`px-6 py-3 text-sm font-medium transition-all relative ${
+            view === 'creators'
+              ? 'text-primary-600'
+              : 'text-neutral-500 hover:text-neutral-700'
+          }`}
+        >
+          クリエイター/品目一覧
+          {view === 'creators' && (
+            <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary-600" />
+          )}
+        </button>
+        <button
+          onClick={() => setView('brands')}
+          className={`px-6 py-3 text-sm font-medium transition-all relative ${
+            view === 'brands'
+              ? 'text-primary-600'
+              : 'text-neutral-500 hover:text-neutral-700'
+          }`}
+        >
+          ブランド一覧
+          <span className="ml-2 px-2 py-0.5 text-xs font-medium bg-neutral-100 text-neutral-600 rounded-full">
+            {brands.length}
+          </span>
+          {view === 'brands' && (
+            <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary-600" />
+          )}
+        </button>
+      </div>
+
+      {/* クリエイター/品目一覧ビュー */}
+      {view === 'creators' && (
+        <>
+          {brandbaseProjects.length === 0 ? (
+            <div className="text-center py-16 sm:py-20 md:py-24 px-4">
+              <div className="w-16 h-16 sm:w-20 sm:h-20 bg-neutral-100 rounded-2xl flex items-center justify-center mx-auto mb-4 sm:mb-6">
+                <FolderKanban className="w-8 h-8 sm:w-10 sm:h-10 text-neutral-400" />
+              </div>
+              <h2 className="text-base sm:text-lg font-semibold text-neutral-900 mb-2">
+                プロジェクトがありません
+              </h2>
+              <p className="text-sm sm:text-base text-neutral-500 mb-6 sm:mb-8 leading-relaxed">
+                新しいプロジェクトを作成して始めましょう
+              </p>
+            </div>
+          ) : (
+            <>
+              <h2 className="text-lg font-semibold text-neutral-900 mb-6">プロジェクト一覧</h2>
       <div className="space-y-8 sm:space-y-10 md:space-y-12">
         {(['進行中', '保留', '完了'] as ProjectStatus[]).map((status) => {
           const statusProjects = getProjectsByStatus(status);
