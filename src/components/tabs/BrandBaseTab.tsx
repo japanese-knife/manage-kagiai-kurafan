@@ -988,7 +988,7 @@ export default function BrandBaseTab({
               <form onSubmit={handleCreateBrand} className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-neutral-700 mb-2">
-                    ブランド名 *
+                    商品/ブランド名 *
                   </label>
                   <input
                     type="text"
@@ -1066,7 +1066,7 @@ export default function BrandBaseTab({
                   <thead className="bg-neutral-50 border-b border-neutral-200">
                     <tr>
                       <th className="px-6 py-4 text-left text-sm font-semibold text-neutral-900 min-w-[200px]">
-                        ブランド名
+                        商品/ブランド名
                       </th>
                       <th className="px-6 py-4 text-left text-sm font-semibold text-neutral-900 min-w-[250px]">
                         ブランドテーマ
