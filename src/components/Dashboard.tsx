@@ -52,6 +52,104 @@ export default function Dashboard({ onSelectProject, user, onLogout }: Dashboard
     loadProductCategories();
   }, []);
 
+  const loadCreators = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('creators')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      setCreators(data || []);
+    } catch (error) {
+      console.error('クリエイター読み込みエラー:', error);
+    }
+  };
+
+  const loadProductCategories = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('product_categories')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      setProductCategories(data || []);
+    } catch (error) {
+      console.error('品目読み込みエラー:', error);
+    }
+  };
+
+  const handleCreateCreator = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newCreatorName.trim()) {
+      alert('クリエイター名を入力してください');
+      return;
+    }
+
+    try {
+      const { data, error } = await supabase
+        .from('creators')
+        .insert({
+          name: newCreatorName,
+          user_id: user.id,
+        })
+        .select()
+        .single();
+
+      if (error) {
+        console.error('Supabaseクリエイター作成エラー:', error);
+        throw error;
+      }
+
+      console.log('クリエイター作成成功:', data);
+      setNewCreatorName('');
+      setShowCreateCreatorForm(false);
+      setSelectedCreatorId(data.id);
+      setShowCreateCategoryForm(true);
+      await loadCreators();
+      alert('クリエイターを作成しました。次に品目を追加してください。');
+    } catch (error) {
+      console.error('クリエイター作成エラー:', error);
+      alert(`クリエイターの作成に失敗しました: ${error instanceof Error ? error.message : '不明なエラー'}`);
+    }
+  };
+
+  const handleCreateCategory = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newCategoryName.trim() || !selectedCreatorId) {
+      alert('クリエイターを選択して品目名を入力してください');
+      return;
+    }
+
+    try {
+      const { data, error } = await supabase
+        .from('product_categories')
+        .insert({
+          creator_id: selectedCreatorId,
+          name: newCategoryName,
+          user_id: user.id,
+        })
+        .select()
+        .single();
+
+      if (error) {
+        console.error('Supabase品目作成エラー:', error);
+        throw error;
+      }
+
+      console.log('品目作成成功:', data);
+      setNewCategoryName('');
+      setShowCreateCategoryForm(false);
+      setSelectedCreatorId(null);
+      await loadProductCategories();
+      alert('品目を作成しました');
+    } catch (error) {
+      console.error('品目作成エラー:', error);
+      alert(`品目の作成に失敗しました: ${error instanceof Error ? error.message : '不明なエラー'}`);
+    }
+  };
+  
   const loadProjects = async () => {
     try {
       const { data: projectsData, error: projectsError } = await supabase
