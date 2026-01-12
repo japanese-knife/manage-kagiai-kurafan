@@ -83,6 +83,20 @@ export default function Dashboard({ onSelectProject, user, onLogout }: Dashboard
     }
   };
 
+  const loadBrandInfos = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('brand_infos')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      setBrandInfos(data || []);
+    } catch (error) {
+      console.error('ブランド情報読み込みエラー:', error);
+    }
+  };
+
   const handleCreateCreator = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newCreatorName.trim() || !newCategoryName.trim()) {
