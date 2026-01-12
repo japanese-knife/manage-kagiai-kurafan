@@ -35,6 +35,22 @@ interface BrandProject {
   created_at: string;
 }
 
+interface Creator {
+  id: string;
+  name: string;
+  description: string;
+  created_at: string;
+  updated_at: string;
+  user_id: string;
+}
+
+interface CreatorBrand {
+  id: string;
+  creator_id: string;
+  brand_id: string;
+  created_at: string;
+}
+
 export default function BrandBaseTab({ 
   projects, 
   user, 
