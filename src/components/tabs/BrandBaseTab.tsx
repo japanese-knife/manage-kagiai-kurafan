@@ -1132,55 +1132,6 @@ export default function BrandBaseTab({
             </div>
           )}
 
-          // 新しいstate変数を追加（ファイルの先頭のstate定義部分に追加）
-  const [showNewProjectInModal, setShowNewProjectInModal] = useState(false);
-  const [newProjectNameInModal, setNewProjectNameInModal] = useState('');
-  const [newProjectDescriptionInModal, setNewProjectDescriptionInModal] = useState('');
-
-  // 新しいハンドラー関数を追加（handleUnlinkProjectの後に追加）
-  const handleCreateAndLinkProject = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newProjectNameInModal.trim() || !selectedBrandForLink) return;
-
-    try {
-      // プロジェクトを作成
-      const { data: newProject, error: projectError } = await supabase
-        .from('projects')
-        .insert({
-          name: newProjectNameInModal,
-          description: newProjectDescriptionInModal,
-          status: '進行中',
-          brand_type: 'BRAND-BASE',
-          user_id: user.id,
-        })
-        .select()
-        .single();
-
-      if (projectError) throw projectError;
-
-      // ブランドにリンク
-      const { error: linkError } = await supabase
-        .from('brand_projects')
-        .insert({
-          brand_id: selectedBrandForLink,
-          project_id: newProject.id,
-        });
-
-      if (linkError) throw linkError;
-
-      setNewProjectNameInModal('');
-      setNewProjectDescriptionInModal('');
-      setShowNewProjectInModal(false);
-      onProjectsChange();
-      loadBrands();
-    } catch (error) {
-      console.error('プロジェクト作成エラー:', error);
-      alert('プロジェクトの作成に失敗しました');
-    }
-  };
-
-  // プロジェクトリンクモーダル（修正版）
-          {/* プロジェクトリンクモーダル */}
           {/* プロジェクトリンクモーダル */}
           {showProjectLinkModal && selectedBrandForLink && (
             <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
