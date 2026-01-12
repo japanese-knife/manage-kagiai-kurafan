@@ -811,11 +811,456 @@ export default function Dashboard({ onSelectProject, user, onLogout }: Dashboard
 )}
 
 {/* プロジェクト一覧タブの内容 */}
+{/* プロジェクト一覧タブの内容 */}
 {activeTab === 'projects' && (
   <div className="mt-8">
-    <h2 className="text-lg font-semibold text-neutral-900 mb-6">プロジェクト一覧</h2>
+    {activeBrandTab === 'BRAND-BASE' ? (
+      // BRAND-BASE用: 3段階表示
+      <>
+        {/* パンくずリスト */}
+        <div className="flex items-center gap-2 mb-6 text-sm">
+          <button
+            onClick={() => {
+              setBrandBaseView('creators');
+              setSelectedCreatorForView(null);
+              setSelectedCategoryForView(null);
+            }}
+            className={`hover:text-primary-600 transition-colors ${
+              brandBaseView === 'creators' ? 'text-primary-600 font-semibold' : 'text-neutral-600'
+            }`}
+          >
+            クリエイター一覧
+          </button>
+          {selectedCreatorForView && (
+            <>
+              <span className="text-neutral-400">/</span>
+              <button
+                onClick={() => {
+                  setBrandBaseView('categories');
+                  setSelectedCategoryForView(null);
+                }}
+                className={`hover:text-primary-600 transition-colors ${
+                  brandBaseView === 'categories' ? 'text-primary-600 font-semibold' : 'text-neutral-600'
+                }`}
+              >
+                {creators.find(c => c.id === selectedCreatorForView)?.name} の品目
+              </button>
+            </>
+          )}
+          {selectedCategoryForView && (
+            <>
+              <span className="text-neutral-400">/</span>
+              <span className="text-primary-600 font-semibold">
+                {productCategories.find(c => c.id === selectedCategoryForView)?.name} のプロジェクト
+              </span>
+            </>
+          )}
+        </div>
 
-    {projects.filter(p => p.brand_type === activeBrandTab).length === 0 ? (
+        {/* クリエイター一覧 */}
+        {brandBaseView === 'creators' && (
+          <>
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-lg font-semibold text-neutral-900">クリエイター一覧</h2>
+              <button
+                onClick={() => setShowCreateCreatorForm(true)}
+                className="inline-flex items-center px-4 py-2 btn-gradient-animated text-white text-sm font-medium rounded-lg shadow-soft-lg"
+              >
+                <Plus className="w-4 h-4 mr-2" />
+                クリエイターを作成
+              </button>
+            </div>
+
+            {creators.length === 0 ? (
+              <div className="text-center py-16 sm:py-20 md:py-24 px-4">
+                <div className="w-16 h-16 sm:w-20 sm:h-20 bg-neutral-100 rounded-2xl flex items-center justify-center mx-auto mb-4 sm:mb-6">
+                  <FolderKanban className="w-8 h-8 sm:w-10 sm:h-10 text-neutral-400" />
+                </div>
+                <h2 className="text-base sm:text-lg font-semibold text-neutral-900 mb-2">
+                  クリエイターがありません
+                </h2>
+                <p className="text-sm sm:text-base text-neutral-500 mb-6 sm:mb-8 leading-relaxed">
+                  新しいクリエイターを作成して始めましょう
+                </p>
+                <button
+                  onClick={() => setShowCreateCreatorForm(true)}
+                  className="inline-flex items-center px-5 sm:px-6 py-2 sm:py-2.5 btn-gradient-animated text-white text-sm font-medium rounded-lg shadow-soft-lg"
+                >
+                  <Plus className="w-4 h-4 mr-1.5 sm:mr-2" />
+                  クリエイターを作成
+                </button>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5 md:gap-6">
+                {creators.map((creator) => {
+                  const creatorCategories = productCategories.filter(cat => cat.creator_id === creator.id);
+                  const creatorProjects = projects.filter(p => {
+                    const category = productCategories.find(cat => cat.id === p.product_category_id);
+                    return category?.creator_id === creator.id;
+                  });
+
+                  return (
+                    <div
+                      key={creator.id}
+                      className="bg-white rounded-2xl border border-neutral-200/50 hover:border-primary-300 hover:shadow-xl transition-all group cursor-pointer p-6"
+                      onClick={() => {
+                        setSelectedCreatorForView(creator.id);
+                        setBrandBaseView('categories');
+                      }}
+                    >
+                      <div className="flex items-start justify-between mb-4">
+                        <div className="flex-1">
+                          <h3 className="text-lg font-bold text-neutral-900 mb-2 group-hover:text-primary-600 transition-colors">
+                            {creator.name}
+                          </h3>
+                          <div className="flex items-center gap-3 text-sm text-neutral-600">
+                            <span>{creatorCategories.length}品目</span>
+                            <span>·</span>
+                            <span>{creatorProjects.length}プロジェクト</span>
+                          </div>
+                        </div>
+                        <ArrowRight className="w-5 h-5 text-neutral-400 group-hover:text-primary-600 group-hover:translate-x-1 transition-all" />
+                      </div>
+
+                      {creatorCategories.length > 0 && (
+                        <div className="mt-4 pt-4 border-t border-neutral-100">
+                          <p className="text-xs font-medium text-neutral-500 mb-2">品目</p>
+                          <div className="flex flex-wrap gap-2">
+                            {creatorCategories.slice(0, 3).map((category) => (
+                              <span
+                                key={category.id}
+                                className="px-2 py-1 bg-neutral-100 text-neutral-700 text-xs rounded-lg"
+                              >
+                                {category.name}
+                              </span>
+                            ))}
+                            {creatorCategories.length > 3 && (
+                              <span className="px-2 py-1 text-neutral-500 text-xs">
+                                +{creatorCategories.length - 3}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </>
+        )}
+
+        {/* 品目一覧 */}
+        {brandBaseView === 'categories' && selectedCreatorForView && (
+          <>
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-lg font-semibold text-neutral-900">
+                {creators.find(c => c.id === selectedCreatorForView)?.name} の品目一覧
+              </h2>
+              <button
+                onClick={() => {
+                  setSelectedCreatorId(selectedCreatorForView);
+                  setShowCreateCategoryForm(true);
+                }}
+                className="inline-flex items-center px-4 py-2 btn-gradient-animated text-white text-sm font-medium rounded-lg shadow-soft-lg"
+              >
+                <Plus className="w-4 h-4 mr-2" />
+                品目を作成
+              </button>
+            </div>
+
+            {productCategories.filter(cat => cat.creator_id === selectedCreatorForView).length === 0 ? (
+              <div className="text-center py-16 sm:py-20 md:py-24 px-4">
+                <div className="w-16 h-16 sm:w-20 sm:h-20 bg-neutral-100 rounded-2xl flex items-center justify-center mx-auto mb-4 sm:mb-6">
+                  <FolderKanban className="w-8 h-8 sm:w-10 sm:h-10 text-neutral-400" />
+                </div>
+                <h2 className="text-base sm:text-lg font-semibold text-neutral-900 mb-2">
+                  品目がありません
+                </h2>
+                <p className="text-sm sm:text-base text-neutral-500 mb-6 sm:mb-8 leading-relaxed">
+                  新しい品目を作成して始めましょう
+                </p>
+                <button
+                  onClick={() => {
+                    setSelectedCreatorId(selectedCreatorForView);
+                    setShowCreateCategoryForm(true);
+                  }}
+                  className="inline-flex items-center px-5 sm:px-6 py-2 sm:py-2.5 btn-gradient-animated text-white text-sm font-medium rounded-lg shadow-soft-lg"
+                >
+                  <Plus className="w-4 h-4 mr-1.5 sm:mr-2" />
+                  品目を作成
+                </button>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5 md:gap-6">
+                {productCategories
+                  .filter(cat => cat.creator_id === selectedCreatorForView)
+                  .map((category) => {
+                    const categoryProjects = projects.filter(p => p.product_category_id === category.id);
+
+                    return (
+                      <div
+                        key={category.id}
+                        className="bg-white rounded-2xl border border-neutral-200/50 hover:border-primary-300 hover:shadow-xl transition-all group cursor-pointer p-6"
+                        onClick={() => {
+                          setSelectedCategoryForView(category.id);
+                          setBrandBaseView('projects');
+                        }}
+                      >
+                        <div className="flex items-start justify-between mb-4">
+                          <div className="flex-1">
+                            <h3 className="text-lg font-bold text-neutral-900 mb-2 group-hover:text-primary-600 transition-colors">
+                              {category.name}
+                            </h3>
+                            <div className="flex items-center gap-3 text-sm text-neutral-600">
+                              <span>{categoryProjects.length}プロジェクト</span>
+                            </div>
+                          </div>
+                          <ArrowRight className="w-5 h-5 text-neutral-400 group-hover:text-primary-600 group-hover:translate-x-1 transition-all" />
+                        </div>
+
+                        {categoryProjects.length > 0 && (
+                          <div className="mt-4 pt-4 border-t border-neutral-100">
+                            <div className="space-y-2">
+                              {categoryProjects.slice(0, 2).map((project) => (
+                                <div key={project.id} className="text-sm text-neutral-600 truncate">
+                                  • {project.name}
+                                </div>
+                              ))}
+                              {categoryProjects.length > 2 && (
+                                <div className="text-sm text-neutral-500">
+                                  +{categoryProjects.length - 2} 件
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+              </div>
+            )}
+          </>
+        )}
+
+        {/* プロジェクト一覧 */}
+        {brandBaseView === 'projects' && selectedCategoryForView && (
+          <>
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-lg font-semibold text-neutral-900">
+                {productCategories.find(c => c.id === selectedCategoryForView)?.name} のプロジェクト一覧
+              </h2>
+              <button
+                onClick={() => {
+                  setSelectedCategoryId(selectedCategoryForView);
+                  setNewBrandType('BRAND-BASE');
+                  setShowCreateForm(true);
+                }}
+                className="inline-flex items-center px-4 py-2 btn-gradient-animated text-white text-sm font-medium rounded-lg shadow-soft-lg"
+              >
+                <Plus className="w-4 h-4 mr-2" />
+                プロジェクトを作成
+              </button>
+            </div>
+
+            {projects.filter(p => p.product_category_id === selectedCategoryForView).length === 0 ? (
+              <div className="text-center py-16 sm:py-20 md:py-24 px-4">
+                <div className="w-16 h-16 sm:w-20 sm:h-20 bg-neutral-100 rounded-2xl flex items-center justify-center mx-auto mb-4 sm:mb-6">
+                  <FolderKanban className="w-8 h-8 sm:w-10 sm:h-10 text-neutral-400" />
+                </div>
+                <h2 className="text-base sm:text-lg font-semibold text-neutral-900 mb-2">
+                  プロジェクトがありません
+                </h2>
+                <p className="text-sm sm:text-base text-neutral-500 mb-6 sm:mb-8 leading-relaxed">
+                  新しいプロジェクトを作成して始めましょう
+                </p>
+                <button
+                  onClick={() => {
+                    setSelectedCategoryId(selectedCategoryForView);
+                    setNewBrandType('BRAND-BASE');
+                    setShowCreateForm(true);
+                  }}
+                  className="inline-flex items-center px-5 sm:px-6 py-2 sm:py-2.5 btn-gradient-animated text-white text-sm font-medium rounded-lg shadow-soft-lg"
+                >
+                  <Plus className="w-4 h-4 mr-1.5 sm:mr-2" />
+                  プロジェクトを作成
+                </button>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5 md:gap-6">
+                {projects
+                  .filter(p => p.product_category_id === selectedCategoryForView)
+                  .map((project) => {
+                    const stats = projectStats.get(project.id);
+                    const lastUpdated = new Date(project.updated_at).toLocaleDateString('ja-JP');
+
+                    return (
+                      <div
+                        key={project.id}
+                        className="bg-white rounded-2xl border border-neutral-200/50 hover:border-primary-300 hover:shadow-xl transition-all group cursor-pointer"
+                        onClick={() => onSelectProject(project)}
+                      >
+                        <div className="p-6">
+                          {editingProjectId === project.id ? (
+                            <div 
+                              className="space-y-4"
+                              onClick={(e) => e.stopPropagation()}
+                            >
+                              <div>
+                                <label className="block text-sm font-medium text-neutral-700 mb-2">
+                                  プロジェクト名
+                                </label>
+                                <input
+                                  type="text"
+                                  value={editProjectName}
+                                  onChange={(e) => setEditProjectName(e.target.value)}
+                                  className="w-full px-3 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-100 focus:border-primary-500"
+                                />
+                              </div>
+                              <div>
+                                <label className="block text-sm font-medium text-neutral-700 mb-2">
+                                  詳細
+                                </label>
+                                <textarea
+                                  value={editProjectDescription}
+                                  onChange={(e) => setEditProjectDescription(e.target.value)}
+                                  className="w-full px-3 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-100 focus:border-primary-500 resize-none"
+                                  rows={2}
+                                />
+                              </div>
+                              <div className="flex gap-2">
+                                <button
+                                  onClick={() => handleUpdateProject(project.id)}
+                                  className="flex-1 px-4 py-2 bg-primary-600 text-white text-sm font-medium rounded-lg hover:bg-primary-700"
+                                >
+                                  保存
+                                </button>
+                                <button
+                                  onClick={handleCancelEdit}
+                                  className="flex-1 px-4 py-2 bg-white border border-neutral-300 text-neutral-700 text-sm font-medium rounded-lg hover:bg-neutral-50"
+                                >
+                                  キャンセル
+                                </button>
+                              </div>
+                            </div>
+                          ) : (
+                            <>
+                              <div className="flex items-start justify-between mb-4">
+                                <div className="flex-1">
+                                  <h3 className="text-base font-semibold text-neutral-900 mb-2 group-hover:text-primary-600 transition-colors">
+                                    {project.name}
+                                  </h3>
+                                  {project.description && (
+                                    <p className="text-sm text-neutral-600 line-clamp-2 leading-relaxed">
+                                      {project.description}
+                                    </p>
+                                  )}
+                                </div>
+                                <div className="flex items-center gap-2 ml-3">
+                                  <button
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleStartEdit(project);
+                                    }}
+                                    className="p-1.5 text-neutral-500 hover:text-primary-600 hover:bg-primary-50 rounded-lg transition-colors"
+                                    title="編集"
+                                  >
+                                    <Edit2 className="w-4 h-4" />
+                                  </button>
+                                  <button
+                                    onClick={(e) => handleDuplicateProject(project, e)}
+                                    className="p-1.5 text-neutral-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                                    title="複製"
+                                  >
+                                    <Copy className="w-4 h-4" />
+                                  </button>
+                                  <button
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleDeleteProject(project.id);
+                                    }}
+                                    className="p-1.5 text-neutral-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                                    title="削除"
+                                  >
+                                    <Trash2 className="w-4 h-4" />
+                                  </button>
+                                  <select
+                                    value={project.status}
+                                    onChange={(e) => {
+                                      e.stopPropagation();
+                                      handleStatusChange(project.id, e.target.value as ProjectStatus);
+                                    }}
+                                    onClick={(e) => e.stopPropagation()}
+                                    className={`px-3 py-1 text-xs font-medium rounded-full border-0 cursor-pointer ${
+                                      project.status === '完了'
+                                        ? 'bg-green-50 text-green-700'
+                                        : project.status === '保留'
+                                        ? 'bg-yellow-50 text-yellow-700'
+                                        : 'bg-primary-50 text-primary-700'
+                                    }`}
+                                  >
+                                    <option value="進行中">進行中</option>
+                                    <option value="保留">保留</option>
+                                    <option value="完了">完了</option>
+                                  </select>
+                                </div>
+                              </div>
+
+                              <div className="space-y-4 mt-5">
+                                {stats && stats.totalTasks > 0 && (
+                                  <>
+                                    <div className="flex items-center justify-between text-sm">
+                                      <span className="text-neutral-600 font-medium">進捗率</span>
+                                      <span className="font-semibold text-primary-600">
+                                        {stats.progress}%
+                                      </span>
+                                    </div>
+                                    <div className="w-full bg-neutral-100 rounded-full h-2 overflow-hidden">
+                                      <div
+                                        className="bg-gradient-to-r from-primary-600 to-primary-500 h-2 rounded-full transition-all duration-300"
+                                        style={{ width: `${stats.progress}%` }}
+                                      />
+                                    </div>
+                                    <div className="flex items-center text-sm text-neutral-600">
+                                      <CheckSquare className="w-4 h-4 mr-2 text-neutral-500" />
+                                      {stats.completedTasks} / {stats.totalTasks} タスク完了
+                                    </div>
+                                  </>
+                                )}
+
+                                {(!stats || stats.totalTasks === 0) && (
+                                  <div className="text-sm text-neutral-500">
+                                    タスクがまだありません
+                                  </div>
+                                )}
+
+                                <div className="pt-4 border-t border-neutral-100 flex items-center justify-between">
+                                  <div className="flex items-center text-xs text-neutral-500">
+                                    <Calendar className="w-3.5 h-3.5 mr-2" />
+                                    {lastUpdated}
+                                  </div>
+                                  <div className="text-xs text-primary-600 font-medium flex items-center group-hover:translate-x-0.5 transition-transform">
+                                    詳細
+                                    <ArrowRight className="w-3.5 h-3.5 ml-1" />
+                                  </div>
+                                </div>
+                              </div>
+                            </>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+              </div>
+            )}
+          </>
+        )}
+      </>
+    ) : (
+      // 海外クラファン.com用: 従来通りのステータス別表示
+      <>
+        <h2 className="text-lg font-semibold text-neutral-900 mb-6">プロジェクト一覧</h2>
+        {projects.filter(p => p.brand_type === activeBrandTab).length === 0 ? (
           <div className="text-center py-16 sm:py-20 md:py-24 px-4">
             <div className="w-16 h-16 sm:w-20 sm:h-20 bg-neutral-100 rounded-2xl flex items-center justify-center mx-auto mb-4 sm:mb-6">
               <FolderKanban className="w-8 h-8 sm:w-10 sm:h-10 text-neutral-400" />
@@ -1032,6 +1477,8 @@ export default function Dashboard({ onSelectProject, user, onLogout }: Dashboard
             })}
           </div>
         )}
+      </>
+    )}
   </div>
 )}
       </main>
