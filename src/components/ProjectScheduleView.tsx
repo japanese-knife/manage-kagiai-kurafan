@@ -56,29 +56,32 @@ export default function ProjectScheduleView({ user, activeBrandTab, viewType, on
 
   useEffect(() => {
     // 日次ビューで初回読み込み時のみ当日の列を中央に配置
-    if (viewType === 'daily' && dates.length > 0 && !hasScrolledToToday.current) {
-      const todayIndex = dates.findIndex(date => isToday(date));
-      if (todayIndex !== -1) {
-        hasScrolledToToday.current = true;
-        setTimeout(() => {
-          const tableContainers = document.querySelectorAll('.overflow-x-auto');
+    useEffect(() => {
+  // 日次ビューで初回読み込み時のみ当日の列を中央に配置
+  if (viewType === 'daily' && dates.length > 0 && !hasScrolledToToday.current) {
+    const todayIndex = dates.findIndex(date => isToday(date));
+    if (todayIndex !== -1) {
+      hasScrolledToToday.current = true;
+      setTimeout(() => {
+        const tableContainers = document.querySelectorAll('.overflow-x-auto');
+        
+        tableContainers.forEach((tableContainer) => {
+          // 固定列が2つあるため、+2でインデックスを調整
+          const todayHeader = tableContainer.querySelectorAll('thead th')[todayIndex + 2];
           
-          tableContainers.forEach((tableContainer) => {
-            const todayHeader = tableContainer.querySelectorAll('thead th')[todayIndex + 1];
+          if (tableContainer && todayHeader) {
+            const containerWidth = tableContainer.clientWidth;
+            const headerLeft = (todayHeader as HTMLElement).offsetLeft;
+            const headerWidth = (todayHeader as HTMLElement).offsetWidth;
             
-            if (tableContainer && todayHeader) {
-              const containerWidth = tableContainer.clientWidth;
-              const headerLeft = (todayHeader as HTMLElement).offsetLeft;
-              const headerWidth = (todayHeader as HTMLElement).offsetWidth;
-              
-              const scrollLeft = headerLeft - (containerWidth / 2) + (headerWidth / 2);
-              tableContainer.scrollLeft = scrollLeft;
-            }
-          });
-        }, 100);
-      }
+            const scrollLeft = headerLeft - (containerWidth / 2) + (headerWidth / 2);
+            tableContainer.scrollLeft = scrollLeft;
+          }
+        });
+      }, 100);
     }
-  }, [dates.length, viewType]);
+  }
+}, [dates.length, viewType]);
 
   useEffect(() => {
     hasScrolledToToday.current = false;
