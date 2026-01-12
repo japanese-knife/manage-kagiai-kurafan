@@ -1561,97 +1561,71 @@ const handleCreateCategory = async (e: React.FormEvent) => {
 
                   return (
                     <div
-                      key={creator.id}
-                      className="bg-white rounded-2xl border border-neutral-200/50 hover:border-primary-300 hover:shadow-xl transition-all group p-6"
-                    >
-                      <div className="flex items-start justify-between mb-4">
-  <div 
-    className="flex-1 cursor-pointer"
-    onClick={() => {
-      setSelectedCreatorForView(creator.id);
-      // クリエイターに紐づく最初の品目を自動選択
-      const firstCategory = creatorCategories[0];
-      if (firstCategory) {
-        setSelectedCategoryForView(firstCategory.id);
-        setBrandBaseView('category-detail');
-      } else {
-        alert('このクリエイターには品目がありません');
-      }
-    }}
-  >
-    <h3 className="text-lg font-bold text-neutral-900 mb-2 group-hover:text-primary-600 transition-colors">
-      {creator.name}
-    </h3>
-    <div className="flex items-center gap-3 text-sm text-neutral-600">
-      <span>{creatorCategories.length}品目</span>
-      <span>·</span>
-      <span>{creatorProjects.length}プロジェクト</span>
-    </div>
-  </div>
-  <div className="flex items-center gap-2">
-    <button
-      onClick={(e) => {
-        e.stopPropagation();
-        if (confirm(`「${creator.name}」を削除しますか？関連する品目とプロジェクトもすべて削除されます。`)) {
-          handleDeleteCreator(creator.id);
+  key={creator.id}
+  className="bg-white rounded-2xl border border-neutral-200/50 hover:border-primary-300 hover:shadow-xl transition-all group p-6"
+>
+  <div className="flex items-start justify-between mb-4">
+    <div 
+      className="flex-1 cursor-pointer"
+      onClick={() => {
+        setSelectedCreatorForView(creator.id);
+        // クリエイターに紐づく最初の品目を自動選択
+        const firstCategory = creatorCategories[0];
+        if (firstCategory) {
+          setSelectedCategoryForView(firstCategory.id);
+          setBrandBaseView('category-detail');
+        } else {
+          alert('このクリエイターには品目がありません');
         }
       }}
-      className="p-1.5 text-neutral-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-      title="削除"
     >
-      <Trash2 className="w-4 h-4" />
-    </button>
-    <ArrowRight className="w-5 h-5 text-neutral-400 group-hover:text-primary-600 group-hover:translate-x-1 transition-all" />
-  </div>
-</div>
-  <div className="flex-1">
-    <h3 className="text-lg font-bold text-neutral-900 mb-2 group-hover:text-primary-600 transition-colors">
-      {creator.name}
-    </h3>
-    <div className="flex items-center gap-3 text-sm text-neutral-600">
-      <span>{creatorCategories.length}品目</span>
-      <span>·</span>
-      <span>{creatorProjects.length}プロジェクト</span>
+      <h3 className="text-lg font-bold text-neutral-900 mb-2 group-hover:text-primary-600 transition-colors">
+        {creator.name}
+      </h3>
+      <div className="flex items-center gap-3 text-sm text-neutral-600">
+        <span>{creatorCategories.length}品目</span>
+        <span>·</span>
+        <span>{creatorProjects.length}プロジェクト</span>
+      </div>
+    </div>
+    <div className="flex items-center gap-2">
+      <button
+        onClick={(e) => {
+          e.stopPropagation();
+          if (confirm(`「${creator.name}」を削除しますか？関連する品目とプロジェクトもすべて削除されます。`)) {
+            handleDeleteCreator(creator.id);
+          }
+        }}
+        className="p-1.5 text-neutral-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+        title="削除"
+      >
+        <Trash2 className="w-4 h-4" />
+      </button>
+      <ArrowRight className="w-5 h-5 text-neutral-400 group-hover:text-primary-600 group-hover:translate-x-1 transition-all" />
     </div>
   </div>
-  <div className="flex items-center gap-2">
-    <button
-      onClick={(e) => {
-        e.stopPropagation();
-        if (confirm(`「${creator.name}」を削除しますか？関連する品目とプロジェクトもすべて削除されます。`)) {
-          handleDeleteCreator(creator.id);
-        }
-      }}
-      className="p-1.5 text-neutral-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-      title="削除"
-    >
-      <Trash2 className="w-4 h-4" />
-    </button>
-    <ArrowRight className="w-5 h-5 text-neutral-400 group-hover:text-primary-600 group-hover:translate-x-1 transition-all" />
-  </div>
-</div>
 
-                      {creatorCategories.length > 0 && (
-                        <div className="mt-4 pt-4 border-t border-neutral-100">
-                          <p className="text-xs font-medium text-neutral-500 mb-2">品目</p>
-                          <div className="flex flex-wrap gap-2">
-                            {creatorCategories.slice(0, 3).map((category) => (
-                              <span
-                                key={category.id}
-                                className="px-2 py-1 bg-neutral-100 text-neutral-700 text-xs rounded-lg"
-                              >
-                                {category.name}
-                              </span>
-                            ))}
-                            {creatorCategories.length > 3 && (
-                              <span className="px-2 py-1 text-neutral-500 text-xs">
-                                +{creatorCategories.length - 3}
-                              </span>
-                            )}
-                          </div>
-                        </div>
-                      )}
-                    </div>
+  {creatorCategories.length > 0 && (
+    <div className="mt-4 pt-4 border-t border-neutral-100">
+      <p className="text-xs font-medium text-neutral-500 mb-2">品目</p>
+      <div className="flex flex-wrap gap-2">
+        {creatorCategories.slice(0, 3).map((category) => (
+          <span
+            key={category.id}
+            className="px-2 py-1 bg-neutral-100 text-neutral-700 text-xs rounded-lg"
+          >
+            {category.name}
+          </span>
+        ))}
+        {creatorCategories.length > 3 && (
+          <span className="px-2 py-1 text-neutral-500 text-xs">
+            +{creatorCategories.length - 3}
+          </span>
+        )}
+      </div>
+    </div>
+  )}
+</div>
                   );
                 })}
               </div>
