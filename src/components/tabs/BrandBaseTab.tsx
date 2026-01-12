@@ -1146,25 +1146,58 @@ const [editBrandFeatures, setEditBrandFeatures] = useState('');
       )}
 
       {/* ブランド一覧ビュー */}
-      {view === 'brands' && selectedCreatorId && (
-        <>
-          <div className="flex items-center justify-between mb-6">
-            <div>
-              <h2 className="text-lg font-semibold text-neutral-900">
-                {creators.find(c => c.id === selectedCreatorId)?.name} のブランド一覧
-              </h2>
-              <p className="text-sm text-neutral-500 mt-1">
-                ブランドを選択してプロジェクトを管理できます
-              </p>
-            </div>
-            <button
-              onClick={() => setShowNewBrandForm(true)}
-              className="inline-flex items-center px-4 py-2 bg-primary-600 text-white text-sm font-medium rounded-lg hover:bg-primary-700"
-            >
-              <Plus className="w-4 h-4 mr-2" />
-              新規ブランド
-            </button>
+{view === 'brands' && selectedCreatorId && (
+  <>
+    {/* 表示モード切り替えボタン */}
+    <div className="flex items-center gap-2 mb-6 border-b border-neutral-200">
+      <button
+        onClick={() => setBrandsDisplayMode('brands')}
+        className={`px-6 py-3 text-sm font-medium transition-all relative ${
+          brandsDisplayMode === 'brands'
+            ? 'text-primary-600'
+            : 'text-neutral-500 hover:text-neutral-700'
+        }`}
+      >
+        ブランド一覧
+        {brandsDisplayMode === 'brands' && (
+          <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary-600" />
+        )}
+      </button>
+      <button
+        onClick={() => setBrandsDisplayMode('projects')}
+        className={`px-6 py-3 text-sm font-medium transition-all relative ${
+          brandsDisplayMode === 'projects'
+            ? 'text-primary-600'
+            : 'text-neutral-500 hover:text-neutral-700'
+        }`}
+      >
+        プロジェクト一覧
+        {brandsDisplayMode === 'projects' && (
+          <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary-600" />
+        )}
+      </button>
+    </div>
+
+    {/* ブランド一覧の表示 */}
+    {brandsDisplayMode === 'brands' && (
+      <>
+        <div className="flex items-center justify-between mb-6">
+          <div>
+            <h2 className="text-lg font-semibold text-neutral-900">
+              {creators.find(c => c.id === selectedCreatorId)?.name} のブランド一覧
+            </h2>
+            <p className="text-sm text-neutral-500 mt-1">
+              ブランドを選択してプロジェクトを管理できます
+            </p>
           </div>
+          <button
+            onClick={() => setShowNewBrandForm(true)}
+            className="inline-flex items-center px-4 py-2 bg-primary-600 text-white text-sm font-medium rounded-lg hover:bg-primary-700"
+          >
+            <Plus className="w-4 h-4 mr-2" />
+            新規ブランド
+          </button>
+        </div>
 
           {showNewBrandForm && (
             <div className="bg-white rounded-lg border border-neutral-200 p-6 mb-6">
