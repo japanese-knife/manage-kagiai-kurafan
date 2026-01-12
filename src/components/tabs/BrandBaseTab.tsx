@@ -310,27 +310,34 @@ const [editBrandFeatures, setEditBrandFeatures] = useState('');
   };
 
   const handleUpdateBrand = async (brandId: string) => {
-    try {
-      const { error } = await supabase
-        .from('brands')
-        .update({
-          theme: editBrandTheme,
-          features: editBrandFeatures,
-          updated_at: new Date().toISOString(),
-        })
-        .eq('id', brandId);
+  if (!editBrandName.trim()) {
+    alert('商品 / ブランド名を入力してください');
+    return;
+  }
 
-      if (error) throw error;
+  try {
+    const { error } = await supabase
+      .from('brands')
+      .update({
+        name: editBrandName,
+        theme: editBrandTheme,
+        features: editBrandFeatures,
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', brandId);
 
-      setEditingBrandId(null);
-      setEditBrandTheme('');
-      setEditBrandFeatures('');
-      loadBrands();
-    } catch (error) {
-      console.error('ブランド更新エラー:', error);
-      alert('ブランドの更新に失敗しました');
-    }
-  };
+    if (error) throw error;
+
+    setEditingBrandId(null);
+    setEditBrandName('');
+    setEditBrandTheme('');
+    setEditBrandFeatures('');
+    loadBrands();
+  } catch (error) {
+    console.error('ブランド更新エラー:', error);
+    alert('ブランドの更新に失敗しました');
+  }
+};
 
   const handleDeleteBrand = async (brandId: string) => {
     if (!confirm('このブランドを削除してもよろしいですか？プロジェクトとの紐付けも削除されます。')) {
