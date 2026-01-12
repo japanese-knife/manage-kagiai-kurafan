@@ -64,19 +64,31 @@ export default function ProjectScheduleView({ user, activeBrandTab, viewType, on
         const tableContainers = document.querySelectorAll('.overflow-x-auto');
         
         tableContainers.forEach((tableContainer) => {
+          const allHeaders = tableContainer.querySelectorAll('thead th');
           // 固定列が2つあるため、+2でインデックスを調整
-          const todayHeader = tableContainer.querySelectorAll('thead th')[todayIndex + 2];
+          const todayHeader = allHeaders[todayIndex + 2];
           
           if (tableContainer && todayHeader) {
             const containerWidth = tableContainer.clientWidth;
-            const headerLeft = (todayHeader as HTMLElement).offsetLeft;
-            const headerWidth = (todayHeader as HTMLElement).offsetWidth;
+            const todayHeaderElement = todayHeader as HTMLElement;
             
-            const scrollLeft = headerLeft - (containerWidth / 2) + (headerWidth / 2);
-            tableContainer.scrollLeft = scrollLeft;
+            // 固定列の幅を考慮（SP: 120px、PC: 260px）
+            const isMobile = window.innerWidth < 640;
+            const fixedColumnsWidth = isMobile ? 120 : 260;
+            
+            // todayHeaderの実際の位置を取得
+            const headerLeft = todayHeaderElement.offsetLeft;
+            const headerWidth = todayHeaderElement.offsetWidth;
+            
+            // 中央に配置するためのスクロール位置を計算
+            // 固定列の幅を引いて、残りのスペースの中央に配置
+            const visibleWidth = containerWidth - fixedColumnsWidth;
+            const scrollLeft = headerLeft - fixedColumnsWidth - (visibleWidth / 2) + (headerWidth / 2);
+            
+            tableContainer.scrollLeft = Math.max(0, scrollLeft);
           }
         });
-      }, 100);
+      }, 150);
     }
   }
 }, [dates.length, viewType]);
