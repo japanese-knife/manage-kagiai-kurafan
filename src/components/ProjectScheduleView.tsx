@@ -780,30 +780,47 @@ export default function ProjectScheduleView({ user, activeBrandTab, viewType, on
       {brandProjects.map((project) => (
         <tr key={project.id} className="hover:bg-neutral-50/50">
           <td className="sticky left-0 z-20 bg-white border border-neutral-200 px-4 py-2 text-neutral-900 shadow-sm">
-            {activeBrandTab === 'BRAND-BASE' ? (
-              <>
-                {project.creatorName && (
-                  <div className="text-sm font-semibold text-primary-600 mb-1">
-                    {project.creatorName}
-                  </div>
-                )}
-                {project.brandName && (
-                  <div className="font-medium text-neutral-900">
-                    {project.brandName}
-                  </div>
-                )}
-              </>
-            ) : (
-              <>
-                <div className="font-medium">{project.name}</div>
-                {project.description && (
-                  <div className="text-xs text-neutral-500 mt-1 line-clamp-2">
-                    {project.description}
-                  </div>
-                )}
-              </>
-            )}
-          </td>
+  {activeBrandTab === 'BRAND-BASE' ? (
+    <>
+      {project.creatorName && (
+        <div className="text-sm font-semibold text-primary-600 mb-1">
+          <span className="hidden sm:inline">{project.creatorName}</span>
+          <span className="sm:hidden">
+            {project.creatorName.length > 6 
+              ? `${project.creatorName.substring(0, 6)}...` 
+              : project.creatorName}
+          </span>
+        </div>
+      )}
+      {project.brandName && (
+        <div className="font-medium text-neutral-900">
+          <span className="hidden sm:inline">{project.brandName}</span>
+          <span className="sm:hidden">
+            {project.brandName.length > 6 
+              ? `${project.brandName.substring(0, 6)}...` 
+              : project.brandName}
+          </span>
+        </div>
+      )}
+    </>
+  ) : (
+    <>
+      <div className="font-medium">
+        <span className="hidden sm:inline">{project.name}</span>
+        <span className="sm:hidden">
+          {project.name.length > 6 
+            ? `${project.name.substring(0, 6)}...` 
+            : project.name}
+        </span>
+      </div>
+      {project.description && (
+        <div className="text-xs text-neutral-500 mt-1 line-clamp-2">
+          {project.description}
+        </div>
+      )}
+    </>
+  )}
+</td>
           
           <td className="sticky left-[200px] z-20 bg-white border border-neutral-200 px-2 py-2 text-center shadow-sm">
   <button
