@@ -821,16 +821,49 @@ const [editBrandFeatures, setEditBrandFeatures] = useState('');
 {/* クリエイター一覧ビュー */}
 {view === 'creators' && (
   <>
-    <div className="flex items-center justify-between mb-6">
-      <h2 className="text-lg font-semibold text-neutral-900">クリエイター一覧</h2>
-            <button
-              onClick={() => setShowNewCreatorForm(true)}
-              className="inline-flex items-center px-4 py-2 bg-primary-600 text-white text-sm font-medium rounded-lg hover:bg-primary-700"
-            >
-              <Plus className="w-4 h-4 mr-2" />
-              新規クリエイター
-            </button>
-          </div>
+    {/* 表示モード切り替えボタン */}
+    <div className="flex items-center gap-2 mb-6 border-b border-neutral-200">
+      <button
+        onClick={() => setCreatorsDisplayMode('creators')}
+        className={`px-6 py-3 text-sm font-medium transition-all relative ${
+          creatorsDisplayMode === 'creators'
+            ? 'text-primary-600'
+            : 'text-neutral-500 hover:text-neutral-700'
+        }`}
+      >
+        クリエイター一覧
+        {creatorsDisplayMode === 'creators' && (
+          <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary-600" />
+        )}
+      </button>
+      <button
+        onClick={() => setCreatorsDisplayMode('projects')}
+        className={`px-6 py-3 text-sm font-medium transition-all relative ${
+          creatorsDisplayMode === 'projects'
+            ? 'text-primary-600'
+            : 'text-neutral-500 hover:text-neutral-700'
+        }`}
+      >
+        プロジェクト一覧
+        {creatorsDisplayMode === 'projects' && (
+          <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary-600" />
+        )}
+      </button>
+    </div>
+
+    {/* クリエイター一覧の表示 */}
+    {creatorsDisplayMode === 'creators' && (
+      <>
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="text-lg font-semibold text-neutral-900">クリエイター一覧</h2>
+          <button
+            onClick={() => setShowNewCreatorForm(true)}
+            className="inline-flex items-center px-4 py-2 bg-primary-600 text-white text-sm font-medium rounded-lg hover:bg-primary-700"
+          >
+            <Plus className="w-4 h-4 mr-2" />
+            新規クリエイター
+          </button>
+        </div>
 
           {showNewCreatorForm && (
             <div className="bg-white rounded-lg border border-neutral-200 p-6 mb-6">
