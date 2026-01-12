@@ -1148,11 +1148,34 @@ export default function Dashboard({ onSelectProject, user, onLogout }: Dashboard
                   return (
                     <div
                       key={creator.id}
-                      className="bg-white rounded-2xl border border-neutral-200/50 hover:border-primary-300 hover:shadow-xl transition-all group cursor-pointer p-6"
-                      onClick={() => {
-                        setSelectedCreatorForView(creator.id);
-                        setBrandBaseView('categories');
-                      }}
+                      className="bg-white rounded-2xl border border-neutral-200/50 hover:border-primary-300 hover:shadow-xl transition-all group p-6"
+                    >
+                      <div className="flex items-start justify-between mb-4">
+                        <div className="flex-1 cursor-pointer" onClick={() => {
+                          setSelectedCreatorForView(creator.id);
+                        }}>
+                          <h3 className="text-lg font-bold text-neutral-900 mb-2 group-hover:text-primary-600 transition-colors">
+                            {creator.name}
+                          </h3>
+                          <div className="flex items-center gap-3 text-sm text-neutral-600">
+                            <span>{creatorCategories.length}品目</span>
+                            <span>·</span>
+                            <span>{creatorProjects.length}プロジェクト</span>
+                          </div>
+                        </div>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            if (confirm(`「${creator.name}」を削除しますか？関連する品目とプロジェクトもすべて削除されます。`)) {
+                              handleDeleteCreator(creator.id);
+                            }
+                          }}
+                          className="p-1.5 text-neutral-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                          title="削除"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
                     >
                       <div className="flex items-start justify-between mb-4">
                         <div className="flex-1">
