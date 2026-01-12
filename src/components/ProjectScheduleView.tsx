@@ -18,6 +18,11 @@ interface ScheduleCell {
   textColor: string;
 }
 
+interface ProjectWithBrandInfo extends Project {
+  creatorName?: string;
+  brandName?: string;
+}
+
 export default function ProjectScheduleView({ user, activeBrandTab, viewType }: ProjectScheduleViewProps) {
   const [projects, setProjects] = useState<Project[]>([]);
   const [schedules, setSchedules] = useState<Map<string, ScheduleCell>>(new Map());
