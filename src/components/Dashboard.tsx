@@ -53,6 +53,7 @@ export default function Dashboard({ onSelectProject, user, onLogout }: Dashboard
     loadProjects();
     loadCreators();
     loadProductCategories();
+    loadBrandInfos();
   }, []);
 
   const loadCreators = async () => {
