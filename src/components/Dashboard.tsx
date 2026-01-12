@@ -154,79 +154,79 @@ export default function Dashboard({ onSelectProject, user, onLogout }: Dashboard
   }
 };
 
-  const handleCreateCategory = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newCategoryName.trim() || !selectedCreatorId) {
-      alert('クリエイターを選択して品目名を入力してください');
-      return;
-    }
+  const handleDeleteCreator = async (creatorId: string) => {
+  try {
+    const { error } = await supabase
+      .from('creators')
+      .delete()
+      .eq('id', creatorId);
 
-    const handleDeleteCreator = async (creatorId: string) => {
-    try {
-      const { error } = await supabase
-        .from('creators')
-        .delete()
-        .eq('id', creatorId);
+    if (error) throw error;
 
-      if (error) throw error;
+    await loadCreators();
+    await loadProductCategories();
+    setShowDeleteCreatorConfirm(null);
+    alert('クリエイターを削除しました');
+  } catch (error) {
+    console.error('クリエイター削除エラー:', error);
+    alert(`削除に失敗しました: ${error instanceof Error ? error.message : '不明なエラー'}`);
+  }
+};
 
-      await loadCreators();
-      await loadProductCategories();
-      setShowDeleteCreatorConfirm(null);
-      alert('クリエイターを削除しました');
-    } catch (error) {
-      console.error('クリエイター削除エラー:', error);
-      alert(`削除に失敗しました: ${error instanceof Error ? error.message : '不明なエラー'}`);
-    }
-  };
+const handleDeleteCategory = async (categoryId: string) => {
+  try {
+    const { error } = await supabase
+      .from('product_categories')
+      .delete()
+      .eq('id', categoryId);
 
-  const handleDeleteCategory = async (categoryId: string) => {
-    try {
-      const { error } = await supabase
-        .from('product_categories')
-        .delete()
-        .eq('id', categoryId);
+    if (error) throw error;
 
-      if (error) throw error;
+    await loadProductCategories();
+    setShowDeleteCategoryConfirm(null);
+    setBrandBaseView('creators');
+    setSelectedCategoryForView(null);
+    alert('品目を削除しました');
+  } catch (error) {
+    console.error('品目削除エラー:', error);
+    alert(`削除に失敗しました: ${error instanceof Error ? error.message : '不明なエラー'}`);
+  }
+};
 
-      await loadProductCategories();
-      setShowDeleteCategoryConfirm(null);
-      setBrandBaseView('creators');
-      setSelectedCategoryForView(null);
-      alert('品目を削除しました');
-    } catch (error) {
-      console.error('品目削除エラー:', error);
-      alert(`削除に失敗しました: ${error instanceof Error ? error.message : '不明なエラー'}`);
-    }
-  };
+const handleCreateCategory = async (e: React.FormEvent) => {
+  e.preventDefault();
+  if (!newCategoryName.trim() || !selectedCreatorId) {
+    alert('クリエイターを選択して品目名を入力してください');
+    return;
+  }
     
-    try {
-      const { data, error } = await supabase
-        .from('product_categories')
-        .insert({
-          creator_id: selectedCreatorId,
-          name: newCategoryName,
-          user_id: user.id,
-        })
-        .select()
-        .single();
+  try {
+    const { data, error } = await supabase
+      .from('product_categories')
+      .insert({
+        creator_id: selectedCreatorId,
+        name: newCategoryName,
+        user_id: user.id,
+      })
+      .select()
+      .single();
 
-      if (error) {
-        console.error('Supabase品目作成エラー:', error);
-        throw error;
-      }
-
-      console.log('品目作成成功:', data);
-      setNewCategoryName('');
-      setShowCreateCategoryForm(false);
-      setSelectedCreatorId(null);
-      await loadProductCategories();
-      alert('品目を作成しました');
-    } catch (error) {
-      console.error('品目作成エラー:', error);
-      alert(`品目の作成に失敗しました: ${error instanceof Error ? error.message : '不明なエラー'}`);
+    if (error) {
+      console.error('Supabase品目作成エラー:', error);
+      throw error;
     }
-  };
+
+    console.log('品目作成成功:', data);
+    setNewCategoryName('');
+    setShowCreateCategoryForm(false);
+    setSelectedCreatorId(null);
+    await loadProductCategories();
+    alert('品目を作成しました');
+  } catch (error) {
+    console.error('品目作成エラー:', error);
+    alert(`品目の作成に失敗しました: ${error instanceof Error ? error.message : '不明なエラー'}`);
+  }
+};
   
   const loadProjects = async () => {
     try {
