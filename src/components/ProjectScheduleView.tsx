@@ -814,6 +814,17 @@ export default function ProjectScheduleView({ user, activeBrandTab, viewType, on
               開く
             </button>
           </td>
+          
+          {dates.map((date, dateIndex) => {
+          
+          <td className="sticky left-[200px] z-10 bg-white border border-neutral-200 px-2 py-2 text-center shadow-sm">
+            <button
+              onClick={() => onSelectProject(project)}
+              className="px-3 py-1.5 bg-primary-600 text-white text-xs font-medium rounded-lg hover:bg-primary-700 transition-colors"
+            >
+              開く
+            </button>
+          </td>
             {activeBrandTab === 'BRAND-BASE' ? (
               <>
                 {project.creatorName && (
