@@ -779,11 +779,11 @@ export default function ProjectScheduleView({ user, activeBrandTab, viewType, on
     <>
       {brandProjects.map((project) => (
         <tr key={project.id} className="hover:bg-neutral-50/50">
-          <td className="sticky left-0 z-20 bg-white border border-neutral-200 px-4 py-2 text-neutral-900 shadow-sm">
+          <td className="sticky left-0 z-20 bg-white border border-neutral-200 px-2 sm:px-4 py-2 text-neutral-900 shadow-sm min-w-[80px] sm:min-w-[200px]">
   {activeBrandTab === 'BRAND-BASE' ? (
     <>
       {project.creatorName && (
-        <div className="text-sm font-semibold text-primary-600 mb-1">
+        <div className="text-xs sm:text-sm font-semibold text-primary-600 mb-1">
           <span className="hidden sm:inline">{project.creatorName}</span>
           <span className="sm:hidden">
             {project.creatorName.length > 6 
@@ -793,7 +793,7 @@ export default function ProjectScheduleView({ user, activeBrandTab, viewType, on
         </div>
       )}
       {project.brandName && (
-        <div className="font-medium text-neutral-900">
+        <div className="text-xs sm:text-sm font-medium text-neutral-900">
           <span className="hidden sm:inline">{project.brandName}</span>
           <span className="sm:hidden">
             {project.brandName.length > 6 
@@ -805,7 +805,7 @@ export default function ProjectScheduleView({ user, activeBrandTab, viewType, on
     </>
   ) : (
     <>
-      <div className="font-medium">
+      <div className="text-xs sm:text-sm font-medium">
         <span className="hidden sm:inline">{project.name}</span>
         <span className="sm:hidden">
           {project.name.length > 6 
@@ -814,18 +814,18 @@ export default function ProjectScheduleView({ user, activeBrandTab, viewType, on
         </span>
       </div>
       {project.description && (
-        <div className="text-xs text-neutral-500 mt-1 line-clamp-2">
+        <div className="hidden sm:block text-xs text-neutral-500 mt-1 line-clamp-2">
           {project.description}
         </div>
       )}
     </>
   )}
 </td>
-          
-          <td className="sticky left-[200px] z-20 bg-white border border-neutral-200 px-2 py-2 text-center shadow-sm">
+
+<td className="sticky left-[80px] sm:left-[200px] z-20 bg-white border border-neutral-200 px-1 sm:px-2 py-2 text-center shadow-sm w-[40px] sm:w-[60px]">
   <button
     onClick={() => onSelectProject(project)}
-    className="px-2 py-1 text-xs text-primary-600 underline hover:text-primary-700 hover:no-underline transition-colors"
+    className="px-1 sm:px-2 py-1 text-xs text-primary-600 underline hover:text-primary-700 hover:no-underline transition-colors"
     title="プロジェクトを開く"
   >
     開く
