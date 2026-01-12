@@ -822,34 +822,28 @@ const [editBrandFeatures, setEditBrandFeatures] = useState('');
 {view === 'creators' && (
   <>
     {/* 表示モード切り替えボタン */}
-    <div className="flex items-center gap-2 mb-6 border-b border-neutral-200">
-      <button
-        onClick={() => setCreatorsDisplayMode('creators')}
-        className={`px-6 py-3 text-sm font-medium transition-all relative ${
-          creatorsDisplayMode === 'creators'
-            ? 'text-primary-600'
-            : 'text-neutral-500 hover:text-neutral-700'
-        }`}
-      >
-        クリエイター一覧
-        {creatorsDisplayMode === 'creators' && (
-          <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary-600" />
-        )}
-      </button>
-      <button
-        onClick={() => setCreatorsDisplayMode('projects')}
-        className={`px-6 py-3 text-sm font-medium transition-all relative ${
-          creatorsDisplayMode === 'projects'
-            ? 'text-primary-600'
-            : 'text-neutral-500 hover:text-neutral-700'
-        }`}
-      >
-        プロジェクト一覧
-        {creatorsDisplayMode === 'projects' && (
-          <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary-600" />
-        )}
-      </button>
-    </div>
+<div className="flex items-center gap-3 mb-6">
+  <button
+    onClick={() => setCreatorsDisplayMode('creators')}
+    className={`px-5 py-2.5 text-sm font-medium rounded-lg transition-all ${
+      creatorsDisplayMode === 'creators'
+        ? 'bg-primary-600 text-white shadow-sm'
+        : 'bg-white text-neutral-700 border border-neutral-300 hover:bg-neutral-50'
+    }`}
+  >
+    クリエイター一覧
+  </button>
+  <button
+    onClick={() => setCreatorsDisplayMode('projects')}
+    className={`px-5 py-2.5 text-sm font-medium rounded-lg transition-all ${
+      creatorsDisplayMode === 'projects'
+        ? 'bg-primary-600 text-white shadow-sm'
+        : 'bg-white text-neutral-700 border border-neutral-300 hover:bg-neutral-50'
+    }`}
+  >
+    プロジェクト一覧
+  </button>
+</div>
 
     {/* クリエイター一覧の表示 */}
     {creatorsDisplayMode === 'creators' && (
