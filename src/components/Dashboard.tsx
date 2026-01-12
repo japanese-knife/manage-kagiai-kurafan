@@ -249,7 +249,7 @@ export default function Dashboard({ onSelectProject, user, onLogout }: Dashboard
         )}
 
         {/* タブコンテンツ */}
-        {activeTab === 'schedule' && <GanttChartTab user={user} />}
+        {activeTab === 'schedule' && <GanttChartTab user={user} onSelectProject={onSelectProject} />}
         {activeTab === 'kaigai' && (
           <KaigaiKurafanTab
             projects={projects}
