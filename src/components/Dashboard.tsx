@@ -1221,98 +1221,20 @@ const handleCreateCategory = async (e: React.FormEvent) => {
           </>
         )}
 
-        {/* 品目一覧 */}
-        {brandBaseView === 'categories' && selectedCreatorForView && (
-          <>
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-lg font-semibold text-neutral-900">
-                {creators.find(c => c.id === selectedCreatorForView)?.name} の品目一覧
-              </h2>
-              <button
-                onClick={() => {
-                  setSelectedCreatorId(selectedCreatorForView);
-                  setShowCreateCategoryForm(true);
-                }}
-                className="inline-flex items-center px-4 py-2 btn-gradient-animated text-white text-sm font-medium rounded-lg shadow-soft-lg"
-              >
-                <Plus className="w-4 h-4 mr-2" />
-                品目を作成
-              </button>
-            </div>
-
-            {productCategories.filter(cat => cat.creator_id === selectedCreatorForView).length === 0 ? (
-              <div className="text-center py-16 sm:py-20 md:py-24 px-4">
-                <div className="w-16 h-16 sm:w-20 sm:h-20 bg-neutral-100 rounded-2xl flex items-center justify-center mx-auto mb-4 sm:mb-6">
-                  <FolderKanban className="w-8 h-8 sm:w-10 sm:h-10 text-neutral-400" />
-                </div>
-                <h2 className="text-base sm:text-lg font-semibold text-neutral-900 mb-2">
-                  品目がありません
-                </h2>
-                <p className="text-sm sm:text-base text-neutral-500 mb-6 sm:mb-8 leading-relaxed">
-                  新しい品目を作成して始めましょう
-                </p>
-                <button
-                  onClick={() => {
-                    setSelectedCreatorId(selectedCreatorForView);
-                    setShowCreateCategoryForm(true);
-                  }}
-                  className="inline-flex items-center px-5 sm:px-6 py-2 sm:py-2.5 btn-gradient-animated text-white text-sm font-medium rounded-lg shadow-soft-lg"
-                >
-                  <Plus className="w-4 h-4 mr-1.5 sm:mr-2" />
-                  品目を作成
-                </button>
-              </div>
-            ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5 md:gap-6">
-                {productCategories
-                  .filter(cat => cat.creator_id === selectedCreatorForView)
-                  .map((category) => {
-                    const categoryProjects = projects.filter(p => p.product_category_id === category.id);
-
-                    return (
-                      <div
-                        key={category.id}
-                        className="bg-white rounded-2xl border border-neutral-200/50 hover:border-primary-300 hover:shadow-xl transition-all group cursor-pointer p-6"
-                        onClick={() => {
-                          setSelectedCategoryForView(category.id);
-                          setBrandBaseView('projects');
-                        }}
-                      >
-                        <div className="flex items-start justify-between mb-4">
-                          <div className="flex-1">
-                            <h3 className="text-lg font-bold text-neutral-900 mb-2 group-hover:text-primary-600 transition-colors">
-                              {category.name}
-                            </h3>
-                            <div className="flex items-center gap-3 text-sm text-neutral-600">
-                              <span>{categoryProjects.length}プロジェクト</span>
-                            </div>
-                          </div>
-                          <ArrowRight className="w-5 h-5 text-neutral-400 group-hover:text-primary-600 group-hover:translate-x-1 transition-all" />
-                        </div>
-
-                        {categoryProjects.length > 0 && (
-                          <div className="mt-4 pt-4 border-t border-neutral-100">
-                            <div className="space-y-2">
-                              {categoryProjects.slice(0, 2).map((project) => (
-                                <div key={project.id} className="text-sm text-neutral-600 truncate">
-                                  • {project.name}
-                                </div>
-                              ))}
-                              {categoryProjects.length > 2 && (
-                                <div className="text-sm text-neutral-500">
-                                  +{categoryProjects.length - 2} 件
-                                </div>
-                              )}
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                    );
-                  })}
-              </div>
-            )}
-          </>
-        )}
+        {/* ブランド情報テーブル */}
+{brandBaseView === 'category-detail' && selectedCategoryForView && (
+  <BrandInfoTable
+    user={user}
+    categoryId={selectedCategoryForView}
+    categoryName={productCategories.find(c => c.id === selectedCategoryForView)?.name || ''}
+    creatorName={creators.find(c => c.id === selectedCreatorForView)?.name || ''}
+    onDeleteCategory={() => {
+      if (confirm(`この品目を削除しますか？関連するプロジェクトとブランド情報もすべて削除されます。`)) {
+        handleDeleteCategory(selectedCategoryForView);
+      }
+    }}
+  />
+)}
 
         {/* プロジェクト一覧 */}
         {brandBaseView === 'projects' && selectedCategoryForView && (
