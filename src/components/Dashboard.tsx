@@ -1346,71 +1346,106 @@ const handleCreateCategory = async (e: React.FormEvent) => {
 </div>
 
         {showCreateForm && (
-          <div className="bg-white rounded-2xl border border-neutral-200/50 p-4 sm:p-6 md:p-8 mb-6 sm:mb-8 md:mb-10 shadow-lg">
-            <h2 className="text-base sm:text-lg font-semibold text-neutral-900 mb-4 sm:mb-6">
-              新しいプロジェクトを作成
-            </h2>
-            <form onSubmit={handleCreateProject} className="space-y-5">
-              <div>
-                <label className="block text-sm font-medium text-neutral-700 mb-2.5">
-                  タイプ *
-                </label>
-                <select
-                  value={newBrandType}
-                  onChange={(e) => setNewBrandType(e.target.value as BrandType)}
-                  className="w-full px-4 py-3 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-100 focus:border-primary-500 bg-white"
-                >
-                  <option value="海外クラファン.com">海外クラファン.com</option>
-                  <option value="BRAND-BASE">BRAND-BASE</option>
-                </select>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-neutral-700 mb-2.5">
-                  事業者名 *
-                </label>
-                <input
-                  type="text"
-                  required
-                  value={newProjectName}
-                  onChange={(e) => setNewProjectName(e.target.value)}
-                  className="w-full px-4 py-3 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-100 focus:border-primary-500 bg-white"
-                  placeholder="例: 株式会社RE-IDEA様"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-neutral-700 mb-2.5">
-                  商品
-                </label>
-                <textarea
-                  value={newProjectDescription}
-                  onChange={(e) => setNewProjectDescription(e.target.value)}
-                  className="w-full px-4 py-3 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-100 focus:border-primary-500 bg-white resize-none"
-                  rows={3}
-                  placeholder="プロジェクトの概要や目的"
-                />
-              </div>
-              <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 pt-3">
-                <button
-                  type="submit"
-                  className="w-full sm:w-auto px-6 py-2.5 btn-gradient-animated text-white font-medium rounded-lg shadow-soft-lg"
-                >
-                  作成
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setShowCreateForm(false);
-                    setNewProjectName('');
-                    setNewProjectDescription('');
-                  }}
-                  className="w-full sm:w-auto px-6 py-2.5 bg-white border border-neutral-300 text-neutral-700 font-medium rounded-lg hover:bg-neutral-50"
-                >
-                  キャンセル
-                </button>
-              </div>
-            </form>
-          </div>
-        )}
+  <div className="bg-white rounded-2xl border border-neutral-200/50 p-4 sm:p-6 md:p-8 mb-6 sm:mb-8 md:mb-10 shadow-lg">
+    <h2 className="text-base sm:text-lg font-semibold text-neutral-900 mb-4 sm:mb-6">
+      新しいプロジェクトを作成
+    </h2>
+    <form onSubmit={handleCreateProject} className="space-y-5">
+      <div>
+        <label className="block text-sm font-medium text-neutral-700 mb-2.5">
+          タイプ *
+        </label>
+        <select
+          value={newBrandType}
+          onChange={(e) => {
+            setNewBrandType(e.target.value as BrandType);
+            setSelectedCategoryId(null);
+          }}
+          className="w-full px-4 py-3 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-100 focus:border-primary-500 bg-white"
+        >
+          <option value="海外クラファン.com">海外クラファン.com</option>
+          <option value="BRAND-BASE">BRAND-BASE</option>
+        </select>
+      </div>
+
+      {newBrandType === 'BRAND-BASE' && (
+        <div>
+          <label className="block text-sm font-medium text-neutral-700 mb-2.5">
+            クリエイター・品目 *
+          </label>
+          <select
+            value={selectedCategoryId || ''}
+            onChange={(e) => setSelectedCategoryId(e.target.value || null)}
+            required
+            className="w-full px-4 py-3 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-100 focus:border-primary-500 bg-white"
+          >
+            <option value="">選択してください</option>
+            {creators.map((creator) => {
+              const creatorCategories = productCategories.filter(cat => cat.creator_id === creator.id);
+              return creatorCategories.map((category) => (
+                <option key={category.id} value={category.id}>
+                  {creator.name} - {category.name}
+                </option>
+              ));
+            })}
+          </select>
+          {creators.length === 0 && (
+            <p className="mt-2 text-sm text-amber-600">
+              ※ 先にクリエイターと品目を作成してください
+            </p>
+          )}
+        </div>
+      )}
+
+      <div>
+        <label className="block text-sm font-medium text-neutral-700 mb-2.5">
+          {newBrandType === 'BRAND-BASE' ? 'プロジェクト名' : '事業者名'} *
+        </label>
+        <input
+          type="text"
+          required
+          value={newProjectName}
+          onChange={(e) => setNewProjectName(e.target.value)}
+          className="w-full px-4 py-3 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-100 focus:border-primary-500 bg-white"
+          placeholder={newBrandType === 'BRAND-BASE' ? '例: 2025年春夏コレクション' : '例: 株式会社RE-IDEA様'}
+        />
+      </div>
+      <div>
+        <label className="block text-sm font-medium text-neutral-700 mb-2.5">
+          {newBrandType === 'BRAND-BASE' ? 'メモ' : '商品'}
+        </label>
+        <textarea
+          value={newProjectDescription}
+          onChange={(e) => setNewProjectDescription(e.target.value)}
+          className="w-full px-4 py-3 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-100 focus:border-primary-500 bg-white resize-none"
+          rows={3}
+          placeholder={newBrandType === 'BRAND-BASE' ? 'プロジェクトに関するメモ' : 'プロジェクトの概要や目的'}
+        />
+      </div>
+      <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 pt-3">
+        <button
+          type="submit"
+          className="w-full sm:w-auto px-6 py-2.5 btn-gradient-animated text-white font-medium rounded-lg shadow-soft-lg"
+        >
+          作成
+        </button>
+        <button
+          type="button"
+          onClick={() => {
+            setShowCreateForm(false);
+            setNewProjectName('');
+            setNewProjectDescription('');
+            setNewBrandType('海外クラファン.com');
+            setSelectedCategoryId(null);
+          }}
+          className="w-full sm:w-auto px-6 py-2.5 bg-white border border-neutral-300 text-neutral-700 font-medium rounded-lg hover:bg-neutral-50"
+        >
+          キャンセル
+        </button>
+      </div>
+    </form>
+  </div>
+)}
 
         {/* クリエイター作成フォーム */}
         {/* クリエイター作成フォーム */}
