@@ -53,6 +53,9 @@ export default function BrandBaseTab({
   const [newBrandFeatures, setNewBrandFeatures] = useState('');
   const [showProjectLinkModal, setShowProjectLinkModal] = useState(false);
   const [selectedBrandForLink, setSelectedBrandForLink] = useState<string | null>(null);
+  const [showNewProjectInModal, setShowNewProjectInModal] = useState(false);
+  const [newProjectNameInModal, setNewProjectNameInModal] = useState('');
+  const [newProjectDescriptionInModal, setNewProjectDescriptionInModal] = useState('');
   
   const [projectStats, setProjectStats] = useState<Map<string, ProjectStats>>(new Map());
   const [editingProjectId, setEditingProjectId] = useState<string | null>(null);
