@@ -770,7 +770,11 @@ export default function BrandBaseTab({
     return projects.filter((p) => p.status === status && p.brand_type === 'BRAND-BASE');
   };
 
-  
+  const brandbaseProjects = projects.filter(p => p.brand_type === 'BRAND-BASE');
+
+  return (
+    <div className="mt-8">
+      {/* 戻るボタン（ブランド一覧表示時のみ） */}
       {view === 'brands' && selectedCreatorId && (
         <button
           onClick={() => {
