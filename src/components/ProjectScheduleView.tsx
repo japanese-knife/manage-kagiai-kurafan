@@ -727,22 +727,22 @@ export default function ProjectScheduleView({ user, activeBrandTab, viewType, on
   return (
     <tr>
       <th className="sticky left-0 z-50 bg-neutral-50 border border-neutral-200 px-4 py-2 text-left font-semibold text-neutral-900 min-w-[200px]">
-  {headerLabel}
-</th>
-<th className="sticky left-[200px] z-50 bg-neutral-50 border border-neutral-200 px-2 py-2 text-center font-semibold text-neutral-900 w-[60px]">
-  リンク
-</th>
-        {dates.map((date, index) => (
-          <th
-            key={index}
-            className={`border border-neutral-200 px-3 py-2 text-center font-medium min-w-[80px] ${
-              viewType === 'daily' && isToday(date) 
-                ? 'bg-yellow-100 border-yellow-400 border-2' 
-                : viewType === 'daily' && isWeekend(date) 
-                  ? 'bg-blue-50' 
-                  : 'bg-neutral-50'
-            }`}
-          >
+        {headerLabel}
+      </th>
+      <th className="sticky left-[200px] z-50 bg-neutral-50 border border-neutral-200 px-2 py-2 text-center font-semibold text-neutral-900 w-[60px]">
+        リンク
+      </th>
+      {dates.map((date, index) => (
+        <th
+          key={index}
+          className={`border border-neutral-200 px-3 py-2 text-center font-medium min-w-[80px] ${
+            viewType === 'daily' && isToday(date) 
+              ? 'bg-yellow-100 border-yellow-400 border-2' 
+              : viewType === 'daily' && isWeekend(date) 
+                ? 'bg-blue-50' 
+                : 'bg-neutral-50'
+          }`}
+        >
             {viewType === 'monthly' ? (
               <>
                 <div className="text-xs text-neutral-600">
