@@ -1090,15 +1090,128 @@ export default function BrandBaseTab({
             </div>
           )}
 
+          // 新しいstate変数を追加（ファイルの先頭のstate定義部分に追加）
+  const [showNewProjectInModal, setShowNewProjectInModal] = useState(false);
+  const [newProjectNameInModal, setNewProjectNameInModal] = useState('');
+  const [newProjectDescriptionInModal, setNewProjectDescriptionInModal] = useState('');
+
+  // 新しいハンドラー関数を追加（handleUnlinkProjectの後に追加）
+  const handleCreateAndLinkProject = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newProjectNameInModal.trim() || !selectedBrandForLink) return;
+
+    try {
+      // プロジェクトを作成
+      const { data: newProject, error: projectError } = await supabase
+        .from('projects')
+        .insert({
+          name: newProjectNameInModal,
+          description: newProjectDescriptionInModal,
+          status: '進行中',
+          brand_type: 'BRAND-BASE',
+          user_id: user.id,
+        })
+        .select()
+        .single();
+
+      if (projectError) throw projectError;
+
+      // ブランドにリンク
+      const { error: linkError } = await supabase
+        .from('brand_projects')
+        .insert({
+          brand_id: selectedBrandForLink,
+          project_id: newProject.id,
+        });
+
+      if (linkError) throw linkError;
+
+      setNewProjectNameInModal('');
+      setNewProjectDescriptionInModal('');
+      setShowNewProjectInModal(false);
+      onProjectsChange();
+      loadBrands();
+    } catch (error) {
+      console.error('プロジェクト作成エラー:', error);
+      alert('プロジェクトの作成に失敗しました');
+    }
+  };
+
+  // プロジェクトリンクモーダル（修正版）
           {/* プロジェクトリンクモーダル */}
           {showProjectLinkModal && selectedBrandForLink && (
             <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
               <div className="bg-white rounded-xl max-w-2xl w-full max-h-[80vh] overflow-hidden">
                 <div className="p-6 border-b border-neutral-200">
-                  <h3 className="text-lg font-semibold text-neutral-900">プロジェクトを選択</h3>
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-lg font-semibold text-neutral-900">プロジェクトを選択または作成</h3>
+                    <button
+                      onClick={() => setShowNewProjectInModal(!showNewProjectInModal)}
+                      className="inline-flex items-center px-4 py-2 bg-primary-600 text-white text-sm font-medium rounded-lg hover:bg-primary-700"
+                    >
+                      <Plus className="w-4 h-4 mr-2" />
+                      新規作成
+                    </button>
+                  </div>
                 </div>
+
                 <div className="p-6 overflow-y-auto max-h-[60vh]">
+                  {/* 新規プロジェクト作成フォーム */}
+                  {showNewProjectInModal && (
+                    <div className="bg-neutral-50 rounded-lg p-4 mb-4">
+                      <h4 className="text-sm font-semibold text-neutral-900 mb-3">新規プロジェクト作成</h4>
+                      <form onSubmit={handleCreateAndLinkProject} className="space-y-3">
+                        <div>
+                          <label className="block text-xs font-medium text-neutral-700 mb-1.5">
+                            事業者名 *
+                          </label>
+                          <input
+                            type="text"
+                            required
+                            value={newProjectNameInModal}
+                            onChange={(e) => setNewProjectNameInModal(e.target.value)}
+                            className="w-full px-3 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-100 focus:border-primary-500 text-sm"
+                            placeholder="例: 株式会社RE-IDEA様"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-xs font-medium text-neutral-700 mb-1.5">
+                            商品
+                          </label>
+                          <textarea
+                            value={newProjectDescriptionInModal}
+                            onChange={(e) => setNewProjectDescriptionInModal(e.target.value)}
+                            className="w-full px-3 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-100 focus:border-primary-500 resize-none text-sm"
+                            rows={2}
+                            placeholder="プロジェクトの概要"
+                          />
+                        </div>
+                        <div className="flex gap-2">
+                          <button
+                            type="submit"
+                            className="flex-1 px-4 py-2 bg-primary-600 text-white text-sm font-medium rounded-lg hover:bg-primary-700"
+                          >
+                            作成してリンク
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setShowNewProjectInModal(false);
+                              setNewProjectNameInModal('');
+                              setNewProjectDescriptionInModal('');
+                            }}
+                            className="flex-1 px-4 py-2 bg-white border border-neutral-300 text-neutral-700 text-sm font-medium rounded-lg hover:bg-neutral-50"
+                          >
+                            キャンセル
+                          </button>
+                        </div>
+                      </form>
+                    </div>
+                  )}
+
+                  {/* 既存プロジェクト選択 */}
                   <div className="space-y-2">
+                    <h4 className="text-xs font-semibold text-neutral-700 mb-2">既存のプロジェクトから選択</h4>
                     {projects
                       .filter(p => p.brand_type === 'BRAND-BASE')
                       .filter(p => {
@@ -1117,13 +1230,25 @@ export default function BrandBaseTab({
                           )}
                         </button>
                       ))}
+                    {projects.filter(p => p.brand_type === 'BRAND-BASE').filter(p => {
+                      const linkedIds = brandProjects.get(selectedBrandForLink) || [];
+                      return !linkedIds.includes(p.id);
+                    }).length === 0 && (
+                      <div className="text-sm text-neutral-500 text-center py-4">
+                        リンク可能なプロジェクトがありません
+                      </div>
+                    )}
                   </div>
                 </div>
+
                 <div className="p-6 border-t border-neutral-200">
                   <button
                     onClick={() => {
                       setShowProjectLinkModal(false);
                       setSelectedBrandForLink(null);
+                      setShowNewProjectInModal(false);
+                      setNewProjectNameInModal('');
+                      setNewProjectDescriptionInModal('');
                     }}
                     className="w-full px-4 py-2 bg-neutral-100 text-neutral-700 font-medium rounded-lg hover:bg-neutral-200"
                   >
