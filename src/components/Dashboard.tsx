@@ -914,10 +914,11 @@ export default function Dashboard({ onSelectProject, user, onLogout }: Dashboard
         )}
 
         {/* クリエイター作成フォーム */}
+        {/* クリエイター作成フォーム */}
         {showCreateCreatorForm && (
           <div className="bg-white rounded-2xl border border-neutral-200/50 p-4 sm:p-6 md:p-8 mb-6 sm:mb-8 md:mb-10 shadow-lg">
             <h2 className="text-base sm:text-lg font-semibold text-neutral-900 mb-4 sm:mb-6">
-              新しいクリエイターを作成
+              新しいクリエイター・品目を作成
             </h2>
             <form onSubmit={handleCreateCreator} className="space-y-5">
               <div>
@@ -932,53 +933,6 @@ export default function Dashboard({ onSelectProject, user, onLogout }: Dashboard
                   className="w-full px-4 py-3 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-100 focus:border-primary-500 bg-white"
                   placeholder="例: 山田太郎"
                 />
-              </div>
-              <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 pt-3">
-                <button
-                  type="submit"
-                  className="w-full sm:w-auto px-6 py-2.5 btn-gradient-animated text-white font-medium rounded-lg shadow-soft-lg"
-                >
-                  作成して品目を追加
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setShowCreateCreatorForm(false);
-                    setNewCreatorName('');
-                  }}
-                  className="w-full sm:w-auto px-6 py-2.5 bg-white border border-neutral-300 text-neutral-700 font-medium rounded-lg hover:bg-neutral-50"
-                >
-                  キャンセル
-                </button>
-              </div>
-            </form>
-          </div>
-        )}
-
-        {/* 品目作成フォーム */}
-        {showCreateCategoryForm && (
-          <div className="bg-white rounded-2xl border border-neutral-200/50 p-4 sm:p-6 md:p-8 mb-6 sm:mb-8 md:mb-10 shadow-lg">
-            <h2 className="text-base sm:text-lg font-semibold text-neutral-900 mb-4 sm:mb-6">
-              新しい品目を作成
-            </h2>
-            <form onSubmit={handleCreateCategory} className="space-y-5">
-              <div>
-                <label className="block text-sm font-medium text-neutral-700 mb-2.5">
-                  クリエイターを選択 *
-                </label>
-                <select
-                  value={selectedCreatorId || ''}
-                  onChange={(e) => setSelectedCreatorId(e.target.value)}
-                  className="w-full px-4 py-3 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-100 focus:border-primary-500 bg-white"
-                  required
-                >
-                  <option value="">クリエイターを選択してください</option>
-                  {creators.map((creator) => (
-                    <option key={creator.id} value={creator.id}>
-                      {creator.name}
-                    </option>
-                  ))}
-                </select>
               </div>
               <div>
                 <label className="block text-sm font-medium text-neutral-700 mb-2.5">
@@ -1003,9 +957,9 @@ export default function Dashboard({ onSelectProject, user, onLogout }: Dashboard
                 <button
                   type="button"
                   onClick={() => {
-                    setShowCreateCategoryForm(false);
+                    setShowCreateCreatorForm(false);
+                    setNewCreatorName('');
                     setNewCategoryName('');
-                    setSelectedCreatorId(null);
                   }}
                   className="w-full sm:w-auto px-6 py-2.5 bg-white border border-neutral-300 text-neutral-700 font-medium rounded-lg hover:bg-neutral-50"
                 >
