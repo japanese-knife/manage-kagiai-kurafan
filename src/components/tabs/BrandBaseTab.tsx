@@ -1181,6 +1181,7 @@ export default function BrandBaseTab({
 
   // プロジェクトリンクモーダル（修正版）
           {/* プロジェクトリンクモーダル */}
+          {/* プロジェクトリンクモーダル */}
           {showProjectLinkModal && selectedBrandForLink && (
             <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
               <div className="bg-white rounded-xl max-w-2xl w-full max-h-[80vh] overflow-hidden">
@@ -1198,7 +1199,6 @@ export default function BrandBaseTab({
                 </div>
 
                 <div className="p-6 overflow-y-auto max-h-[60vh]">
-                  {/* 新規プロジェクト作成フォーム */}
                   {showNewProjectInModal && (
                     <div className="bg-neutral-50 rounded-lg p-4 mb-4">
                       <h4 className="text-sm font-semibold text-neutral-900 mb-3">新規プロジェクト作成</h4>
@@ -1251,7 +1251,6 @@ export default function BrandBaseTab({
                     </div>
                   )}
 
-                  {/* 既存プロジェクト選択 */}
                   <div className="space-y-2">
                     <h4 className="text-xs font-semibold text-neutral-700 mb-2">既存のプロジェクトから選択</h4>
                     {projects
