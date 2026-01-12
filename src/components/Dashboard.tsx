@@ -141,6 +141,45 @@ export default function Dashboard({ onSelectProject, user, onLogout }: Dashboard
       return;
     }
 
+    const handleDeleteCreator = async (creatorId: string) => {
+    try {
+      const { error } = await supabase
+        .from('creators')
+        .delete()
+        .eq('id', creatorId);
+
+      if (error) throw error;
+
+      await loadCreators();
+      await loadProductCategories();
+      setShowDeleteCreatorConfirm(null);
+      alert('クリエイターを削除しました');
+    } catch (error) {
+      console.error('クリエイター削除エラー:', error);
+      alert(`削除に失敗しました: ${error instanceof Error ? error.message : '不明なエラー'}`);
+    }
+  };
+
+  const handleDeleteCategory = async (categoryId: string) => {
+    try {
+      const { error } = await supabase
+        .from('product_categories')
+        .delete()
+        .eq('id', categoryId);
+
+      if (error) throw error;
+
+      await loadProductCategories();
+      setShowDeleteCategoryConfirm(null);
+      setBrandBaseView('creators');
+      setSelectedCategoryForView(null);
+      alert('品目を削除しました');
+    } catch (error) {
+      console.error('品目削除エラー:', error);
+      alert(`削除に失敗しました: ${error instanceof Error ? error.message : '不明なエラー'}`);
+    }
+  };
+    
     try {
       const { data, error } = await supabase
         .from('product_categories')
