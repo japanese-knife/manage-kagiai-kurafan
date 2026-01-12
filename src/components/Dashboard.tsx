@@ -27,6 +27,17 @@ interface BrandInfoTableProps {
   onDeleteCategory: () => void;
 }
 
+interface BrandInfo {
+  id: string;
+  category_id: string;
+  brand_name: string;
+  brand_theme: string;
+  special_feature: string;
+  projects: Record<string, string>; // { [projectName]: value }
+  user_id: string;
+  created_at: string;
+}
+
 function BrandInfoTable({ user, categoryId, categoryName, creatorName, onDeleteCategory }: BrandInfoTableProps) {
   const [brandInfos, setBrandInfos] = useState<BrandInfo[]>([]);
   const [projectColumns, setProjectColumns] = useState<string[]>([]);
