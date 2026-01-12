@@ -67,8 +67,9 @@ export default function BrandBaseTab({
   const [newCreatorName, setNewCreatorName] = useState('');
   const [newCreatorDescription, setNewCreatorDescription] = useState('');
   const [editingBrandId, setEditingBrandId] = useState<string | null>(null);
-  const [editBrandTheme, setEditBrandTheme] = useState('');
-  const [editBrandFeatures, setEditBrandFeatures] = useState('');
+const [editBrandName, setEditBrandName] = useState('');
+const [editBrandTheme, setEditBrandTheme] = useState('');
+const [editBrandFeatures, setEditBrandFeatures] = useState('');
   const [showNewBrandForm, setShowNewBrandForm] = useState(false);
   const [newBrandName, setNewBrandName] = useState('');
   const [newBrandTheme, setNewBrandTheme] = useState('');
