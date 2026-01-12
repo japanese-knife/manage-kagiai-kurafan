@@ -596,36 +596,34 @@ export default function BrandBaseTab({
 
   return (
     <div className="mt-8">
-      {/* ビュー切り替えタブ */}
-      <div className="flex items-center gap-2 mb-6 border-b border-neutral-200">
-        <button
-          onClick={() => setView('creators')}
-          className={`px-6 py-3 text-sm font-medium transition-all relative ${
-            view === 'creators'
-              ? 'text-primary-600'
-              : 'text-neutral-500 hover:text-neutral-700'
-          }`}
-        >
-          クリエイター/品目一覧
-          {view === 'creators' && (
-            <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary-600" />
-          )}
-        </button>
+      {/* ビュー切り替えボタン */}
+      <div className="flex items-center gap-3 mb-6">
         <button
           onClick={() => setView('brands')}
-          className={`px-6 py-3 text-sm font-medium transition-all relative ${
+          className={`px-6 py-3 text-sm font-medium rounded-lg transition-all ${
             view === 'brands'
-              ? 'text-primary-600'
-              : 'text-neutral-500 hover:text-neutral-700'
+              ? 'bg-primary-600 text-white shadow-lg'
+              : 'bg-white border border-neutral-200 text-neutral-700 hover:border-primary-300 hover:bg-primary-50'
           }`}
         >
           ブランド一覧
-          <span className="ml-2 px-2 py-0.5 text-xs font-medium bg-neutral-100 text-neutral-600 rounded-full">
+          <span className={`ml-2 px-2 py-0.5 text-xs font-medium rounded-full ${
+            view === 'brands'
+              ? 'bg-white/20 text-white'
+              : 'bg-neutral-100 text-neutral-600'
+          }`}>
             {brands.length}
           </span>
-          {view === 'brands' && (
-            <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary-600" />
-          )}
+        </button>
+        <button
+          onClick={() => setView('creators')}
+          className={`px-6 py-3 text-sm font-medium rounded-lg transition-all ${
+            view === 'creators'
+              ? 'bg-primary-600 text-white shadow-lg'
+              : 'bg-white border border-neutral-200 text-neutral-700 hover:border-primary-300 hover:bg-primary-50'
+          }`}
+        >
+          クリエイター/品目一覧
         </button>
       </div>
 
