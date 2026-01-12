@@ -1314,34 +1314,51 @@ const [editBrandFeatures, setEditBrandFeatures] = useState('');
                   )}
 
                   <div className="space-y-2">
-                    <h4 className="text-xs font-semibold text-neutral-700 mb-2">既存のプロジェクトから選択</h4>
-                    {projects
-                      .filter(p => p.brand_type === 'BRAND-BASE')
-                      .filter(p => {
-                        const linkedIds = brandProjects.get(selectedBrandForLink) || [];
-                        return !linkedIds.includes(p.id);
-                      })
-                      .map((project) => (
-                        <button
-                          key={project.id}
-                          onClick={() => handleLinkProject(selectedBrandForLink, project.id)}
-                          className="w-full text-left px-4 py-3 border border-neutral-200 rounded-lg hover:border-primary-300 hover:bg-primary-50 transition-all"
-                        >
-                          <div className="font-medium text-neutral-900">{project.name}</div>
-                          {project.description && (
-                            <div className="text-sm text-neutral-600 mt-1">{project.description}</div>
-                          )}
-                        </button>
-                      ))}
-                    {projects.filter(p => p.brand_type === 'BRAND-BASE').filter(p => {
-                      const linkedIds = brandProjects.get(selectedBrandForLink) || [];
-                      return !linkedIds.includes(p.id);
-                    }).length === 0 && (
-                      <div className="text-sm text-neutral-500 text-center py-4">
-                        リンク可能なプロジェクトがありません
-                      </div>
-                    )}
-                  </div>
+  <h4 className="text-xs font-semibold text-neutral-700 mb-2">既存のプロジェクトから選択</h4>
+  {projects
+    .filter(p => p.brand_type === 'BRAND-BASE')
+    .filter(p => {
+      // 選択中のブランドに既にリンクされているプロジェクトを除外
+      const linkedIds = brandProjects.get(selectedBrandForLink!) || [];
+      if (linkedIds.includes(p.id)) return false;
+      
+      // 他のどのブランドにもリンクされていないプロジェクトのみ表示
+      for (const [brandId, projectIds] of brandProjects.entries()) {
+        if (projectIds.includes(p.id)) {
+          return false;
+        }
+      }
+      return true;
+    })
+    .map((project) => (
+      <button
+        key={project.id}
+        onClick={() => handleLinkProject(selectedBrandForLink!, project.id)}
+        className="w-full text-left px-4 py-3 border border-neutral-200 rounded-lg hover:border-primary-300 hover:bg-primary-50 transition-all"
+      >
+        <div className="font-medium text-neutral-900">{project.name}</div>
+        {project.description && (
+          <div className="text-sm text-neutral-600 mt-1">{project.description}</div>
+        )}
+      </button>
+    ))}
+  {projects
+    .filter(p => p.brand_type === 'BRAND-BASE')
+    .filter(p => {
+      const linkedIds = brandProjects.get(selectedBrandForLink!) || [];
+      if (linkedIds.includes(p.id)) return false;
+      for (const [brandId, projectIds] of brandProjects.entries()) {
+        if (projectIds.includes(p.id)) {
+          return false;
+        }
+      }
+      return true;
+    }).length === 0 && (
+    <div className="text-sm text-neutral-500 text-center py-4">
+      リンク可能なプロジェクトがありません
+    </div>
+  )}
+</div>
                 </div>
 
                 <div className="p-6 border-t border-neutral-200">
