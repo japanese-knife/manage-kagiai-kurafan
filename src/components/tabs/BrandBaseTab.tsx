@@ -816,37 +816,6 @@ const [editBrandFeatures, setEditBrandFeatures] = useState('');
         </button>
       )}
 
-      {/* 表示モード切り替えボタン */}
-{view === 'creators' && (
-  <div className="flex items-center gap-2 mb-6 border-b border-neutral-200">
-    <button
-      onClick={() => setDisplayMode('creators')}
-      className={`px-6 py-3 text-sm font-medium transition-all relative ${
-        displayMode === 'creators'
-          ? 'text-primary-600'
-          : 'text-neutral-500 hover:text-neutral-700'
-      }`}
-    >
-      クリエイター一覧
-      {displayMode === 'creators' && (
-        <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary-600" />
-      )}
-    </button>
-    <button
-      onClick={() => setDisplayMode('projects')}
-      className={`px-6 py-3 text-sm font-medium transition-all relative ${
-        displayMode === 'projects'
-          ? 'text-primary-600'
-          : 'text-neutral-500 hover:text-neutral-700'
-      }`}
-    >
-      プロジェクト一覧
-      {displayMode === 'projects' && (
-        <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary-600" />
-      )}
-    </button>
-  </div>
-)}
 
 {/* プロジェクト一覧ビュー */}
 {view === 'creators' && displayMode === 'projects' && (
