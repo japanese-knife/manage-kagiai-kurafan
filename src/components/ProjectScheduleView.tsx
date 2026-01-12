@@ -8,6 +8,8 @@ interface ProjectScheduleViewProps {
   user: User;
   activeBrandTab: BrandType | 'all';
   viewType: 'daily' | 'monthly';
+  creators?: Creator[];
+  productCategories?: ProductCategory[];
 }
 
 interface ScheduleCell {
