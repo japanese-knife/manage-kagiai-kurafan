@@ -1197,16 +1197,17 @@ const [editBrandFeatures, setEditBrandFeatures] = useState('');
                                     <CheckSquare className="w-4 h-4" />
                                   </button>
                                   <button
-                                    onClick={() => {
-                                      setEditingBrandId(null);
-                                      setEditBrandTheme('');
-                                      setEditBrandFeatures('');
-                                    }}
-                                    className="p-1.5 text-neutral-500 hover:bg-neutral-100 rounded-lg transition-colors"
-                                    title="キャンセル"
-                                  >
-                                    ×
-                                  </button>
+  onClick={() => {
+    setEditingBrandId(null);
+    setEditBrandName('');
+    setEditBrandTheme('');
+    setEditBrandFeatures('');
+  }}
+  className="p-1.5 text-neutral-500 hover:bg-neutral-100 rounded-lg transition-colors"
+  title="キャンセル"
+>
+  ×
+</button>
                                 </>
                               ) : (
                                 <>
