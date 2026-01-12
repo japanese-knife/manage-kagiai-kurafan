@@ -816,11 +816,43 @@ const [editBrandFeatures, setEditBrandFeatures] = useState('');
         </button>
       )}
 
-      {/* クリエイター一覧ビュー */}
-      {view === 'creators' && (
-        <>
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-lg font-semibold text-neutral-900">クリエイター一覧</h2>
+      {/* 表示モード切り替えボタン */}
+{view === 'creators' && (
+  <div className="flex items-center gap-2 mb-6 border-b border-neutral-200">
+    <button
+      onClick={() => setDisplayMode('creators')}
+      className={`px-6 py-3 text-sm font-medium transition-all relative ${
+        displayMode === 'creators'
+          ? 'text-primary-600'
+          : 'text-neutral-500 hover:text-neutral-700'
+      }`}
+    >
+      クリエイター一覧
+      {displayMode === 'creators' && (
+        <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary-600" />
+      )}
+    </button>
+    <button
+      onClick={() => setDisplayMode('projects')}
+      className={`px-6 py-3 text-sm font-medium transition-all relative ${
+        displayMode === 'projects'
+          ? 'text-primary-600'
+          : 'text-neutral-500 hover:text-neutral-700'
+      }`}
+    >
+      プロジェクト一覧
+      {displayMode === 'projects' && (
+        <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary-600" />
+      )}
+    </button>
+  </div>
+)}
+
+{/* クリエイター一覧ビュー */}
+{view === 'creators' && displayMode === 'creators' && (
+  <>
+    <div className="flex items-center justify-between mb-6">
+      <h2 className="text-lg font-semibold text-neutral-900">クリエイター一覧</h2>
             <button
               onClick={() => setShowNewCreatorForm(true)}
               className="inline-flex items-center px-4 py-2 bg-primary-600 text-white text-sm font-medium rounded-lg hover:bg-primary-700"
