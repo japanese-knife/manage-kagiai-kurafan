@@ -779,7 +779,7 @@ export default function ProjectScheduleView({ user, activeBrandTab, viewType, on
     <>
       {brandProjects.map((project) => (
         <tr key={project.id} className="hover:bg-neutral-50/50">
-          <td className="sticky left-0 z-10 bg-white border border-neutral-200 px-4 py-2 text-neutral-900 shadow-sm">
+          <td className="sticky left-0 z-20 bg-white border border-neutral-200 px-4 py-2 text-neutral-900 shadow-sm">
             {activeBrandTab === 'BRAND-BASE' ? (
               <>
                 {project.creatorName && (
