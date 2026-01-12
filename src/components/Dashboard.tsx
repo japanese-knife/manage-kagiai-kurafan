@@ -33,6 +33,18 @@ export default function Dashboard({ onSelectProject, user, onLogout }: Dashboard
   const [editProjectName, setEditProjectName] = useState('');
   const [editProjectDescription, setEditProjectDescription] = useState('');
   const [editBrandType, setEditBrandType] = useState<BrandType>('海外クラファン.com');
+  // BRAND-BASE用の新しいstate
+  const [creators, setCreators] = useState<Creator[]>([]);
+  const [productCategories, setProductCategories] = useState<ProductCategory[]>([]);
+  const [showCreateCreatorForm, setShowCreateCreatorForm] = useState(false);
+  const [showCreateCategoryForm, setShowCreateCategoryForm] = useState(false);
+  const [selectedCreatorId, setSelectedCreatorId] = useState<string | null>(null);
+  const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null);
+  const [newCreatorName, setNewCreatorName] = useState('');
+  const [newCategoryName, setNewCategoryName] = useState('');
+  const [brandBaseView, setBrandBaseView] = useState<'creators' | 'categories' | 'projects'>('creators');
+  const [selectedCreatorForView, setSelectedCreatorForView] = useState<string | null>(null);
+  const [selectedCategoryForView, setSelectedCategoryForView] = useState<string | null>(null);
 
   useEffect(() => {
     loadProjects();
