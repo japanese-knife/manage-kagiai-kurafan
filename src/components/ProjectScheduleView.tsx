@@ -733,9 +733,9 @@ export default function ProjectScheduleView({ user, activeBrandTab, viewType, cr
                 <>
                   <div className="text-xs text-neutral-500 mb-1">
                     {(() => {
-                      // クリエイター名と品目名を取得するロジックをここに追加
-                      // これはProjectScheduleViewにcreatorsとproductCategoriesを渡す必要があります
-                      return `クリエイター名 - 品目名`;
+                      const category = productCategories.find(c => c.id === project.product_category_id);
+                      const creator = category ? creators.find(cr => cr.id === category.creator_id) : null;
+                      return creator && category ? `${creator.name} - ${category.name}` : '';
                     })()}
                   </div>
                   <div className="font-medium">{project.name}</div>
