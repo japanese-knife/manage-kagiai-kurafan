@@ -62,7 +62,41 @@ export default function BrandBaseTab({
 
   useEffect(() => {
     loadProjectStats();
+    loadBrands();
   }, [projects]);
+
+  const loadBrands = async () => {
+    try {
+      const { data: brandsData, error: brandsError } = await supabase
+        .from('brands')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false });
+
+      if (brandsError) throw brandsError;
+
+      setBrands(brandsData || []);
+
+      // ブランドとプロジェクトの紐付けを取得
+      const { data: linkData, error: linkError } = await supabase
+        .from('brand_projects')
+        .select('*');
+
+      if (linkError) throw linkError;
+
+      const linkMap = new Map<string, string[]>();
+      linkData?.forEach((link: BrandProject) => {
+        if (!linkMap.has(link.brand_id)) {
+          linkMap.set(link.brand_id, []);
+        }
+        linkMap.get(link.brand_id)?.push(link.project_id);
+      });
+
+      setBrandProjects(linkMap);
+    } catch (error) {
+      console.error('ブランド読み込みエラー:', error);
+    }
+  };
 
   const loadProjectStats = async () => {
     const statsMap = new Map<string, ProjectStats>();
@@ -87,6 +121,113 @@ export default function BrandBaseTab({
     }
 
     setProjectStats(statsMap);
+  };
+
+  const handleCreateBrand = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newBrandName.trim()) return;
+
+    try {
+      const { error } = await supabase
+        .from('brands')
+        .insert({
+          name: newBrandName,
+          theme: newBrandTheme,
+          features: newBrandFeatures,
+          user_id: user.id,
+        });
+
+      if (error) throw error;
+
+      setNewBrandName('');
+      setNewBrandTheme('');
+      setNewBrandFeatures('');
+      setShowNewBrandForm(false);
+      loadBrands();
+    } catch (error) {
+      console.error('ブランド作成エラー:', error);
+      alert('ブランドの作成に失敗しました');
+    }
+  };
+
+  const handleUpdateBrand = async (brandId: string) => {
+    try {
+      const { error } = await supabase
+        .from('brands')
+        .update({
+          theme: editBrandTheme,
+          features: editBrandFeatures,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', brandId);
+
+      if (error) throw error;
+
+      setEditingBrandId(null);
+      setEditBrandTheme('');
+      setEditBrandFeatures('');
+      loadBrands();
+    } catch (error) {
+      console.error('ブランド更新エラー:', error);
+      alert('ブランドの更新に失敗しました');
+    }
+  };
+
+  const handleDeleteBrand = async (brandId: string) => {
+    if (!confirm('このブランドを削除してもよろしいですか？プロジェクトとの紐付けも削除されます。')) {
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from('brands')
+        .delete()
+        .eq('id', brandId);
+
+      if (error) throw error;
+
+      loadBrands();
+    } catch (error) {
+      console.error('ブランド削除エラー:', error);
+      alert('ブランドの削除に失敗しました');
+    }
+  };
+
+  const handleLinkProject = async (brandId: string, projectId: string) => {
+    try {
+      const { error } = await supabase
+        .from('brand_projects')
+        .insert({
+          brand_id: brandId,
+          project_id: projectId,
+        });
+
+      if (error) throw error;
+
+      loadBrands();
+      setShowProjectLinkModal(false);
+      setSelectedBrandForLink(null);
+    } catch (error) {
+      console.error('プロジェクトリンクエラー:', error);
+      alert('プロジェクトの紐付けに失敗しました');
+    }
+  };
+
+  const handleUnlinkProject = async (brandId: string, projectId: string) => {
+    try {
+      const { error } = await supabase
+        .from('brand_projects')
+        .delete()
+        .eq('brand_id', brandId)
+        .eq('project_id', projectId);
+
+      if (error) throw error;
+
+      loadBrands();
+    } catch (error) {
+      console.error('プロジェクトリンク解除エラー:', error);
+      alert('プロジェクトの紐付け解除に失敗しました');
+    }
   };
 
   const handleStatusChange = async (projectId: string, newStatus: ProjectStatus) => {
