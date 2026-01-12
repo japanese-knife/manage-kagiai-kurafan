@@ -726,12 +726,12 @@ export default function ProjectScheduleView({ user, activeBrandTab, viewType, on
   
   return (
     <tr>
-      <th className="sticky left-0 z-40 bg-neutral-50 border border-neutral-200 px-4 py-2 text-left font-semibold text-neutral-900 min-w-[200px]">
-        {headerLabel}
-      </th>
-      <th className="sticky left-[200px] z-40 bg-neutral-50 border border-neutral-200 px-2 py-2 text-center font-semibold text-neutral-900 w-[60px]">
-        リンク
-      </th>
+      <th className="sticky left-0 z-40 bg-neutral-50 border border-neutral-200 px-2 sm:px-4 py-2 text-left font-semibold text-neutral-900 min-w-[80px] sm:min-w-[200px]">
+  {headerLabel}
+</th>
+<th className="sticky left-[80px] sm:left-[200px] z-40 bg-neutral-50 border border-neutral-200 px-1 sm:px-2 py-2 text-center font-semibold text-neutral-900 w-[40px] sm:w-[60px]">
+  リンク
+</th>
       {dates.map((date, index) => (
         <th
           key={index}
