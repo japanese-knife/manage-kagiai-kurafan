@@ -843,6 +843,300 @@ export default function BrandBaseTab({
           );
         })}
       </div>
+            </>
+          )}
+        </>
+      )}
+
+      {/* ブランド一覧ビュー */}
+      {view === 'brands' && (
+        <>
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-lg font-semibold text-neutral-900">ブランド一覧</h2>
+            <button
+              onClick={() => setShowNewBrandForm(true)}
+              className="inline-flex items-center px-4 py-2 bg-primary-600 text-white text-sm font-medium rounded-lg hover:bg-primary-700"
+            >
+              <Plus className="w-4 h-4 mr-2" />
+              新規ブランド
+            </button>
+          </div>
+
+          {showNewBrandForm && (
+            <div className="bg-white rounded-lg border border-neutral-200 p-6 mb-6">
+              <h3 className="text-base font-semibold text-neutral-900 mb-4">新規ブランド作成</h3>
+              <form onSubmit={handleCreateBrand} className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-neutral-700 mb-2">
+                    ブランド名 *
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={newBrandName}
+                    onChange={(e) => setNewBrandName(e.target.value)}
+                    className="w-full px-3 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-100 focus:border-primary-500"
+                    placeholder="例: テクノブランドA"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-neutral-700 mb-2">
+                    ブランドテーマ
+                  </label>
+                  <input
+                    type="text"
+                    value={newBrandTheme}
+                    onChange={(e) => setNewBrandTheme(e.target.value)}
+                    className="w-full px-3 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-100 focus:border-primary-500"
+                    placeholder="例: 最先端テクノロジー"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-neutral-700 mb-2">
+                    特化した特徴
+                  </label>
+                  <textarea
+                    value={newBrandFeatures}
+                    onChange={(e) => setNewBrandFeatures(e.target.value)}
+                    className="w-full px-3 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-100 focus:border-primary-500 resize-none"
+                    rows={3}
+                    placeholder="例: AI技術、IoT製品、スマートデバイス"
+                  />
+                </div>
+                <div className="flex gap-2">
+                  <button
+                    type="submit"
+                    className="px-4 py-2 bg-primary-600 text-white text-sm font-medium rounded-lg hover:bg-primary-700"
+                  >
+                    作成
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowNewBrandForm(false);
+                      setNewBrandName('');
+                      setNewBrandTheme('');
+                      setNewBrandFeatures('');
+                    }}
+                    className="px-4 py-2 bg-white border border-neutral-300 text-neutral-700 text-sm font-medium rounded-lg hover:bg-neutral-50"
+                  >
+                    キャンセル
+                  </button>
+                </div>
+              </form>
+            </div>
+          )}
+
+          {brands.length === 0 ? (
+            <div className="text-center py-16 px-4">
+              <div className="w-16 h-16 bg-neutral-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                <FolderKanban className="w-8 h-8 text-neutral-400" />
+              </div>
+              <h2 className="text-base font-semibold text-neutral-900 mb-2">
+                ブランドがありません
+              </h2>
+              <p className="text-sm text-neutral-500 mb-6">
+                新しいブランドを作成して始めましょう
+              </p>
+            </div>
+          ) : (
+            <div className="bg-white rounded-lg border border-neutral-200 overflow-hidden">
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead className="bg-neutral-50 border-b border-neutral-200">
+                    <tr>
+                      <th className="px-6 py-4 text-left text-sm font-semibold text-neutral-900 min-w-[200px]">
+                        ブランド名
+                      </th>
+                      <th className="px-6 py-4 text-left text-sm font-semibold text-neutral-900 min-w-[250px]">
+                        ブランドテーマ
+                      </th>
+                      <th className="px-6 py-4 text-left text-sm font-semibold text-neutral-900 min-w-[300px]">
+                        特化した特徴
+                      </th>
+                      <th className="px-6 py-4 text-left text-sm font-semibold text-neutral-900 min-w-[250px]">
+                        プロジェクトリンク
+                      </th>
+                      <th className="px-6 py-4 text-right text-sm font-semibold text-neutral-900 w-[100px]">
+                        操作
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-neutral-200">
+                    {brands.map((brand) => {
+                      const linkedProjectIds = brandProjects.get(brand.id) || [];
+                      const linkedProjects = projects.filter(p => linkedProjectIds.includes(p.id));
+
+                      return (
+                        <tr key={brand.id} className="hover:bg-neutral-50">
+                          <td className="px-6 py-4">
+                            <div className="text-sm font-medium text-neutral-900">
+                              {brand.name}
+                            </div>
+                          </td>
+                          <td className="px-6 py-4">
+                            {editingBrandId === brand.id ? (
+                              <input
+                                type="text"
+                                value={editBrandTheme}
+                                onChange={(e) => setEditBrandTheme(e.target.value)}
+                                className="w-full px-3 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-100 focus:border-primary-500 text-sm"
+                              />
+                            ) : (
+                              <div className="text-sm text-neutral-600">
+                                {brand.theme || '-'}
+                              </div>
+                            )}
+                          </td>
+                          <td className="px-6 py-4">
+                            {editingBrandId === brand.id ? (
+                              <textarea
+                                value={editBrandFeatures}
+                                onChange={(e) => setEditBrandFeatures(e.target.value)}
+                                className="w-full px-3 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-100 focus:border-primary-500 resize-none text-sm"
+                                rows={2}
+                              />
+                            ) : (
+                              <div className="text-sm text-neutral-600 whitespace-pre-wrap">
+                                {brand.features || '-'}
+                              </div>
+                            )}
+                          </td>
+                          <td className="px-6 py-4">
+                            <div className="space-y-2">
+                              {linkedProjects.map((project) => (
+                                <div
+                                  key={project.id}
+                                  className="flex items-center justify-between bg-primary-50 px-3 py-2 rounded-lg group"
+                                >
+                                  <button
+                                    onClick={() => onSelectProject(project)}
+                                    className="text-sm text-primary-600 hover:text-primary-700 font-medium flex-1 text-left"
+                                  >
+                                    {project.name}
+                                  </button>
+                                  <button
+                                    onClick={() => handleUnlinkProject(brand.id, project.id)}
+                                    className="ml-2 text-neutral-400 hover:text-red-600 opacity-0 group-hover:opacity-100 transition-opacity"
+                                    title="リンク解除"
+                                  >
+                                    <Trash2 className="w-3.5 h-3.5" />
+                                  </button>
+                                </div>
+                              ))}
+                              <button
+                                onClick={() => {
+                                  setSelectedBrandForLink(brand.id);
+                                  setShowProjectLinkModal(true);
+                                }}
+                                className="inline-flex items-center px-3 py-1.5 text-xs font-medium text-primary-600 hover:bg-primary-50 rounded-lg transition-colors"
+                              >
+                                <Plus className="w-3.5 h-3.5 mr-1" />
+                                プロジェクトを追加
+                              </button>
+                            </div>
+                          </td>
+                          <td className="px-6 py-4">
+                            <div className="flex items-center justify-end gap-2">
+                              {editingBrandId === brand.id ? (
+                                <>
+                                  <button
+                                    onClick={() => handleUpdateBrand(brand.id)}
+                                    className="p-1.5 text-green-600 hover:bg-green-50 rounded-lg transition-colors"
+                                    title="保存"
+                                  >
+                                    <CheckSquare className="w-4 h-4" />
+                                  </button>
+                                  <button
+                                    onClick={() => {
+                                      setEditingBrandId(null);
+                                      setEditBrandTheme('');
+                                      setEditBrandFeatures('');
+                                    }}
+                                    className="p-1.5 text-neutral-500 hover:bg-neutral-100 rounded-lg transition-colors"
+                                    title="キャンセル"
+                                  >
+                                    ×
+                                  </button>
+                                </>
+                              ) : (
+                                <>
+                                  <button
+                                    onClick={() => {
+                                      setEditingBrandId(brand.id);
+                                      setEditBrandTheme(brand.theme || '');
+                                      setEditBrandFeatures(brand.features || '');
+                                    }}
+                                    className="p-1.5 text-neutral-500 hover:text-primary-600 hover:bg-primary-50 rounded-lg transition-colors"
+                                    title="編集"
+                                  >
+                                    <Edit2 className="w-4 h-4" />
+                                  </button>
+                                  <button
+                                    onClick={() => handleDeleteBrand(brand.id)}
+                                    className="p-1.5 text-neutral-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                                    title="削除"
+                                  >
+                                    <Trash2 className="w-4 h-4" />
+                                  </button>
+                                </>
+                              )}
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+
+          {/* プロジェクトリンクモーダル */}
+          {showProjectLinkModal && selectedBrandForLink && (
+            <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+              <div className="bg-white rounded-xl max-w-2xl w-full max-h-[80vh] overflow-hidden">
+                <div className="p-6 border-b border-neutral-200">
+                  <h3 className="text-lg font-semibold text-neutral-900">プロジェクトを選択</h3>
+                </div>
+                <div className="p-6 overflow-y-auto max-h-[60vh]">
+                  <div className="space-y-2">
+                    {projects
+                      .filter(p => p.brand_type === 'BRAND-BASE')
+                      .filter(p => {
+                        const linkedIds = brandProjects.get(selectedBrandForLink) || [];
+                        return !linkedIds.includes(p.id);
+                      })
+                      .map((project) => (
+                        <button
+                          key={project.id}
+                          onClick={() => handleLinkProject(selectedBrandForLink, project.id)}
+                          className="w-full text-left px-4 py-3 border border-neutral-200 rounded-lg hover:border-primary-300 hover:bg-primary-50 transition-all"
+                        >
+                          <div className="font-medium text-neutral-900">{project.name}</div>
+                          {project.description && (
+                            <div className="text-sm text-neutral-600 mt-1">{project.description}</div>
+                          )}
+                        </button>
+                      ))}
+                  </div>
+                </div>
+                <div className="p-6 border-t border-neutral-200">
+                  <button
+                    onClick={() => {
+                      setShowProjectLinkModal(false);
+                      setSelectedBrandForLink(null);
+                    }}
+                    className="w-full px-4 py-2 bg-neutral-100 text-neutral-700 font-medium rounded-lg hover:bg-neutral-200"
+                  >
+                    閉じる
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+        </>
+      )}
     </div>
   );
 }
