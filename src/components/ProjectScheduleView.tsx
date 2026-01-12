@@ -801,6 +801,7 @@ export default function ProjectScheduleView({ user, activeBrandTab, viewType }: 
               </>
             )}
           </td>
+          
             {dates.map((date, dateIndex) => {
               const key = getCellKey(project.id, date);
               const cell = schedules.get(key);
