@@ -48,6 +48,8 @@ export default function Dashboard({ onSelectProject, user, onLogout }: Dashboard
 
   useEffect(() => {
     loadProjects();
+    loadCreators();
+    loadProductCategories();
   }, []);
 
   const loadProjects = async () => {
@@ -118,6 +120,8 @@ export default function Dashboard({ onSelectProject, user, onLogout }: Dashboard
     }
   };
 
+  
+  
   const handleStatusChange = async (projectId: string, newStatus: ProjectStatus) => {
     try {
       const { error } = await supabase
