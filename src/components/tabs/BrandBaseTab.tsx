@@ -87,6 +87,7 @@ export default function BrandBaseTab({
 
   useEffect(() => {
     loadProjectStats();
+    loadCreators();
     loadBrands();
   }, [projects]);
 
