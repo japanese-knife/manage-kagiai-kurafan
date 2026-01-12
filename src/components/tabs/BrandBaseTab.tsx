@@ -18,12 +18,42 @@ interface ProjectStats {
   progress: number;
 }
 
+interface Brand {
+  id: string;
+  name: string;
+  theme: string;
+  features: string;
+  created_at: string;
+  updated_at: string;
+  user_id: string;
+}
+
+interface BrandProject {
+  id: string;
+  brand_id: string;
+  project_id: string;
+  created_at: string;
+}
+
 export default function BrandBaseTab({ 
   projects, 
   user, 
   onSelectProject, 
   onProjectsChange 
 }: BrandBaseTabProps) {
+  const [view, setView] = useState<'creators' | 'brands'>('creators');
+  const [brands, setBrands] = useState<Brand[]>([]);
+  const [brandProjects, setBrandProjects] = useState<Map<string, string[]>>(new Map());
+  const [editingBrandId, setEditingBrandId] = useState<string | null>(null);
+  const [editBrandTheme, setEditBrandTheme] = useState('');
+  const [editBrandFeatures, setEditBrandFeatures] = useState('');
+  const [showNewBrandForm, setShowNewBrandForm] = useState(false);
+  const [newBrandName, setNewBrandName] = useState('');
+  const [newBrandTheme, setNewBrandTheme] = useState('');
+  const [newBrandFeatures, setNewBrandFeatures] = useState('');
+  const [showProjectLinkModal, setShowProjectLinkModal] = useState(false);
+  const [selectedBrandForLink, setSelectedBrandForLink] = useState<string | null>(null);
+  
   const [projectStats, setProjectStats] = useState<Map<string, ProjectStats>>(new Map());
   const [editingProjectId, setEditingProjectId] = useState<string | null>(null);
   const [editProjectName, setEditProjectName] = useState('');
