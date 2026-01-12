@@ -84,13 +84,14 @@ export default function Dashboard({ onSelectProject, user, onLogout }: Dashboard
 
   const handleCreateCreator = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newCreatorName.trim()) {
-      alert('クリエイター名を入力してください');
+    if (!newCreatorName.trim() || !newCategoryName.trim()) {
+      alert('クリエイター名と品目名を入力してください');
       return;
     }
 
     try {
-      const { data, error } = await supabase
+      // クリエイターを作成
+      const { data: creatorData, error: creatorError } = await supabase
         .from('creators')
         .insert({
           name: newCreatorName,
@@ -99,21 +100,37 @@ export default function Dashboard({ onSelectProject, user, onLogout }: Dashboard
         .select()
         .single();
 
-      if (error) {
-        console.error('Supabaseクリエイター作成エラー:', error);
-        throw error;
+      if (creatorError) {
+        console.error('Supabaseクリエイター作成エラー:', creatorError);
+        throw creatorError;
       }
 
-      console.log('クリエイター作成成功:', data);
+      // 品目を作成
+      const { data: categoryData, error: categoryError } = await supabase
+        .from('product_categories')
+        .insert({
+          creator_id: creatorData.id,
+          name: newCategoryName,
+          user_id: user.id,
+        })
+        .select()
+        .single();
+
+      if (categoryError) {
+        console.error('Supabase品目作成エラー:', categoryError);
+        throw categoryError;
+      }
+
+      console.log('クリエイター・品目作成成功:', creatorData, categoryData);
       setNewCreatorName('');
+      setNewCategoryName('');
       setShowCreateCreatorForm(false);
-      setSelectedCreatorId(data.id);
-      setShowCreateCategoryForm(true);
       await loadCreators();
-      alert('クリエイターを作成しました。次に品目を追加してください。');
+      await loadProductCategories();
+      alert('クリエイターと品目を作成しました');
     } catch (error) {
-      console.error('クリエイター作成エラー:', error);
-      alert(`クリエイターの作成に失敗しました: ${error instanceof Error ? error.message : '不明なエラー'}`);
+      console.error('作成エラー:', error);
+      alert(`作成に失敗しました: ${error instanceof Error ? error.message : '不明なエラー'}`);
     }
   };
 
