@@ -1107,25 +1107,36 @@ const [editBrandFeatures, setEditBrandFeatures] = useState('');
 
                       return (
                         <tr key={brand.id} className="hover:bg-neutral-50">
-                          <td className="px-6 py-4">
-                            <div className="text-sm font-medium text-neutral-900">
-                              {brand.name}
-                            </div>
-                          </td>
-                          <td className="px-6 py-4">
-                            {editingBrandId === brand.id ? (
-                              <input
-                                type="text"
-                                value={editBrandTheme}
-                                onChange={(e) => setEditBrandTheme(e.target.value)}
-                                className="w-full px-3 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-100 focus:border-primary-500 text-sm"
-                              />
-                            ) : (
-                              <div className="text-sm text-neutral-600">
-                                {brand.theme || '-'}
-                              </div>
-                            )}
-                          </td>
+  <td className="px-6 py-4">
+    {editingBrandId === brand.id ? (
+      <input
+        type="text"
+        required
+        value={editBrandName}
+        onChange={(e) => setEditBrandName(e.target.value)}
+        className="w-full px-3 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-100 focus:border-primary-500 text-sm font-medium"
+        placeholder="商品 / ブランド名"
+      />
+    ) : (
+      <div className="text-sm font-medium text-neutral-900">
+        {brand.name}
+      </div>
+    )}
+  </td>
+  <td className="px-6 py-4">
+    {editingBrandId === brand.id ? (
+      <input
+        type="text"
+        value={editBrandTheme}
+        onChange={(e) => setEditBrandTheme(e.target.value)}
+        className="w-full px-3 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-100 focus:border-primary-500 text-sm"
+      />
+    ) : (
+      <div className="text-sm text-neutral-600">
+        {brand.theme || '-'}
+      </div>
+    )}
+  </td>
                           <td className="px-6 py-4">
                             {editingBrandId === brand.id ? (
                               <textarea
