@@ -52,11 +52,11 @@ export interface Project {
   name: string;
   description: string;
   status: ProjectStatus;
+  brand_type: BrandType;
+  product_category_id?: string | null;
+  user_id: string;
   created_at: string;
   updated_at: string;
-  share_token?: string;
-  is_shared?: boolean;
-  shared_at?: string;
 }
 
 export interface Schedule {
