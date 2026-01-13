@@ -1382,7 +1382,7 @@ const [editBrandFeatures, setEditBrandFeatures] = useState('');
           
           const creatorProjects = filterProjects(projects.filter(p => creatorProjectIds.has(p.id)));
 
-          if (creatorProjects.length === 0) {{
+          if (creatorProjects.length === 0) {
             return (
               <div className="text-center py-16 px-4">
                 <div className="w-16 h-16 bg-neutral-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
