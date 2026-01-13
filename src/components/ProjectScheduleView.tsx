@@ -351,11 +351,16 @@ const isCurrentMonth = (date: Date): boolean => {
     try {
       if (editValue.trim() === '') {
         if (existingCell) {
+          // データベースからは完全な日付で削除
+          const fullDate = viewType === 'monthly' 
+            ? `${editingCell.date}-01`  // 月次の場合は日付を補完
+            : editingCell.date;
+          
           await supabase
             .from('project_schedules')
             .delete()
             .eq('project_id', editingCell.projectId)
-            .eq('date', editingCell.date);
+            .eq('date', fullDate);
           
           const updatedSchedules = new Map(schedules);
           updatedSchedules.delete(key);
@@ -365,9 +370,14 @@ const isCurrentMonth = (date: Date): boolean => {
         const bgColor = existingCell?.backgroundColor || '#ffffff';
         const txtColor = existingCell?.textColor || getTextColorForBackground(bgColor);
         
+        // データベースには完全な日付で保存
+        const fullDate = viewType === 'monthly' 
+          ? `${editingCell.date}-01`  // 月次の場合は日付を補完
+          : editingCell.date;
+        
         const updateData: any = {
           project_id: editingCell.projectId,
-          date: editingCell.date,
+          date: fullDate,
           content: editValue,
           background_color: bgColor,
           text_color: txtColor,
@@ -385,7 +395,7 @@ const isCurrentMonth = (date: Date): boolean => {
         const updatedSchedules = new Map(schedules);
         updatedSchedules.set(key, {
           projectId: editingCell.projectId,
-          date: editingCell.date,
+          date: fullDate,
           content: editValue,
           backgroundColor: bgColor,
           textColor: txtColor,
