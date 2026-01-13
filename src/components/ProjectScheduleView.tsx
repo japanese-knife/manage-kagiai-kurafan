@@ -1023,15 +1023,14 @@ onTouchStart={(e) => {
   </div>
   <div className="flex items-center gap-2">
     <select
-      value={columnWidth}
-      onChange={(e) => setColumnWidth(e.target.value as 'narrow' | 'normal' | 'wide')}
-      className="px-3 py-1.5 text-xs border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-100 focus:border-primary-500 bg-white"
-      title="列幅を変更"
-    >
-      <option value="narrow">狭い</option>
-      <option value="normal">標準</option>
-      <option value="wide">広い</option>
-    </select>
+  value={columnWidth}
+  onChange={(e) => setColumnWidth(e.target.value as 'narrow' | 'wide')}
+  className="px-3 py-1.5 text-xs border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-100 focus:border-primary-500 bg-white"
+  title="列幅を変更"
+>
+  <option value="narrow">狭い</option>
+  <option value="wide">広い</option>
+</select>
     <button
       onClick={handleCopy}
       disabled={selectedCells.size === 0}
