@@ -555,6 +555,8 @@ const isCurrentMonth = (date: Date): boolean => {
           
           const sourceData = cellsData[0];
           
+          const tableName = viewType === 'monthly' ? 'annual_schedules' : 'project_schedules';
+          
           const updateData: any = {
             project_id: targetProjectId,
             date: targetDateStr,
@@ -565,7 +567,7 @@ const isCurrentMonth = (date: Date): boolean => {
           };
 
           await supabase
-            .from('project_schedules')
+            .from(tableName)
             .upsert(updateData, {
               onConflict: 'project_id,date'
             });
