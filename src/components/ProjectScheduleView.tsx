@@ -810,7 +810,11 @@ export default function ProjectScheduleView({ user, activeBrandTab, viewType, on
     <>
       {brandProjects.map((project) => (
         <tr key={project.id} className="hover:bg-neutral-50/50">
-          <td className="sticky left-0 z-20 bg-white border border-neutral-200 px-2 sm:px-4 py-2 text-neutral-900 shadow-sm min-w-[80px] sm:min-w-[200px]">
+          <td className={`sticky left-0 z-20 bg-white border border-neutral-200 px-2 sm:px-4 py-2 text-neutral-900 shadow-sm ${
+  activeBrandTab === 'BRAND-BASE' 
+    ? 'min-w-[80px] sm:min-w-[120px]' 
+    : 'min-w-[80px] sm:min-w-[200px]'
+}`}>
   {activeBrandTab === 'BRAND-BASE' ? (
     <>
       {project.creatorName && (
