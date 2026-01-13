@@ -1066,10 +1066,22 @@ const [editBrandFeatures, setEditBrandFeatures] = useState('');
     )}
 
     {/* プロジェクト一覧の表示 */}
+    {/* プロジェクト一覧の表示 */}
     {creatorsDisplayMode === 'projects' && (
       <>
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-lg font-semibold text-neutral-900">全プロジェクト一覧</h2>
+        </div>
+
+        {/* 検索バー */}
+        <div className="mb-6">
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="プロジェクト名や説明で検索..."
+            className="w-full px-4 py-3 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-100 focus:border-primary-500 bg-white text-sm"
+          />
         </div>
 
         {brandbaseProjects.length === 0 ? (
