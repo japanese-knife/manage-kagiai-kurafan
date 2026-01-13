@@ -945,7 +945,7 @@ const [editBrandFeatures, setEditBrandFeatures] = useState('');
             </div>
           )}
 
-          {/* 検索バー */}
+         {/* 検索バー */}
           <div className="mb-6">
             <input
               type="text"
@@ -956,6 +956,11 @@ const [editBrandFeatures, setEditBrandFeatures] = useState('');
             />
           </div>
 
+          {filterCreators(creators).length === 0 ? (
+            <div className="text-center py-16 px-4">
+              <div className="w-16 h-16 bg-neutral-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                <FolderKanban className="w-8 h-8 text-neutral-400" />
+              </div>
               <h2 className="text-base font-semibold text-neutral-900 mb-2">
                 クリエイターがありません
               </h2>
