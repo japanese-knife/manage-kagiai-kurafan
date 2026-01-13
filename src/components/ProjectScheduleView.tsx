@@ -861,7 +861,11 @@ export default function ProjectScheduleView({ user, activeBrandTab, viewType, on
   )}
 </td>
 
-<td className="sticky left-[80px] sm:left-[200px] z-20 bg-white border border-neutral-200 px-1 sm:px-2 py-2 text-center shadow-sm w-[40px] sm:w-[60px]">
+<td className={`sticky ${
+  activeBrandTab === 'BRAND-BASE'
+    ? 'left-[80px] sm:left-[120px]'
+    : 'left-[80px] sm:left-[200px]'
+} z-20 bg-white border border-neutral-200 px-1 sm:px-2 py-2 text-center shadow-sm w-[40px] sm:w-[60px]`}>
   <button
     onClick={() => onSelectProject(project)}
     className="px-1 sm:px-2 py-1 text-xs text-primary-600 underline hover:text-primary-700 hover:no-underline transition-colors"
