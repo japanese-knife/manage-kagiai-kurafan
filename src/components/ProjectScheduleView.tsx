@@ -761,14 +761,15 @@ export default function ProjectScheduleView({ user, activeBrandTab, viewType, on
 </th>
       {dates.map((date, index) => (
         <th
-          key={index}
-          className={`border border-neutral-200 px-3 py-2 text-center font-medium min-w-[80px] ${
-            viewType === 'daily' && isToday(date) 
-              ? 'bg-yellow-100 border-yellow-400 border-2' 
-              : viewType === 'daily' && isWeekend(date) 
-                ? 'bg-blue-50' 
-                : 'bg-neutral-50'
-          }`}
+  key={index}
+  className={`border border-neutral-200 px-3 py-2 text-center font-medium ${getColumnWidth()} ${
+    viewType === 'daily' && isToday(date) 
+      ? 'bg-yellow-100 border-yellow-400 border-2' 
+      : viewType === 'daily' && isWeekend(date) 
+        ? 'bg-blue-50' 
+        : 'bg-neutral-50'
+  }`}
+>
         >
             {viewType === 'monthly' ? (
               <>
