@@ -586,7 +586,7 @@ const isCurrentMonth = (date: Date): boolean => {
           };
 
           await supabase
-            .from('project_schedules')
+            .from(tableName)
             .upsert(updateData, {
               onConflict: 'project_id,date'
             });
