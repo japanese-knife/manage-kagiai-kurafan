@@ -556,27 +556,106 @@ const isCurrentMonth = (date: Date): boolean => {
     if (selectedCells.size === 0) return;
 
     try {
-      const cellsData = Array.from(selectedCells).map(key => {
+      // 選択されたセルを行列順にソート
+      const sortedCells = Array.from(selectedCells).sort((a, b) => {
+        const [aProjectId, aDate] = a.split('-').reduce((acc, part, idx, arr) => {
+          if (idx < arr.length - 3) {
+            acc[0] = acc[0] ? `${acc[0]}-${part}` : part;
+          } else {
+            acc[1] = acc[1] ? `${acc[1]}-${part}` : part;
+          }
+          return acc;
+        }, ['', '']);
+        
+        const [bProjectId, bDate] = b.split('-').reduce((acc, part, idx, arr) => {
+          if (idx < arr.length - 3) {
+            acc[0] = acc[0] ? `${acc[0]}-${part}` : part;
+          } else {
+            acc[1] = acc[1] ? `${acc[1]}-${part}` : part;
+          }
+          return acc;
+        }, ['', '']);
+        
+        const aProjectIndex = projects.findIndex(p => p.id === aProjectId);
+        const bProjectIndex = projects.findIndex(p => p.id === bProjectId);
+        
+        if (aProjectIndex !== bProjectIndex) {
+          return aProjectIndex - bProjectIndex;
+        }
+        
+        const aDateIndex = dates.findIndex(d => d.toISOString().split('T')[0] === aDate);
+        const bDateIndex = dates.findIndex(d => d.toISOString().split('T')[0] === bDate);
+        
+        return aDateIndex - bDateIndex;
+      });
+
+      const cellsData = sortedCells.map(key => {
         const cell = schedules.get(key);
+        const [projectId, dateStr] = key.split('-').reduce((acc, part, idx, arr) => {
+          if (idx < arr.length - 3) {
+            acc[0] = acc[0] ? `${acc[0]}-${part}` : part;
+          } else {
+            acc[1] = acc[1] ? `${acc[1]}-${part}` : part;
+          }
+          return acc;
+        }, ['', '']);
+        
         return {
           key,
+          projectId,
+          dateStr,
           content: cell?.content || '',
           backgroundColor: cell?.backgroundColor || '#ffffff',
           textColor: cell?.textColor || '#000000'
         };
       });
       
-      setCopiedCellData({
-        content: cellsData.map(c => c.content).join('\t'),
-        backgroundColor: cellsData[0].backgroundColor,
-        textColor: cellsData[0].textColor,
-        isMultiple: selectedCells.size > 1,
-        cellsData: cellsData
+      // 矩形領域として構造化
+      const cellStructure = new Map<string, Map<string, typeof cellsData[0]>>();
+      cellsData.forEach(cell => {
+        if (!cellStructure.has(cell.projectId)) {
+          cellStructure.set(cell.projectId, new Map());
+        }
+        cellStructure.get(cell.projectId)!.set(cell.dateStr, cell);
       });
       
-      await navigator.clipboard.writeText(cellsData.map(c => c.content).join('\t'));
+      setCopiedCellData({
+        cellsData: cellsData,
+        structure: cellStructure,
+        isMultiple: selectedCells.size > 1
+      });
+      
+      // TSV形式でクリップボードにコピー（Excel互換）
+      let tsvContent = '';
+      const projectIds = Array.from(new Set(cellsData.map(c => c.projectId)));
+      const dateStrs = Array.from(new Set(cellsData.map(c => c.dateStr))).sort();
+      
+      projectIds.forEach((projectId, pIndex) => {
+        dateStrs.forEach((dateStr, dIndex) => {
+          const cell = cellStructure.get(projectId)?.get(dateStr);
+          tsvContent += cell?.content || '';
+          if (dIndex < dateStrs.length - 1) {
+            tsvContent += '\t';
+          }
+        });
+        if (pIndex < projectIds.length - 1) {
+          tsvContent += '\n';
+        }
+      });
+      
+      await navigator.clipboard.writeText(tsvContent);
+      
+      // 視覚的フィードバック
+      const copyButton = document.querySelector('[title="コピー (Ctrl+C)"]');
+      if (copyButton) {
+        copyButton.classList.add('bg-green-100');
+        setTimeout(() => {
+          copyButton.classList.remove('bg-green-100');
+        }, 300);
+      }
     } catch (error) {
       console.error('コピーエラー:', error);
+      alert('コピーに失敗しました');
     }
   };
 
