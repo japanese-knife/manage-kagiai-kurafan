@@ -970,10 +970,17 @@ const [editBrandFeatures, setEditBrandFeatures] = useState('');
           />
         </div>
 
-          {showNewCreatorForm && (
-        
-          {creators.length === 0 ? (
-            <div className="text-center py-16 px-4">
+        {showNewCreatorForm && (
+          <div className="bg-white rounded-lg border border-neutral-200 p-6 mb-6">
+            <h3 className="text-base font-semibold text-neutral-900 mb-4">新規クリエイター作成</h3>
+            <form onSubmit={handleCreateCreator} className="space-y-4">
+              {/* フォームの内容 */}
+            </form>
+          </div>
+        )}
+
+        {creators.length === 0 ? (
+          <div className="text-center py-16 px-4">
               <div className="w-16 h-16 bg-neutral-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
                 <FolderKanban className="w-8 h-8 text-neutral-400" />
               </div>
