@@ -30,6 +30,8 @@ export default function ProjectScheduleView({ user, activeBrandTab, viewType, on
   const [dates, setDates] = useState<Date[]>([]);
   const [selectedCell, setSelectedCell] = useState<{ projectId: string; date: string } | null>(null);
   const [selectedCells, setSelectedCells] = useState<Set<string>>(new Set());
+  const [copiedCellData, setCopiedCellData] = useState<any>(null);
+  const [selectedCells, setSelectedCells] = useState<Set<string>>(new Set());
   const [editingCell, setEditingCell] = useState<{ projectId: string; date: string } | null>(null);
   const [editValue, setEditValue] = useState('');
   const [showColorPicker, setShowColorPicker] = useState<{ projectId: string; date: string } | null>(null);
