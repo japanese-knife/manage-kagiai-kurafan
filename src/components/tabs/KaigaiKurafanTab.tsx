@@ -659,8 +659,11 @@ export default function KaigaiKurafanTab({
                       </div>
                     </div>
                   );
+                })}
+              </div>
+            </div>
+          );
         })}
       </div>
-    </div>
   );
-}    
+}
