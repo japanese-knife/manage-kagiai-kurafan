@@ -41,7 +41,7 @@ export default function ProjectScheduleView({ user, activeBrandTab, viewType, on
   // 日付生成
   useEffect(() => {
     generateDates();
-  }, [viewType]);
+  }, [viewType, activeBrandTab]);
 
   // プロジェクト読み込み
   useEffect(() => {
