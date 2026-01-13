@@ -603,17 +603,20 @@ await supabase
           }, ['', '']);
           
           const updateData: any = {
-            project_id: targetProjectId,
-            date: targetDateStr,
-            content: content,
-            background_color: backgroundColor,
-            text_color: textColor,
-            user_id: user.id,
-          };
+  project_id: targetProjectId,
+  date: targetDateStr,
+  content: content,
+  background_color: backgroundColor,
+  text_color: textColor,
+  user_id: user.id,
+  view_type: viewType,
+};
 
-          await supabase
-            .from('project_schedules')
-            .upsert(updateData);
+await supabase
+  .from('project_schedules')
+  .upsert(updateData, {
+    onConflict: 'project_id,date,view_type'
+  });
         }
       }
 
