@@ -215,13 +215,12 @@ export default function ProjectScheduleView({ user, activeBrandTab, viewType, on
 };
 
   const loadSchedules = async () => {
-  try {
-    const projectIds = projects.map(p => p.id);
-    const { data, error } = await supabase
-      .from('project_schedules')
-      .select('*')
-      .in('project_id', projectIds)
-      .eq('view_type', viewType);
+    try {
+      const projectIds = projects.map(p => p.id);
+      const { data, error } = await supabase
+        .from('project_schedules')
+        .select('*')
+        .in('project_id', projectIds);
 
       if (error) throw error;
 
@@ -351,20 +350,19 @@ const isCurrentMonth = (date: Date): boolean => {
         const txtColor = existingCell?.textColor || getTextColorForBackground(bgColor);
         
         const updateData: any = {
-  project_id: editingCell.projectId,
-  date: editingCell.date,
-  content: editValue,
-  background_color: bgColor,
-  text_color: txtColor,
-  user_id: user.id,
-  view_type: viewType,
-};
+          project_id: editingCell.projectId,
+          date: editingCell.date,
+          content: editValue,
+          background_color: bgColor,
+          text_color: txtColor,
+          user_id: user.id,
+        };
 
-const { error } = await supabase
-  .from('project_schedules')
-  .upsert(updateData, {
-    onConflict: 'project_id,date,view_type'
-  });
+        const { error } = await supabase
+          .from('project_schedules')
+          .upsert(updateData, {
+            onConflict: 'project_id,date'
+          });
 
         if (error) throw error;
         
@@ -546,20 +544,19 @@ const { error } = await supabase
           const sourceData = cellsData[0];
           
           const updateData: any = {
-  project_id: targetProjectId,
-  date: targetDateStr,
-  content: sourceData.content,
-  background_color: sourceData.backgroundColor,
-  text_color: sourceData.textColor,
-  user_id: user.id,
-  view_type: viewType,
-};
+            project_id: targetProjectId,
+            date: targetDateStr,
+            content: sourceData.content,
+            background_color: sourceData.backgroundColor,
+            text_color: sourceData.textColor,
+            user_id: user.id,
+          };
 
-await supabase
-  .from('project_schedules')
-  .upsert(updateData, {
-    onConflict: 'project_id,date,view_type'
-  });
+          await supabase
+            .from('project_schedules')
+            .upsert(updateData, {
+              onConflict: 'project_id,date'
+            });
         }
       } else if (copiedCellData) {
         for (const targetKey of targetCells) {
@@ -573,20 +570,19 @@ await supabase
           }, ['', '']);
           
           const updateData: any = {
-  project_id: targetProjectId,
-  date: targetDateStr,
-  content: copiedCellData.content,
-  background_color: copiedCellData.backgroundColor,
-  text_color: copiedCellData.textColor,
-  user_id: user.id,
-  view_type: viewType,
-};
+            project_id: targetProjectId,
+            date: targetDateStr,
+            content: copiedCellData.content,
+            background_color: copiedCellData.backgroundColor,
+            text_color: copiedCellData.textColor,
+            user_id: user.id,
+          };
 
-await supabase
-  .from('project_schedules')
-  .upsert(updateData, {
-    onConflict: 'project_id,date,view_type'
-  });
+          await supabase
+            .from('project_schedules')
+            .upsert(updateData, {
+              onConflict: 'project_id,date'
+            });
         }
       } else {
         const content = e.clipboardData.getData('text');
@@ -604,20 +600,17 @@ await supabase
           }, ['', '']);
           
           const updateData: any = {
-  project_id: targetProjectId,
-  date: targetDateStr,
-  content: content,
-  background_color: backgroundColor,
-  text_color: textColor,
-  user_id: user.id,
-  view_type: viewType,
-};
+            project_id: targetProjectId,
+            date: targetDateStr,
+            content: content,
+            background_color: backgroundColor,
+            text_color: textColor,
+            user_id: user.id,
+          };
 
-await supabase
-  .from('project_schedules')
-  .upsert(updateData, {
-    onConflict: 'project_id,date,view_type'
-  });
+          await supabase
+            .from('project_schedules')
+            .upsert(updateData);
         }
       }
 
@@ -646,22 +639,21 @@ await supabase
         const existingCell = schedules.get(cellKey);
         
         const updateData: any = {
-  project_id: targetProjectId,
-  date: targetDateStr,
-  content: existingCell?.content || '',
-  background_color: color,
-  text_color: textColor,
-  user_id: user.id,
-  view_type: viewType,
-};
+          project_id: targetProjectId,
+          date: targetDateStr,
+          content: existingCell?.content || '',
+          background_color: color,
+          text_color: textColor,
+          user_id: user.id,
+        };
 
-const { error } = await supabase
-  .from('project_schedules')
-  .upsert(updateData, {
-    onConflict: 'project_id,date,view_type'
-  });
+        const { error } = await supabase
+          .from('project_schedules')
+          .upsert(updateData, {
+            onConflict: 'project_id,date'
+          });
 
-if (error) {
+        if (error) {
           console.error('Supabaseエラー詳細:', error);
           throw error;
         }
