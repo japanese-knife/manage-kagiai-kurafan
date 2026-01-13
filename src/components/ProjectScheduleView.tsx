@@ -75,11 +75,14 @@ export default function ProjectScheduleView({ user, activeBrandTab, viewType, on
             
             
             // 固定列の幅を考慮
+// 固定列の幅を考慮
 const isMobile = window.innerWidth < 640;
 const isBrandBase = activeBrandTab === 'BRAND-BASE';
 const fixedColumnsWidth = isMobile 
   ? 120 
-  : (isBrandBase ? 180 : 260); // BRAND-BASEの場合: 120px(名前) + 60px(リンク) = 180px
+  : (isBrandBase 
+      ? (viewType === 'monthly' ? 140 : 180) // monthly: 80px(名前) + 60px(リンク) = 140px
+      : 260);
             
             // todayHeaderの実際の位置を取得
             const headerLeft = todayHeaderElement.offsetLeft;
