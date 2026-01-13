@@ -215,12 +215,13 @@ export default function ProjectScheduleView({ user, activeBrandTab, viewType, on
 };
 
   const loadSchedules = async () => {
-    try {
-      const projectIds = projects.map(p => p.id);
-      const { data, error } = await supabase
-        .from('project_schedules')
-        .select('*')
-        .in('project_id', projectIds);
+  try {
+    const projectIds = projects.map(p => p.id);
+    const { data, error } = await supabase
+      .from('project_schedules')
+      .select('*')
+      .in('project_id', projectIds)
+      .eq('view_type', viewType);
 
       if (error) throw error;
 
