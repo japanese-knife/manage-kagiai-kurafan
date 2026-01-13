@@ -1284,6 +1284,21 @@ const [editBrandFeatures, setEditBrandFeatures] = useState('');
           </button>
         </div>
 
+          </div>
+
+        {/* 検索バー */}
+        <div className="mb-6">
+          <input
+            type="text"
+            value={brandSearchQuery}
+            onChange={(e) => setBrandSearchQuery(e.target.value)}
+            placeholder="ブランド名、テーマ、特徴で検索..."
+            className="w-full px-4 py-3 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-100 focus:border-primary-500 bg-white text-sm"
+          />
+        </div>
+
+          {showNewBrandForm && (
+        
           {showNewBrandForm && (
             <div className="bg-white rounded-lg border border-neutral-200 p-6 mb-6">
               <h3 className="text-base font-semibold text-neutral-900 mb-4">新規ブランド作成</h3>
