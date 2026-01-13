@@ -945,8 +945,31 @@ const [editBrandFeatures, setEditBrandFeatures] = useState('');
             </div>
           )}
 
-         
-          <div className="text-center py-16 px-4">
+          {/* 検索バー */}
+          <div className="mb-6">
+            <input
+              type="text"
+              value={creatorSearchQuery}
+              onChange={(e) => setCreatorSearchQuery(e.target.value)}
+              placeholder="クリエイター名や説明で検索..."
+              className="w-full px-4 py-3 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-100 focus:border-primary-500 bg-white text-sm"
+            />
+          </div>
+
+          {filterCreators(creators).length === 0 ? (
+            <div className="text-center py-16 px-4">
+              <div className="w-16 h-16 bg-neutral-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                <FolderKanban className="w-8 h-8 text-neutral-400" />
+              </div>
+              <h2 className="text-base font-semibold text-neutral-900 mb-2">
+                クリエイターがありません
+              </h2>
+              <p className="text-sm text-neutral-500 mb-6">
+                新しいクリエイターを作成して始めましょう
+              </p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5 md:gap-6">
               <div className="w-16 h-16 bg-neutral-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
                 <FolderKanban className="w-8 h-8 text-neutral-400" />
               </div>
