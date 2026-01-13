@@ -1593,7 +1593,7 @@ const [editBrandFeatures, setEditBrandFeatures] = useState('');
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-neutral-200">
-                    {brands
+                    {filterBrands(brands)
                       .filter(brand => {
                         const linkedBrandIds = creatorBrands.get(selectedCreatorId!) || [];
                         return linkedBrandIds.includes(brand.id);
