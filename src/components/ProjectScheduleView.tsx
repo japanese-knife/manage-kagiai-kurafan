@@ -666,8 +666,10 @@ const isCurrentMonth = (date: Date): boolean => {
           user_id: user.id,
         };
 
+        const tableName = viewType === 'monthly' ? 'annual_schedules' : 'project_schedules';
+        
         const { error } = await supabase
-          .from('project_schedules')
+          .from(tableName)
           .upsert(updateData, {
             onConflict: 'project_id,date'
           });
