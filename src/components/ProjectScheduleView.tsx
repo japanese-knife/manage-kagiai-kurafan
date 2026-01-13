@@ -37,10 +37,6 @@ export default function ProjectScheduleView({ user, activeBrandTab, viewType, on
   const inputRef = useRef<HTMLInputElement>(null);
   const hasScrolledToToday = useRef(false);
   const [columnWidth, setColumnWidth] = useState<'narrow' | 'normal' | 'wide'>('normal');
-
-useEffect(() => {
-  // 日次ビューで初回読み込み時のみ当日の列を中央に配置
-  if (viewType === 'daily' && dates.length > 0 && !hasScrolledToToday.current) {
   
   useEffect(() => {
   // 日次ビューで初回読み込み時のみ当日の列を中央に配置
