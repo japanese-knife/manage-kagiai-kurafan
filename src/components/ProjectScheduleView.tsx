@@ -641,19 +641,21 @@ const { error } = await supabase
         const existingCell = schedules.get(cellKey);
         
         const updateData: any = {
-          project_id: targetProjectId,
-          date: targetDateStr,
-          content: existingCell?.content || '',
-          background_color: color,
-          text_color: textColor,
-          user_id: user.id,
-        };
+          const updateData: any = {
+  project_id: targetProjectId,
+  date: targetDateStr,
+  content: sourceData.content,
+  background_color: sourceData.backgroundColor,
+  text_color: sourceData.textColor,
+  user_id: user.id,
+  view_type: viewType,
+};
 
-        const { error } = await supabase
-          .from('project_schedules')
-          .upsert(updateData, {
-            onConflict: 'project_id,date'
-          });
+await supabase
+  .from('project_schedules')
+  .upsert(updateData, {
+    onConflict: 'project_id,date,view_type'
+  });
 
         if (error) {
           console.error('Supabaseエラー詳細:', error);
