@@ -884,9 +884,25 @@ export default function ProjectScheduleView({ user, activeBrandTab, viewType, on
                 onPaste={(e) => handlePaste(e, project.id, date)}
                 onKeyDown={(e) => handleKeyDown(e, project.id, dateIndex)}
                 onContextMenu={(e) => {
-                  e.preventDefault();
-                  setShowColorPicker({ projectId: project.id, date: dateStr });
-                }}
+  e.preventDefault();
+  setShowColorPicker({ projectId: project.id, date: dateStr });
+}}
+onTouchStart={(e) => {
+  // 長押しで色選択（SP対応）
+  const touchTimer = setTimeout(() => {
+    e.preventDefault();
+    setShowColorPicker({ projectId: project.id, date: dateStr });
+  }, 500);
+  
+  const clearTimer = () => {
+    clearTimeout(touchTimer);
+    document.removeEventListener('touchend', clearTimer);
+    document.removeEventListener('touchmove', clearTimer);
+  };
+  
+  document.addEventListener('touchend', clearTimer);
+  document.addEventListener('touchmove', clearTimer);
+}}
                 tabIndex={0}
               >
                 <div 
