@@ -283,17 +283,28 @@ const isCurrentMonth = (date: Date): boolean => {
     const cellKey = `${projectId}-${dateStr}`;
     
     if (e?.shiftKey && selectedCell) {
+      // Shift + クリックで範囲選択
       handleRangeSelection(projectId, dateStr);
     } else if (e?.ctrlKey || e?.metaKey) {
+      // Ctrl/Cmd + クリックで複数選択（トグル）
       const newSelectedCells = new Set(selectedCells);
       if (newSelectedCells.has(cellKey)) {
         newSelectedCells.delete(cellKey);
+        // 削除後に残っているセルがあれば、最後のセルを選択状態に
+        if (newSelectedCells.size > 0) {
+          const lastCell = Array.from(newSelectedCells)[newSelectedCells.size - 1];
+          const [pid, ...dateParts] = lastCell.split('-');
+          setSelectedCell({ projectId: pid, date: dateParts.join('-') });
+        } else {
+          setSelectedCell(null);
+        }
       } else {
         newSelectedCells.add(cellKey);
+        setSelectedCell({ projectId, date: dateStr });
       }
       setSelectedCells(newSelectedCells);
-      setSelectedCell({ projectId, date: dateStr });
     } else {
+      // 通常のクリック
       setSelectedCell({ projectId, date: dateStr });
       setSelectedCells(new Set([cellKey]));
     }
