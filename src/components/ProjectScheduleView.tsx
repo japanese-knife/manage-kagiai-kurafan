@@ -873,10 +873,14 @@ const fixedColumnsWidth = isMobile
   )}
 </td>
 
-<td className={`sticky ${
-  activeBrandTab === 'BRAND-BASE'
-    ? 'left-[80px] sm:left-[120px]'
-    : 'left-[80px] sm:left-[200px]'
+<td className={`${
+  viewType === 'monthly' && activeBrandTab === 'BRAND-BASE'
+    ? 'relative'
+    : `sticky ${
+        activeBrandTab === 'BRAND-BASE'
+          ? 'left-[80px] sm:left-[120px]'
+          : 'left-[80px] sm:left-[200px]'
+      }`
 } z-20 bg-white border border-neutral-200 px-1 sm:px-2 py-2 text-center shadow-sm w-[40px] sm:w-[60px]`}>
   <button
     onClick={() => onSelectProject(project)}
