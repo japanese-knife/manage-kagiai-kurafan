@@ -425,6 +425,16 @@ export default function KaigaiKurafanTab({
     }
   };
 
+  const filterProjects = (projectsList: Project[]): Project[] => {
+    if (!searchQuery.trim()) return projectsList;
+    
+    const query = searchQuery.toLowerCase();
+    return projectsList.filter(project => 
+      project.name.toLowerCase().includes(query) ||
+      (project.description && project.description.toLowerCase().includes(query))
+    );
+  };
+  
   const getProjectsByStatus = (status: ProjectStatus): Project[] => {
     return projects.filter((p) => p.status === status && p.brand_type === '海外クラファン.com');
   };
