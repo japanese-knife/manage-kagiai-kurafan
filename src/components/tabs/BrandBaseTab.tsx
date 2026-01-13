@@ -1065,7 +1065,7 @@ const [editBrandFeatures, setEditBrandFeatures] = useState('');
       </>
     )}
 
-    {/* プロジェクト一覧の表示 */
+    {/* プロジェクト一覧の表示 */}
     {creatorsDisplayMode === 'projects' && (
       <>
         <div className="flex items-center justify-between mb-6">
