@@ -647,20 +647,20 @@ await supabase
         const updateData: any = {
   project_id: targetProjectId,
   date: targetDateStr,
-  content: sourceData.content,
-  background_color: sourceData.backgroundColor,
-  text_color: sourceData.textColor,
+  content: existingCell?.content || '',
+  background_color: color,
+  text_color: textColor,
   user_id: user.id,
   view_type: viewType,
 };
 
-await supabase
+const { error } = await supabase
   .from('project_schedules')
   .upsert(updateData, {
     onConflict: 'project_id,date,view_type'
   });
 
-        if (error) {
+if (error) {
           console.error('Supabaseエラー詳細:', error);
           throw error;
         }
