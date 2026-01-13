@@ -545,19 +545,20 @@ const isCurrentMonth = (date: Date): boolean => {
           const sourceData = cellsData[0];
           
           const updateData: any = {
-            project_id: targetProjectId,
-            date: targetDateStr,
-            content: sourceData.content,
-            background_color: sourceData.backgroundColor,
-            text_color: sourceData.textColor,
-            user_id: user.id,
-          };
+  project_id: editingCell.projectId,
+  date: editingCell.date,
+  content: editValue,
+  background_color: bgColor,
+  text_color: txtColor,
+  user_id: user.id,
+  view_type: viewType,
+};
 
-          await supabase
-            .from('project_schedules')
-            .upsert(updateData, {
-              onConflict: 'project_id,date'
-            });
+const { error } = await supabase
+  .from('project_schedules')
+  .upsert(updateData, {
+    onConflict: 'project_id,date,view_type'
+  });
         }
       } else if (copiedCellData) {
         for (const targetKey of targetCells) {
