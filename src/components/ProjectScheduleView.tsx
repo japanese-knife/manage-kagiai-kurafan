@@ -770,8 +770,7 @@ export default function ProjectScheduleView({ user, activeBrandTab, viewType, on
         : 'bg-neutral-50'
   }`}
 >
-        >
-            {viewType === 'monthly' ? (
+  {viewType === 'monthly' ? (
               <>
                 <div className="text-xs text-neutral-600">
                   {date.getFullYear()}年
