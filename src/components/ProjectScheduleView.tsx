@@ -533,7 +533,9 @@ const isCurrentMonth = (date: Date): boolean => {
     const targetCells = selectedCells.size > 0 ? Array.from(selectedCells) : [`${projectId}-${date.toISOString().split('T')[0]}`];
 
     try {
-      if (copiedCellData && copiedCellData.isMultiple && copiedCellData.cellsData) {
+      const tableName = viewType === 'monthly' ? 'annual_schedules' : 'project_schedules';
+        
+        if (copiedCellData && copiedCellData.isMultiple && copiedCellData.cellsData) {
         const cellsData = copiedCellData.cellsData;
         
         for (const targetKey of targetCells) {
@@ -547,8 +549,6 @@ const isCurrentMonth = (date: Date): boolean => {
           }, ['', '']);
           
           const sourceData = cellsData[0];
-          
-          const tableName = viewType === 'monthly' ? 'annual_schedules' : 'project_schedules';
           
           const updateData: any = {
             project_id: targetProjectId,
