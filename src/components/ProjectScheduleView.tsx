@@ -759,7 +759,9 @@ const fixedColumnsWidth = isMobile
     <tr>
       <th className={`sticky left-0 z-40 bg-neutral-50 border border-neutral-200 px-2 sm:px-4 py-2 text-left font-semibold text-neutral-900 ${
   brandName === 'BRAND-BASE' || activeBrandTab === 'BRAND-BASE' 
-    ? 'min-w-[80px] sm:min-w-[120px]' 
+    ? viewType === 'monthly' 
+      ? 'w-auto' 
+      : 'min-w-[80px] sm:min-w-[120px]'
     : 'min-w-[80px] sm:min-w-[200px]'
 }`}>
   {headerLabel}
