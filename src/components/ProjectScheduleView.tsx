@@ -799,7 +799,7 @@ const isCurrentMonth = (date: Date): boolean => {
   {viewType === 'monthly' ? (
     <>
       <div className={`text-xs ${isCurrentMonth(date) ? 'font-bold text-yellow-700' : 'text-neutral-600'}`}>
-        {date.getFullYear()}年
+        {date.getFullYear()}
       </div>
       <div className={`text-xs ${isCurrentMonth(date) ? 'font-bold text-yellow-700' : 'text-neutral-600'}`}>
         {date.getMonth() + 1}月
