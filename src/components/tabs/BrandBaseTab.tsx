@@ -344,7 +344,7 @@ const [editBrandFeatures, setEditBrandFeatures] = useState('');
   }
 };
 
-  const filterProjects = (projectsList: Project[]): Project[] => {
+  const brandbaseProjects = filterProjects(projects.filter(p => p.brand_type === 'BRAND-BASE'));
     if (!searchQuery.trim()) return projectsList;
     
     const query = searchQuery.toLowerCase();
