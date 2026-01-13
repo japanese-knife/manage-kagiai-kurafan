@@ -48,7 +48,10 @@ export default function ProjectScheduleView({ user, activeBrandTab, viewType, on
         const tableContainers = document.querySelectorAll('.overflow-x-auto');
         
         tableContainers.forEach((tableContainer) => {
-          const allHeaders = tableContainer.querySelectorAll('thead th');
+          const table = tableContainer.querySelector('table');
+          if (!table) return;
+          
+          const allHeaders = table.querySelectorAll('thead th');
           // 固定列が2つあるため、+2でインデックスを調整
           const todayHeader = allHeaders[todayIndex + 2];
           
@@ -56,9 +59,10 @@ export default function ProjectScheduleView({ user, activeBrandTab, viewType, on
             const containerWidth = tableContainer.clientWidth;
             const todayHeaderElement = todayHeader as HTMLElement;
             
-            // 固定列の幅を考慮（SP: 120px、PC: 260px）
-            const isMobile = window.innerWidth < 640;
-            const fixedColumnsWidth = isMobile ? 120 : 260;
+            // 固定列の実際の幅を取得
+            const firstFixedColumn = allHeaders[0] as HTMLElement;
+            const secondFixedColumn = allHeaders[1] as HTMLElement;
+            const fixedColumnsWidth = firstFixedColumn.offsetWidth + secondFixedColumn.offsetWidth;
             
             // todayHeaderの実際の位置を取得
             const headerLeft = todayHeaderElement.offsetLeft;
@@ -72,10 +76,10 @@ export default function ProjectScheduleView({ user, activeBrandTab, viewType, on
             tableContainer.scrollLeft = Math.max(0, scrollLeft);
           }
         });
-      }, 150);
+      }, 200);
     }
   }
-}, [dates.length, viewType]);
+}, [dates.length, viewType, activeBrandTab]);
 
   useEffect(() => {
     hasScrolledToToday.current = false;
