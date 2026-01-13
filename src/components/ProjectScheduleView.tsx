@@ -662,61 +662,54 @@ const isCurrentMonth = (date: Date): boolean => {
   const handlePaste = async (e: React.ClipboardEvent, projectId: string, date: Date) => {
     e.preventDefault();
     
-    const targetCells = selectedCells.size > 0 ? Array.from(selectedCells) : [`${projectId}-${date.toISOString().split('T')[0]}`];
+    const dateStr = date.toISOString().split('T')[0];
+    const tableName = viewType === 'monthly' ? 'annual_schedules' : 'project_schedules';
 
     try {
-      const tableName = viewType === 'monthly' ? 'annual_schedules' : 'project_schedules';
+      if (copiedCellData && copiedCellData.structure) {
+        // 構造化されたデータのペースト（矩形領域）
+        const sourceProjectIds = Array.from(copiedCellData.structure.keys());
+        const sourceDates = Array.from(new Set(
+          Array.from(copiedCellData.structure.values())
+            .flatMap(dateMap => Array.from(dateMap.keys()))
+        )).sort();
         
-        if (copiedCellData && copiedCellData.isMultiple && copiedCellData.cellsData) {
-        const cellsData = copiedCellData.cellsData;
+        const startProjectIndex = projects.findIndex(p => p.id === projectId);
+        const startDateIndex = dates.findIndex(d => d.toISOString().split('T')[0] === dateStr);
         
-        for (const targetKey of targetCells) {
-          const [targetProjectId, targetDateStr] = targetKey.split('-').reduce((acc, part, idx, arr) => {
-            if (idx < arr.length - 3) {
-              acc[0] = acc[0] ? `${acc[0]}-${part}` : part;
-            } else {
-              acc[1] = acc[1] ? `${acc[1]}-${part}` : part;
+        if (startProjectIndex === -1 || startDateIndex === -1) return;
+        
+        // コピー元の構造を維持してペースト
+        const updates: any[] = [];
+        sourceProjectIds.forEach((sourceProjectId, pOffset) => {
+          const targetProjectIndex = startProjectIndex + pOffset;
+          if (targetProjectIndex >= projects.length) return;
+          
+          const targetProjectId = projects[targetProjectIndex].id;
+          const sourceDateMap = copiedCellData.structure.get(sourceProjectId);
+          
+          sourceDates.forEach((sourceDate, dOffset) => {
+            const targetDateIndex = startDateIndex + dOffset;
+            if (targetDateIndex >= dates.length) return;
+            
+            const targetDate = dates[targetDateIndex].toISOString().split('T')[0];
+            const sourceCell = sourceDateMap?.get(sourceDate);
+            
+            if (sourceCell) {
+              updates.push({
+                project_id: targetProjectId,
+                date: targetDate,
+                content: sourceCell.content,
+                background_color: sourceCell.backgroundColor,
+                text_color: sourceCell.textColor,
+                user_id: user.id,
+              });
             }
-            return acc;
-          }, ['', '']);
-          
-          const sourceData = cellsData[0];
-          
-          const updateData: any = {
-            project_id: targetProjectId,
-            date: targetDateStr,
-            content: sourceData.content,
-            background_color: sourceData.backgroundColor,
-            text_color: sourceData.textColor,
-            user_id: user.id,
-          };
-
-          await supabase
-            .from(tableName)
-            .upsert(updateData, {
-              onConflict: 'project_id,date'
-            });
-        }
-      } else if (copiedCellData) {
-        for (const targetKey of targetCells) {
-          const [targetProjectId, targetDateStr] = targetKey.split('-').reduce((acc, part, idx, arr) => {
-            if (idx < arr.length - 3) {
-              acc[0] = acc[0] ? `${acc[0]}-${part}` : part;
-            } else {
-              acc[1] = acc[1] ? `${acc[1]}-${part}` : part;
-            }
-            return acc;
-          }, ['', '']);
-          
-          const updateData: any = {
-            project_id: targetProjectId,
-            date: targetDateStr,
-            content: copiedCellData.content,
-            background_color: copiedCellData.backgroundColor,
-            text_color: copiedCellData.textColor,
-            user_id: user.id,
-          };
-
+          });
+        });
+        
+        // バッチ更新
+        for (const updateData of updates) {
           await supabase
             .from(tableName)
             .upsert(updateData, {
@@ -724,38 +717,66 @@ const isCurrentMonth = (date: Date): boolean => {
             });
         }
       } else {
-        const content = e.clipboardData.getData('text');
-        const backgroundColor = '#ffffff';
-        const textColor = getTextColorForBackground(backgroundColor);
+        // プレーンテキストのペースト
+        const clipboardText = e.clipboardData.getData('text');
+        const lines = clipboardText.split('\n').filter(line => line.trim());
         
-        for (const targetKey of targetCells) {
-          const [targetProjectId, targetDateStr] = targetKey.split('-').reduce((acc, part, idx, arr) => {
-            if (idx < arr.length - 3) {
-              acc[0] = acc[0] ? `${acc[0]}-${part}` : part;
-            } else {
-              acc[1] = acc[1] ? `${acc[1]}-${part}` : part;
-            }
-            return acc;
-          }, ['', '']);
+        const startProjectIndex = projects.findIndex(p => p.id === projectId);
+        const startDateIndex = dates.findIndex(d => d.toISOString().split('T')[0] === dateStr);
+        
+        if (startProjectIndex === -1 || startDateIndex === -1) return;
+        
+        const updates: any[] = [];
+        lines.forEach((line, rowOffset) => {
+          const cells = line.split('\t');
+          const targetProjectIndex = startProjectIndex + rowOffset;
           
-          const updateData: any = {
-            project_id: targetProjectId,
-            date: targetDateStr,
-            content: content,
-            background_color: backgroundColor,
-            text_color: textColor,
-            user_id: user.id,
-          };
-
+          if (targetProjectIndex >= projects.length) return;
+          
+          const targetProjectId = projects[targetProjectIndex].id;
+          
+          cells.forEach((content, colOffset) => {
+            const targetDateIndex = startDateIndex + colOffset;
+            if (targetDateIndex >= dates.length) return;
+            
+            const targetDate = dates[targetDateIndex].toISOString().split('T')[0];
+            const backgroundColor = '#ffffff';
+            const textColor = getTextColorForBackground(backgroundColor);
+            
+            updates.push({
+              project_id: targetProjectId,
+              date: targetDate,
+              content: content.trim(),
+              background_color: backgroundColor,
+              text_color: textColor,
+              user_id: user.id,
+            });
+          });
+        });
+        
+        // バッチ更新
+        for (const updateData of updates) {
           await supabase
             .from(tableName)
-            .upsert(updateData);
+            .upsert(updateData, {
+              onConflict: 'project_id,date'
+            });
         }
       }
 
       await loadSchedules();
+      
+      // 視覚的フィードバック
+      const targetCell = document.querySelector(`[data-cell-id="${projectId}-${dateStr}"]`);
+      if (targetCell) {
+        targetCell.classList.add('bg-green-100');
+        setTimeout(() => {
+          targetCell.classList.remove('bg-green-100');
+        }, 300);
+      }
     } catch (error) {
       console.error('ペーストエラー:', error);
+      alert('ペーストに失敗しました');
     }
   };
 
