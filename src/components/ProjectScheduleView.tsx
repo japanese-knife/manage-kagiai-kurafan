@@ -122,11 +122,11 @@ export default function ProjectScheduleView({ user, activeBrandTab, viewType, on
   const getColumnWidth = () => {
   switch (columnWidth) {
     case 'narrow':
-      return 'min-w-[60px]';
+      return 'min-w-[80px]'; // 旧標準 = 最も範囲が狭い
     case 'normal':
-      return 'min-w-[80px]';
+      return 'min-w-[120px]'; // 旧広い
     case 'wide':
-      return 'min-w-[120px]';
+      return 'min-w-[180px]'; // さらに広い範囲
     default:
       return 'min-w-[80px]';
   }
