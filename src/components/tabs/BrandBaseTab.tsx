@@ -830,10 +830,11 @@ const [editBrandFeatures, setEditBrandFeatures] = useState('');
   };
 
   const getProjectsByStatus = (status: ProjectStatus): Project[] => {
-    return projects.filter((p) => p.status === status && p.brand_type === 'BRAND-BASE');
+    const brandbaseProjects = projects.filter((p) => p.brand_type === 'BRAND-BASE');
+    return filterProjects(brandbaseProjects).filter((p) => p.status === status);
   };
 
-  const brandbaseProjects = projects.filter(p => p.brand_type === 'BRAND-BASE');
+  const brandbaseProjects = filterProjects(projects.filter(p => p.brand_type === 'BRAND-BASE'));
 
   return (
     <div className="mt-8">
