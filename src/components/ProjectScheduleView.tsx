@@ -122,13 +122,13 @@ export default function ProjectScheduleView({ user, activeBrandTab, viewType, on
   const getColumnWidth = () => {
   switch (columnWidth) {
     case 'narrow':
-      return 'min-w-[80px]'; // 旧標準 = 最も範囲が狭い
+      return 'min-w-[40px]';
     case 'normal':
-      return 'min-w-[120px]'; // 旧広い
+      return 'min-w-[60px]';
     case 'wide':
-      return 'min-w-[180px]'; // さらに広い範囲
-    default:
       return 'min-w-[80px]';
+    default:
+      return 'min-w-[60px]';
   }
 };
   
