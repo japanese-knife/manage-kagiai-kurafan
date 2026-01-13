@@ -537,7 +537,7 @@ const isCurrentMonth = (date: Date): boolean => {
     try {
       const tableName = viewType === 'monthly' ? 'annual_schedules' : 'project_schedules';
         
-        if (copiedCellData && copiedCellData.isMultiple && copiedCellData.cellsData) {
+      if (copiedCellData && copiedCellData.isMultiple && copiedCellData.cellsData) {
         const cellsData = copiedCellData.cellsData;
         
         for (const targetKey of targetCells) {
