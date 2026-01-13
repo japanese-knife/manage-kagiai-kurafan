@@ -572,19 +572,20 @@ const { error } = await supabase
           }, ['', '']);
           
           const updateData: any = {
-            project_id: targetProjectId,
-            date: targetDateStr,
-            content: copiedCellData.content,
-            background_color: copiedCellData.backgroundColor,
-            text_color: copiedCellData.textColor,
-            user_id: user.id,
-          };
+  project_id: targetProjectId,
+  date: targetDateStr,
+  content: copiedCellData.content,
+  background_color: copiedCellData.backgroundColor,
+  text_color: copiedCellData.textColor,
+  user_id: user.id,
+  view_type: viewType,
+};
 
-          await supabase
-            .from('project_schedules')
-            .upsert(updateData, {
-              onConflict: 'project_id,date'
-            });
+await supabase
+  .from('project_schedules')
+  .upsert(updateData, {
+    onConflict: 'project_id,date,view_type'
+  });
         }
       } else {
         const content = e.clipboardData.getData('text');
