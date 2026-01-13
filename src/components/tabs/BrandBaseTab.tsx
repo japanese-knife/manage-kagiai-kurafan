@@ -344,6 +344,37 @@ const [editBrandFeatures, setEditBrandFeatures] = useState('');
   }
 };
 
+  const filterProjects = (projectsList: Project[]): Project[] => {
+    if (!searchQuery.trim()) return projectsList;
+    
+    const query = searchQuery.toLowerCase();
+    return projectsList.filter(project => 
+      project.name.toLowerCase().includes(query) ||
+      (project.description && project.description.toLowerCase().includes(query))
+    );
+  };
+
+  const filterCreators = (creatorsList: Creator[]): Creator[] => {
+    if (!creatorSearchQuery.trim()) return creatorsList;
+    
+    const query = creatorSearchQuery.toLowerCase();
+    return creatorsList.filter(creator => 
+      creator.name.toLowerCase().includes(query) ||
+      (creator.description && creator.description.toLowerCase().includes(query))
+    );
+  };
+
+  const filterBrands = (brandsList: Brand[]): Brand[] => {
+    if (!brandSearchQuery.trim()) return brandsList;
+    
+    const query = brandSearchQuery.toLowerCase();
+    return brandsList.filter(brand => 
+      brand.name.toLowerCase().includes(query) ||
+      (brand.theme && brand.theme.toLowerCase().includes(query)) ||
+      (brand.features && brand.features.toLowerCase().includes(query))
+    );
+  };
+  
   const handleDeleteBrand = async (brandId: string) => {
     if (!confirm('このブランドを削除してもよろしいですか？プロジェクトとの紐付けも削除されます。')) {
       return;
