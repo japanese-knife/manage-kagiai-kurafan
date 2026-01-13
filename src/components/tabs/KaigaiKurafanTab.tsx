@@ -436,7 +436,8 @@ export default function KaigaiKurafanTab({
   };
   
   const getProjectsByStatus = (status: ProjectStatus): Project[] => {
-    return projects.filter((p) => p.status === status && p.brand_type === '海外クラファン.com');
+    const kaigaiProjects = projects.filter((p) => p.brand_type === '海外クラファン.com');
+    return filterProjects(kaigaiProjects).filter((p) => p.status === status);
   };
 
   const kaigaiProjects = filterProjects(projects.filter(p => p.brand_type === '海外クラファン.com'));
