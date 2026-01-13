@@ -88,6 +88,10 @@ const [editBrandFeatures, setEditBrandFeatures] = useState('');
   const [editProjectDescription, setEditProjectDescription] = useState('');
   const [editBrandType, setEditBrandType] = useState<BrandType>('BRAND-BASE');
 
+  const [searchQuery, setSearchQuery] = useState(''); // 追加
+  const [creatorSearchQuery, setCreatorSearchQuery] = useState(''); // 追加
+  const [brandSearchQuery, setBrandSearchQuery] = useState(''); // 追加
+
   useEffect(() => {
     loadProjectStats();
     loadCreators();
