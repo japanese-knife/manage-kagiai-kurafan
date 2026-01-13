@@ -1007,9 +1007,9 @@ export default function ProjectScheduleView({ user, activeBrandTab, viewType, on
       ) : (
         <div className="overflow-x-auto overflow-y-auto max-h-[600px]">
           <table className="w-full border-collapse text-sm">
-            <thead className="sticky top-0 z-20 bg-neutral-50">
-              {renderDateHeaders()}
-            </thead>
+            <thead className="sticky top-0 z-30 bg-neutral-50">
+  {renderDateHeaders()}
+</thead>
             <tbody>
               {renderProjectRows(projects)}
             </tbody>
