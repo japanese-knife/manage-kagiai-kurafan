@@ -900,6 +900,8 @@ const isCurrentMonth = (date: Date): boolean => {
             const cellKey = `${project.id}-${dateStr}`;
             const isSelected = selectedCells.has(cellKey);
             const isPrimarySelected = selectedCell?.projectId === project.id && selectedCell?.date === dateStr;
+            const isSelected = selectedCells.has(cellKey);
+            const isPrimarySelected = selectedCell?.projectId === project.id && selectedCell?.date === dateStr;
             const isEditing = editingCell?.projectId === project.id && editingCell?.date === dateStr;
 
             return (
