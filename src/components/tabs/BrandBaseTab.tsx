@@ -111,12 +111,11 @@ const [editBrandFeatures, setEditBrandFeatures] = useState('');
 };
 
   const loadBrands = async () => {
-    try {
-      const { data: brandsData, error: brandsError } = await supabase
-        .from('brands')
-        .select('*')
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: false });
+  try {
+    const { data: brandsData, error: brandsError } = await supabase
+      .from('brands')
+      .select('*')
+      .order('created_at', { ascending: false });
 
       if (brandsError) throw brandsError;
 
