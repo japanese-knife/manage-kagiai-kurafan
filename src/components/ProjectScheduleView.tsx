@@ -108,7 +108,9 @@ export default function ProjectScheduleView({ user, activeBrandTab, viewType, on
     if (viewType === 'monthly') {
       const today = new Date();
       const datesArray: Date[] = [];
-      for (let i = 0; i < 12; i++) {
+      // BRAND-BASEの場合は年単位（1年＝12ヶ月）、それ以外は月単位（12ヶ月）
+      const monthCount = activeBrandTab === 'BRAND-BASE' ? 12 : 12;
+      for (let i = 0; i < monthCount; i++) {
         const date = new Date(today.getFullYear(), today.getMonth() + i, 1);
         datesArray.push(date);
       }
