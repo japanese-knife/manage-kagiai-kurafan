@@ -129,12 +129,10 @@ export default function ProjectScheduleView({ user, activeBrandTab, viewType, on
   switch (columnWidth) {
     case 'narrow':
       return 'min-w-[24px] w-[24px]';
-    case 'normal':
-      return 'min-w-[40px] w-[40px]';
     case 'wide':
       return 'min-w-[80px] w-[80px]';
     default:
-      return 'min-w-[40px] w-[40px]';
+      return 'min-w-[24px] w-[24px]';
   }
 };
   
