@@ -165,7 +165,7 @@ const [editBrandFeatures, setEditBrandFeatures] = useState('');
 
   const loadProjectStats = async () => {
     const statsMap = new Map<string, ProjectStats>();
-    const brandbaseProjects = projects.filter(p => p.brand_type === 'BRAND-BASE');
+    const brandbaseProjects = filterProjects(projects.filter(p => p.brand_type === 'BRAND-BASE'));
     
     for (const project of brandbaseProjects) {
       const { data: tasksData } = await supabase
@@ -344,7 +344,7 @@ const [editBrandFeatures, setEditBrandFeatures] = useState('');
   }
 };
 
-  const brandbaseProjects = filterProjects(projects.filter(p => p.brand_type === 'BRAND-BASE'));
+  const filterProjects = (projectsList: Project[]): Project[] => {
     if (!searchQuery.trim()) return projectsList;
     
     const query = searchQuery.toLowerCase();
