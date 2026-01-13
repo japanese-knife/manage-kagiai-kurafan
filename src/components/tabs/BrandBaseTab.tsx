@@ -1298,8 +1298,7 @@ const [editBrandFeatures, setEditBrandFeatures] = useState('');
         </div>
 
           {showNewBrandForm && (
-        
-          {showNewBrandForm && (
+
             <div className="bg-white rounded-lg border border-neutral-200 p-6 mb-6">
               <h3 className="text-base font-semibold text-neutral-900 mb-4">新規ブランド作成</h3>
               <form onSubmit={handleCreateBrand} className="space-y-4">
