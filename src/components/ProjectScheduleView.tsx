@@ -249,14 +249,7 @@ export default function ProjectScheduleView({ user, activeBrandTab, viewType, on
   };
 
   const getCellKey = (projectId: string, date: Date): string => {
-    const dateStr = date.toISOString().split('T')[0];
-    // viewTypeに応じて異なるキーを生成
-    if (viewType === 'monthly') {
-      // 月次ビューの場合は年月のみ（例: 2026-01）
-      return `${projectId}-${dateStr.slice(0, 7)}`;
-    }
-    // 日次ビューの場合は完全な日付（例: 2026-01-13）
-    return `${projectId}-${dateStr}`;
+    return `${projectId}-${date.toISOString().split('T')[0]}`;
   };
 
   const getTextColorForBackground = (bgColor: string): string => {
