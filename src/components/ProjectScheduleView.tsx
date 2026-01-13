@@ -342,20 +342,16 @@ const isCurrentMonth = (date: Date): boolean => {
 
     const key = `${editingCell.projectId}-${editingCell.date}`;
     const existingCell = schedules.get(key);
+    const tableName = viewType === 'monthly' ? 'annual_schedules' : 'project_schedules';
 
     try {
       if (editValue.trim() === '') {
         if (existingCell) {
-          // データベースからは完全な日付で削除
-          const fullDate = viewType === 'monthly' 
-            ? `${editingCell.date}-01`  // 月次の場合は日付を補完
-            : editingCell.date;
-          
           await supabase
-            .from('project_schedules')
+            .from(tableName)
             .delete()
             .eq('project_id', editingCell.projectId)
-            .eq('date', fullDate);
+            .eq('date', editingCell.date);
           
           const updatedSchedules = new Map(schedules);
           updatedSchedules.delete(key);
@@ -365,14 +361,9 @@ const isCurrentMonth = (date: Date): boolean => {
         const bgColor = existingCell?.backgroundColor || '#ffffff';
         const txtColor = existingCell?.textColor || getTextColorForBackground(bgColor);
         
-        // データベースには完全な日付で保存
-        const fullDate = viewType === 'monthly' 
-          ? `${editingCell.date}-01`  // 月次の場合は日付を補完
-          : editingCell.date;
-        
         const updateData: any = {
           project_id: editingCell.projectId,
-          date: fullDate,
+          date: editingCell.date,
           content: editValue,
           background_color: bgColor,
           text_color: txtColor,
@@ -380,7 +371,7 @@ const isCurrentMonth = (date: Date): boolean => {
         };
 
         const { error } = await supabase
-          .from('project_schedules')
+          .from(tableName)
           .upsert(updateData, {
             onConflict: 'project_id,date'
           });
@@ -390,7 +381,7 @@ const isCurrentMonth = (date: Date): boolean => {
         const updatedSchedules = new Map(schedules);
         updatedSchedules.set(key, {
           projectId: editingCell.projectId,
-          date: fullDate,
+          date: editingCell.date,
           content: editValue,
           backgroundColor: bgColor,
           textColor: txtColor,
