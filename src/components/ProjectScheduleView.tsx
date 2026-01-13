@@ -835,7 +835,7 @@ const isCurrentMonth = (date: Date): boolean => {
           <td className={`sticky left-0 z-20 bg-white border border-neutral-200 px-2 sm:px-4 py-2 text-neutral-900 shadow-sm ${
   activeBrandTab === 'BRAND-BASE' 
     ? viewType === 'monthly'
-      ? 'min-w-[60px] sm:min-w-[80px] max-w-[80px] sm:max-w-[100px] truncate'
+      ? 'min-w-[60px] sm:min-w-[80px] max-w-[80px] sm:max-w-[100px]'
       : 'min-w-[80px] sm:min-w-[120px]'
     : 'min-w-[80px] sm:min-w-[200px]'
 }`}>
@@ -843,37 +843,22 @@ const isCurrentMonth = (date: Date): boolean => {
     <>
       {project.creatorName && (
         <div className="text-xs sm:text-sm font-semibold text-primary-600 mb-1">
-          <span className="hidden sm:inline">{project.creatorName}</span>
-          <span className="sm:hidden">
-            {project.creatorName.length > 6 
-              ? `${project.creatorName.substring(0, 6)}...` 
-              : project.creatorName}
-          </span>
+          {project.creatorName}
         </div>
       )}
       {project.brandName && (
         <div className="text-xs sm:text-sm font-medium text-neutral-900">
-          <span className="hidden sm:inline">{project.brandName}</span>
-          <span className="sm:hidden">
-            {project.brandName.length > 6 
-              ? `${project.brandName.substring(0, 6)}...` 
-              : project.brandName}
-          </span>
+          {project.brandName}
         </div>
       )}
     </>
   ) : (
     <>
       <div className="text-xs sm:text-sm font-medium">
-        <span className="hidden sm:inline">{project.name}</span>
-        <span className="sm:hidden">
-          {project.name.length > 6 
-            ? `${project.name.substring(0, 6)}...` 
-            : project.name}
-        </span>
+        {project.name}
       </div>
       {project.description && (
-        <div className="hidden sm:block text-xs text-neutral-500 mt-1 line-clamp-2">
+        <div className="text-xs text-neutral-500 mt-1 line-clamp-2">
           {project.description}
         </div>
       )}
