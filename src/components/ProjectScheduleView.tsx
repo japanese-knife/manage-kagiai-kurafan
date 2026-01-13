@@ -310,6 +310,41 @@ const isCurrentMonth = (date: Date): boolean => {
     }
   };
 
+  const handleCellMouseDown = (projectId: string, date: Date, e: React.MouseEvent) => {
+    // 編集中やカラーピッカー表示中はドラッグ選択しない
+    if (editingCell || showColorPicker) return;
+    
+    const dateStr = date.toISOString().split('T')[0];
+    
+    if (!e.shiftKey && !e.ctrlKey && !e.metaKey) {
+      // 通常のマウスダウンでドラッグ選択を開始
+      setIsSelecting(true);
+      setSelectionStart({ projectId, date: dateStr });
+      setSelectedCell({ projectId, date: dateStr });
+      setSelectedCells(new Set([`${projectId}-${dateStr}`]));
+    }
+  };
+
+  const handleCellMouseEnter = (projectId: string, date: Date) => {
+    if (!isSelecting || !selectionStart) return;
+    
+    const dateStr = date.toISOString().split('T')[0];
+    handleRangeSelection(projectId, dateStr, selectionStart);
+  };
+
+  const handleMouseUp = () => {
+    setIsSelecting(false);
+    setSelectionStart(null);
+  };
+
+  useEffect(() => {
+    // グローバルなマウスアップイベントを監視
+    document.addEventListener('mouseup', handleMouseUp);
+    return () => {
+      document.removeEventListener('mouseup', handleMouseUp);
+    };
+  }, []);
+  
   const handleRangeSelection = (endProjectId: string, endDate: string) => {
     if (!selectedCell) return;
     
