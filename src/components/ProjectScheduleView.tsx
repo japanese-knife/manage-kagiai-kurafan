@@ -498,51 +498,27 @@ const isCurrentMonth = (date: Date): boolean => {
     if (selectedCells.size === 0) return;
 
     try {
-      // 選択されたセルを行列の形式に整理
-      const cellsByPosition: Map<string, Map<string, any>> = new Map();
-      const selectedArray = Array.from(selectedCells);
-      
-      selectedArray.forEach(key => {
-        const [projectId, ...dateParts] = key.split('-');
-        const dateStr = dateParts.join('-');
-        
-        if (!cellsByPosition.has(projectId)) {
-          cellsByPosition.set(projectId, new Map());
-        }
-        
+      const cellsData = Array.from(selectedCells).map(key => {
         const cell = schedules.get(key);
-        cellsByPosition.get(projectId)!.set(dateStr, {
+        return {
+          key,
           content: cell?.content || '',
           backgroundColor: cell?.backgroundColor || '#ffffff',
           textColor: cell?.textColor || '#000000'
-        });
+        };
       });
       
       setCopiedCellData({
-        cellsByPosition: cellsByPosition,
-        projectIds: Array.from(cellsByPosition.keys()),
-        dateStrs: Array.from(new Set(selectedArray.map(key => {
-          const parts = key.split('-');
-          return parts.slice(-3).join('-');
-        }))).sort()
+        content: cellsData.map(c => c.content).join('\t'),
+        backgroundColor: cellsData[0].backgroundColor,
+        textColor: cellsData[0].textColor,
+        isMultiple: selectedCells.size > 1,
+        cellsData: cellsData
       });
       
-      // クリップボードにテキストとしてコピー
-      const textContent = Array.from(cellsByPosition.values())
-        .map(dateMap => Array.from(dateMap.values()).map(c => c.content).join('\t'))
-        .join('\n');
-      
-      await navigator.clipboard.writeText(textContent);
-      
-      // SP用の視覚的フィードバック
-      const copyButton = document.querySelector('[title="コピー (Ctrl+C)"]');
-      if (copyButton) {
-        copyButton.classList.add('bg-green-100');
-        setTimeout(() => copyButton.classList.remove('bg-green-100'), 300);
-      }
+      await navigator.clipboard.writeText(cellsData.map(c => c.content).join('\t'));
     } catch (error) {
       console.error('コピーエラー:', error);
-      alert('コピーに失敗しました');
     }
   };
 
