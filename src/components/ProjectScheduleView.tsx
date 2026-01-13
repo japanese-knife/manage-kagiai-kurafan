@@ -219,8 +219,10 @@ export default function ProjectScheduleView({ user, activeBrandTab, viewType, on
   const loadSchedules = async () => {
     try {
       const projectIds = projects.map(p => p.id);
+      // viewTypeに応じて異なるテーブルから取得
+      const tableName = viewType === 'monthly' ? 'annual_schedules' : 'project_schedules';
       const { data, error } = await supabase
-        .from('project_schedules')
+        .from(tableName)
         .select('*')
         .in('project_id', projectIds);
 
@@ -228,14 +230,7 @@ export default function ProjectScheduleView({ user, activeBrandTab, viewType, on
 
       const scheduleMap = new Map<string, ScheduleCell>();
       (data || []).forEach((schedule) => {
-        let key: string;
-        if (viewType === 'monthly') {
-          // 月次ビューの場合は年月のみでマッチング（例: 2026-01）
-          key = `${schedule.project_id}-${schedule.date.slice(0, 7)}`;
-        } else {
-          // 日次ビューの場合は完全な日付でマッチング（例: 2026-01-13）
-          key = `${schedule.project_id}-${schedule.date}`;
-        }
+        const key = `${schedule.project_id}-${schedule.date}`;
         const bgColor = schedule.background_color || '#ffffff';
         const autoTextColor = getTextColorForBackground(bgColor);
         scheduleMap.set(key, {
