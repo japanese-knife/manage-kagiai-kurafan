@@ -972,30 +972,40 @@ export default function ProjectScheduleView({ user, activeBrandTab, viewType, on
   return (
     <div className="bg-white rounded-2xl border border-neutral-200/50 shadow-lg overflow-hidden">
       <div className="p-4 border-b border-neutral-200 flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <Calendar className="w-5 h-5 text-primary-600" />
-          <h2 className="text-lg font-semibold text-neutral-900">
-            プロジェクトスケジュール
-          </h2>
-        </div>
-        <div className="flex items-center gap-2">
-          <button
-            onClick={handleCopy}
-            disabled={selectedCells.size === 0}
-            className="p-2 text-neutral-600 hover:text-primary-600 hover:bg-primary-50 rounded-lg transition-colors disabled:opacity-30"
-            title="コピー (Ctrl+C)"
-          >
-            <Copy className="w-4 h-4" />
-          </button>
-          <button
-            onClick={exportToCSV}
-            className="p-2 text-neutral-600 hover:text-primary-600 hover:bg-primary-50 rounded-lg transition-colors"
-            title="CSVエクスポート"
-          >
-            <Download className="w-4 h-4" />
-          </button>
-        </div>
-      </div>
+  <div className="flex items-center gap-2">
+    <Calendar className="w-5 h-5 text-primary-600" />
+    <h2 className="text-lg font-semibold text-neutral-900">
+      プロジェクトスケジュール
+    </h2>
+  </div>
+  <div className="flex items-center gap-2">
+    <select
+      value={columnWidth}
+      onChange={(e) => setColumnWidth(e.target.value as 'narrow' | 'normal' | 'wide')}
+      className="px-3 py-1.5 text-xs border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-100 focus:border-primary-500 bg-white"
+      title="列幅を変更"
+    >
+      <option value="narrow">狭い</option>
+      <option value="normal">標準</option>
+      <option value="wide">広い</option>
+    </select>
+    <button
+      onClick={handleCopy}
+      disabled={selectedCells.size === 0}
+      className="p-2 text-neutral-600 hover:text-primary-600 hover:bg-primary-50 rounded-lg transition-colors disabled:opacity-30"
+      title="コピー (Ctrl+C)"
+    >
+      <Copy className="w-4 h-4" />
+    </button>
+    <button
+      onClick={exportToCSV}
+      className="p-2 text-neutral-600 hover:text-primary-600 hover:bg-primary-50 rounded-lg transition-colors"
+      title="CSVエクスポート"
+    >
+      <Download className="w-4 h-4" />
+    </button>
+  </div>
+</div>
 
       {activeBrandTab === 'all' ? (
         <div className="flex flex-col">
