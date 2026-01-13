@@ -39,23 +39,6 @@ export default function ProjectScheduleView({ user, activeBrandTab, viewType, on
   const [columnWidth, setColumnWidth] = useState<'narrow' | 'normal' | 'wide'>('normal');
 
   useEffect(() => {
-    loadProjects();
-    generateDates();
-  }, [activeBrandTab, viewType]);
-
-  useEffect(() => {
-    if (projects.length > 0) {
-      loadSchedules();
-    }
-  }, [projects]);
-
-  useEffect(() => {
-    if (editingCell && inputRef.current) {
-      inputRef.current.focus();
-    }
-  }, [editingCell]);
-
-  useEffect(() => {
   // 日次ビューで初回読み込み時のみ当日の列を中央に配置
   if (viewType === 'daily' && dates.length > 0 && !hasScrolledToToday.current) {
     const todayIndex = dates.findIndex(date => isToday(date));
@@ -65,7 +48,10 @@ export default function ProjectScheduleView({ user, activeBrandTab, viewType, on
         const tableContainers = document.querySelectorAll('.overflow-x-auto');
         
         tableContainers.forEach((tableContainer) => {
-          const allHeaders = tableContainer.querySelectorAll('thead th');
+          const table = tableContainer.querySelector('table');
+          if (!table) return;
+          
+          const allHeaders = table.querySelectorAll('thead th');
           // 固定列が2つあるため、+2でインデックスを調整
           const todayHeader = allHeaders[todayIndex + 2];
           
@@ -73,16 +59,10 @@ export default function ProjectScheduleView({ user, activeBrandTab, viewType, on
             const containerWidth = tableContainer.clientWidth;
             const todayHeaderElement = todayHeader as HTMLElement;
             
-            
-            // 固定列の幅を考慮
-// 固定列の幅を考慮
-const isMobile = window.innerWidth < 640;
-const isBrandBase = activeBrandTab === 'BRAND-BASE';
-const fixedColumnsWidth = isMobile 
-  ? 120 
-  : (isBrandBase 
-      ? (viewType === 'monthly' ? 140 : 180) // monthly: 80px(名前) + 60px(リンク) = 140px
-      : 260);
+            // 固定列の実際の幅を取得
+            const firstFixedColumn = allHeaders[0] as HTMLElement;
+            const secondFixedColumn = allHeaders[1] as HTMLElement;
+            const fixedColumnsWidth = firstFixedColumn.offsetWidth + secondFixedColumn.offsetWidth;
             
             // todayHeaderの実際の位置を取得
             const headerLeft = todayHeaderElement.offsetLeft;
@@ -96,10 +76,10 @@ const fixedColumnsWidth = isMobile
             tableContainer.scrollLeft = Math.max(0, scrollLeft);
           }
         });
-      }, 150);
+      }, 200);
     }
   }
-}, [dates.length, viewType]);
+}, [dates.length, viewType, activeBrandTab]);
 
   useEffect(() => {
     hasScrolledToToday.current = false;
