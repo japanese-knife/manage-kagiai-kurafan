@@ -351,19 +351,20 @@ const isCurrentMonth = (date: Date): boolean => {
         const txtColor = existingCell?.textColor || getTextColorForBackground(bgColor);
         
         const updateData: any = {
-          project_id: editingCell.projectId,
-          date: editingCell.date,
-          content: editValue,
-          background_color: bgColor,
-          text_color: txtColor,
-          user_id: user.id,
-        };
+  project_id: editingCell.projectId,
+  date: editingCell.date,
+  content: editValue,
+  background_color: bgColor,
+  text_color: txtColor,
+  user_id: user.id,
+  view_type: viewType,
+};
 
-        const { error } = await supabase
-          .from('project_schedules')
-          .upsert(updateData, {
-            onConflict: 'project_id,date'
-          });
+const { error } = await supabase
+  .from('project_schedules')
+  .upsert(updateData, {
+    onConflict: 'project_id,date,view_type'
+  });
 
         if (error) throw error;
         
