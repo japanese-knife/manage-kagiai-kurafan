@@ -345,13 +345,18 @@ const isCurrentMonth = (date: Date): boolean => {
     };
   }, []);
   
-  const handleRangeSelection = (endProjectId: string, endDate: string) => {
-    if (!selectedCell) return;
+  const handleRangeSelection = (endProjectId: string, endDate: string, startCell?: { projectId: string; date: string }) => {
+    const baseCell = startCell || selectedCell;
+    if (!baseCell) return;
     
-    const startProjectIndex = projects.findIndex(p => p.id === selectedCell.projectId);
+    const startProjectIndex = projects.findIndex(p => p.id === baseCell.projectId);
     const endProjectIndex = projects.findIndex(p => p.id === endProjectId);
-    const startDateIndex = dates.findIndex(d => d.toISOString().split('T')[0] === selectedCell.date);
+    const startDateIndex = dates.findIndex(d => d.toISOString().split('T')[0] === baseCell.date);
     const endDateIndex = dates.findIndex(d => d.toISOString().split('T')[0] === endDate);
+    
+    if (startProjectIndex === -1 || endProjectIndex === -1 || startDateIndex === -1 || endDateIndex === -1) {
+      return;
+    }
     
     const minProjectIndex = Math.min(startProjectIndex, endProjectIndex);
     const maxProjectIndex = Math.max(startProjectIndex, endProjectIndex);
