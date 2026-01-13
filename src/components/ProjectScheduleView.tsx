@@ -37,6 +37,25 @@ export default function ProjectScheduleView({ user, activeBrandTab, viewType, on
   const inputRef = useRef<HTMLInputElement>(null);
   const hasScrolledToToday = useRef(false);
   const [columnWidth, setColumnWidth] = useState<'narrow' | 'normal' | 'wide'>('normal');
+
+  // 日付生成
+  useEffect(() => {
+    generateDates();
+  }, [viewType]);
+
+  // プロジェクト読み込み
+  useEffect(() => {
+    if (dates.length > 0) {
+      loadProjects();
+    }
+  }, [dates.length, activeBrandTab]);
+
+  // スケジュール読み込み
+  useEffect(() => {
+    if (projects.length > 0) {
+      loadSchedules();
+    }
+  }, [projects.length]);
   
   useEffect(() => {
   // 日次ビューで初回読み込み時のみ当日の列を中央に配置
