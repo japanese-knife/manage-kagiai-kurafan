@@ -119,6 +119,19 @@ export default function ProjectScheduleView({ user, activeBrandTab, viewType, on
     }
   };
 
+  const getColumnWidth = () => {
+  switch (columnWidth) {
+    case 'narrow':
+      return 'min-w-[60px]';
+    case 'normal':
+      return 'min-w-[80px]';
+    case 'wide':
+      return 'min-w-[120px]';
+    default:
+      return 'min-w-[80px]';
+  }
+};
+  
   const loadProjects = async () => {
   try {
     let query = supabase
