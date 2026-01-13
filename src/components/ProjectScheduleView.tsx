@@ -641,7 +641,6 @@ const { error } = await supabase
         const existingCell = schedules.get(cellKey);
         
         const updateData: any = {
-          const updateData: any = {
   project_id: targetProjectId,
   date: targetDateStr,
   content: sourceData.content,
