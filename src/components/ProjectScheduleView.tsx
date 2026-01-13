@@ -1055,41 +1055,42 @@ const isCurrentMonth = (date: Date): boolean => {
 
             return (
               <td
-                key={dateIndex}
-                data-cell-id={`${project.id}-${dateStr}`}
-                className={`p-0 cursor-cell relative ${
-                  isPrimarySelected
-                    ? 'border-4 border-primary-600 shadow-lg' 
-                    : isSelected
-                      ? 'border-2 border-primary-400 bg-primary-50/30'
-                      : 'border border-neutral-200'
-                }`}
-                onClick={(e) => handleCellClick(project.id, date, e)}
-                onDoubleClick={() => handleCellDoubleClick(project.id, date)}
-                onPaste={(e) => handlePaste(e, project.id, date)}
-                onKeyDown={(e) => handleKeyDown(e, project.id, dateIndex)}
-                onContextMenu={(e) => {
-  e.preventDefault();
-  setShowColorPicker({ projectId: project.id, date: dateStr });
-}}
-onTouchStart={(e) => {
-  // 長押しで色選択（SP対応）
-  const touchTimer = setTimeout(() => {
+  key={dateIndex}
+  data-cell-id={`${project.id}-${dateStr}`}
+  className={`p-0 cursor-cell relative select-none ${
+    isPrimarySelected
+      ? 'border-4 border-primary-600 shadow-lg' 
+      : isSelected
+        ? 'border-2 border-primary-400 bg-primary-50/30'
+        : 'border border-neutral-200'
+  }`}
+  onClick={(e) => handleCellClick(project.id, date, e)}
+  onMouseDown={(e) => handleCellMouseDown(project.id, date, e)}
+  onMouseEnter={() => handleCellMouseEnter(project.id, date)}
+  onDoubleClick={() => handleCellDoubleClick(project.id, date)}
+  onPaste={(e) => handlePaste(e, project.id, date)}
+  onKeyDown={(e) => handleKeyDown(e, project.id, dateIndex)}
+  onContextMenu={(e) => {
     e.preventDefault();
     setShowColorPicker({ projectId: project.id, date: dateStr });
-  }, 500);
-  
-  const clearTimer = () => {
-    clearTimeout(touchTimer);
-    document.removeEventListener('touchend', clearTimer);
-    document.removeEventListener('touchmove', clearTimer);
-  };
-  
-  document.addEventListener('touchend', clearTimer);
-  document.addEventListener('touchmove', clearTimer);
-}}
-                tabIndex={0}
-              >
+  }}
+  onTouchStart={(e) => {
+    const touchTimer = setTimeout(() => {
+      e.preventDefault();
+      setShowColorPicker({ projectId: project.id, date: dateStr });
+    }, 500);
+    
+    const clearTimer = () => {
+      clearTimeout(touchTimer);
+      document.removeEventListener('touchend', clearTimer);
+      document.removeEventListener('touchmove', clearTimer);
+    };
+    
+    document.addEventListener('touchend', clearTimer);
+    document.addEventListener('touchmove', clearTimer);
+  }}
+  tabIndex={0}
+>
                 <div 
                   className="absolute inset-0 z-0"
                   style={{ backgroundColor: cell?.backgroundColor || '#ffffff' }}
