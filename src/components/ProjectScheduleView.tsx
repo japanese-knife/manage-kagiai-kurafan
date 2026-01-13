@@ -616,7 +616,7 @@ const isCurrentMonth = (date: Date): boolean => {
           };
 
           await supabase
-            .from('project_schedules')
+            .from(tableName)
             .upsert(updateData);
         }
       }
