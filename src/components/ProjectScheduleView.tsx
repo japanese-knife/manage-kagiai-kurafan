@@ -258,11 +258,19 @@ export default function ProjectScheduleView({ user, activeBrandTab, viewType, on
   };
 
   const isToday = (date: Date): boolean => {
-    const today = new Date();
-    return date.getFullYear() === today.getFullYear() &&
-           date.getMonth() === today.getMonth() &&
-           date.getDate() === today.getDate();
-  };
+  const today = new Date();
+  return date.getFullYear() === today.getFullYear() &&
+         date.getMonth() === today.getMonth() &&
+         date.getDate() === today.getDate();
+};
+
+const isCurrentMonth = (date: Date): boolean => {
+  const today = new Date();
+  return date.getFullYear() === today.getFullYear() &&
+         date.getMonth() === today.getMonth();
+};
+
+  
 
   const handleCellClick = (projectId: string, date: Date, e?: React.MouseEvent) => {
     const dateStr = date.toISOString().split('T')[0];
