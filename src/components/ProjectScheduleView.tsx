@@ -36,7 +36,7 @@ export default function ProjectScheduleView({ user, activeBrandTab, viewType, on
   const [copiedCellData, setCopiedCellData] = useState<any>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const hasScrolledToToday = useRef(false);
-  const [columnWidth, setColumnWidth] = useState<'narrow' | 'normal' | 'wide'>('normal');
+  const [columnWidth, setColumnWidth] = useState<'narrow' | 'wide'>('narrow');
 
   // 日付生成
   useEffect(() => {
