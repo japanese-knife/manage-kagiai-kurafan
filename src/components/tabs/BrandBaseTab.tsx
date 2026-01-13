@@ -945,6 +945,33 @@ const [editBrandFeatures, setEditBrandFeatures] = useState('');
             </div>
           )}
 
+          {/* クリエイター一覧の表示 */}
+    {creatorsDisplayMode === 'creators' && (
+      <>
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="text-lg font-semibold text-neutral-900">クリエイター一覧</h2>
+          <button
+            onClick={() => setShowNewCreatorForm(true)}
+            className="inline-flex items-center px-4 py-2 bg-primary-600 text-white text-sm font-medium rounded-lg hover:bg-primary-700"
+          >
+            <Plus className="w-4 h-4 mr-2" />
+            新規クリエイター
+          </button>
+        </div>
+
+        {/* 検索バー */}
+        <div className="mb-6">
+          <input
+            type="text"
+            value={creatorSearchQuery}
+            onChange={(e) => setCreatorSearchQuery(e.target.value)}
+            placeholder="クリエイター名や説明で検索..."
+            className="w-full px-4 py-3 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-100 focus:border-primary-500 bg-white text-sm"
+          />
+        </div>
+
+          {showNewCreatorForm && (
+        
           {creators.length === 0 ? (
             <div className="text-center py-16 px-4">
               <div className="w-16 h-16 bg-neutral-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
