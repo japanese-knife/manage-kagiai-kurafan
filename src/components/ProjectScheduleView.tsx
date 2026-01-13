@@ -73,7 +73,7 @@ export default function ProjectScheduleView({ user, activeBrandTab, viewType, on
             const containerWidth = tableContainer.clientWidth;
             const todayHeaderElement = todayHeader as HTMLElement;
             
-            // 固定列の幅を考慮（SP: 120px、PC: 260px）
+            
             // 固定列の幅を考慮
 const isMobile = window.innerWidth < 640;
 const isBrandBase = activeBrandTab === 'BRAND-BASE';
