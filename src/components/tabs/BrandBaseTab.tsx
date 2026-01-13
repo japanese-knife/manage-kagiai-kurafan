@@ -1268,7 +1268,6 @@ const [editBrandFeatures, setEditBrandFeatures] = useState('');
           </button>
         </div>
 
-          </div>
 
         {/* 検索バー */}
         <div className="mb-6">
