@@ -30,8 +30,6 @@ export default function ProjectScheduleView({ user, activeBrandTab, viewType, on
   const [dates, setDates] = useState<Date[]>([]);
   const [selectedCell, setSelectedCell] = useState<{ projectId: string; date: string } | null>(null);
   const [selectedCells, setSelectedCells] = useState<Set<string>>(new Set());
-  const [copiedCellData, setCopiedCellData] = useState<any>(null);
-  const [selectedCells, setSelectedCells] = useState<Set<string>>(new Set());
   const [editingCell, setEditingCell] = useState<{ projectId: string; date: string } | null>(null);
   const [editValue, setEditValue] = useState('');
   const [showColorPicker, setShowColorPicker] = useState<{ projectId: string; date: string } | null>(null);
@@ -537,7 +535,7 @@ const isCurrentMonth = (date: Date): boolean => {
     try {
       const tableName = viewType === 'monthly' ? 'annual_schedules' : 'project_schedules';
         
-      if (copiedCellData && copiedCellData.isMultiple && copiedCellData.cellsData) {
+        if (copiedCellData && copiedCellData.isMultiple && copiedCellData.cellsData) {
         const cellsData = copiedCellData.cellsData;
         
         for (const targetKey of targetCells) {
@@ -900,8 +898,6 @@ const isCurrentMonth = (date: Date): boolean => {
             const cellKey = `${project.id}-${dateStr}`;
             const isSelected = selectedCells.has(cellKey);
             const isPrimarySelected = selectedCell?.projectId === project.id && selectedCell?.date === dateStr;
-            const isSelected = selectedCells.has(cellKey);
-            const isPrimarySelected = selectedCell?.projectId === project.id && selectedCell?.date === dateStr;
             const isEditing = editingCell?.projectId === project.id && editingCell?.date === dateStr;
 
             return (
@@ -1093,8 +1089,13 @@ onTouchStart={(e) => {
       )}
 
       <div className="p-3 border-t border-neutral-200 bg-neutral-50 text-xs text-neutral-600">
-        <p>• ダブルクリックで編集 • 右クリックで色選択 • 矢印キーで移動 • Enterで編集開始 • Ctrl+クリックで複数選択 • Shiftで範囲選択 • Ctrl+C でコピー • Ctrl+V でペースト</p>
-      </div>
+  <div className="flex flex-wrap gap-x-4 gap-y-1">
+    <span className="hidden sm:inline">• ダブルクリックで編集</span>
+    <span className="sm:hidden">• タップで編集</span>
+    <span className="hidden sm:inline">• 右クリックで色選択</span>
+    <span className="sm:hidden">• 長押しで色選択</span>
+    <span className="hidden sm:inline">• 矢印キーで移動</span>
+    <span className="hidden sm:inline">• Enterで編集開始</span>
     <span className="hidden sm:inline">• Ctrl+クリックで複数選択</span>
     <span className="hidden sm:inline">• Shiftで範囲選択</span>
     <span className="hidden sm:inline">• Ctrl+C でコピー</span>
