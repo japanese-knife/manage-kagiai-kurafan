@@ -766,14 +766,12 @@ const fixedColumnsWidth = isMobile
 }`}>
   {headerLabel}
 </th>
-<th className={`${
-  viewType === 'monthly' && (brandName === 'BRAND-BASE' || activeBrandTab === 'BRAND-BASE')
-    ? 'relative'
-    : `sticky ${
-        brandName === 'BRAND-BASE' || activeBrandTab === 'BRAND-BASE'
-          ? 'left-[80px] sm:left-[120px]'
-          : 'left-[80px] sm:left-[200px]'
-      }`
+<th className={`sticky ${
+  brandName === 'BRAND-BASE' || activeBrandTab === 'BRAND-BASE'
+    ? viewType === 'monthly'
+      ? 'left-[60px] sm:left-[80px]'
+      : 'left-[80px] sm:left-[120px]'
+    : 'left-[80px] sm:left-[200px]'
 } z-40 bg-neutral-50 border border-neutral-200 px-1 sm:px-2 py-2 text-center font-semibold text-neutral-900 w-[40px] sm:w-[60px]`}>
   リンク
 </th>
