@@ -635,6 +635,8 @@ const isCurrentMonth = (date: Date): boolean => {
       ? Array.from(selectedCells) 
       : [clickedCellKey];
 
+    const tableName = viewType === 'monthly' ? 'annual_schedules' : 'project_schedules';
+
     try {
       const updatedSchedules = new Map(schedules);
       
@@ -645,22 +647,15 @@ const isCurrentMonth = (date: Date): boolean => {
         
         const existingCell = schedules.get(cellKey);
         
-        // データベースには完全な日付で保存
-        const fullDate = viewType === 'monthly' 
-          ? `${targetDateStr}-01`  // 月次の場合は日付を補完
-          : targetDateStr;
-        
         const updateData: any = {
           project_id: targetProjectId,
-          date: fullDate,
+          date: targetDateStr,
           content: existingCell?.content || '',
           background_color: color,
           text_color: textColor,
           user_id: user.id,
         };
 
-        const tableName = viewType === 'monthly' ? 'annual_schedules' : 'project_schedules';
-        
         const { error } = await supabase
           .from(tableName)
           .upsert(updateData, {
