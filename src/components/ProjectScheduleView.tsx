@@ -665,6 +665,154 @@ const isCurrentMonth = (date: Date): boolean => {
     }
   };
 
+  const handleKeyboardPaste = async () => {
+    console.log('handleKeyboardPaste called');
+    console.log('selectedCells:', selectedCells);
+    console.log('copiedCellData:', copiedCellData);
+    
+    if (selectedCells.size === 0) {
+      console.log('No cells selected');
+      return;
+    }
+    
+    if (!copiedCellData) {
+      console.log('No copied data');
+      return;
+    }
+
+    const tableName = viewType === 'monthly' ? 'annual_schedules' : 'project_schedules';
+
+    try {
+      // 1つのセルをコピーして複数セルにペースト
+      if (copiedCellData.cellsData && copiedCellData.cellsData.length === 1) {
+        console.log('Single cell paste to multiple cells');
+        const sourceCellData = copiedCellData.cellsData[0];
+        console.log('Source cell data:', sourceCellData);
+        
+        const updates: any[] = [];
+        
+        selectedCells.forEach(cellKey => {
+          const parts = cellKey.split('-');
+          const targetDateStr = parts.slice(-3).join('-');
+          const targetProjectId = parts.slice(0, -3).join('-');
+          
+          console.log('Processing cellKey:', cellKey, 'projectId:', targetProjectId, 'date:', targetDateStr);
+          
+          updates.push({
+            project_id: targetProjectId,
+            date: targetDateStr,
+            content: sourceCellData.content,
+            background_color: sourceCellData.backgroundColor,
+            text_color: sourceCellData.textColor,
+            user_id: user.id,
+          });
+        });
+        
+        console.log('Updates to perform:', updates);
+        
+        // バッチ更新
+        for (const updateData of updates) {
+          console.log('Upserting:', updateData);
+          const { data, error } = await supabase
+            .from(tableName)
+            .upsert(updateData, {
+              onConflict: 'project_id,date'
+            });
+          
+          if (error) {
+            console.error('Upsert error:', error);
+          } else {
+            console.log('Upsert success:', data);
+          }
+        }
+        
+        console.log('Reloading schedules...');
+        await loadSchedules();
+        
+        // 視覚的フィードバック
+        selectedCells.forEach(cellKey => {
+          const cell = document.querySelector(`[data-cell-id="${cellKey}"]`);
+          if (cell) {
+            cell.classList.add('ring-2', 'ring-green-400');
+            setTimeout(() => {
+              cell.classList.remove('ring-2', 'ring-green-400');
+            }, 500);
+          }
+        });
+        
+        return;
+      }
+
+      // 複数セルのコピー＆ペースト（矩形領域）
+      if (copiedCellData.structure && selectedCell) {
+        console.log('Multiple cells paste (rectangular area)');
+        const sourceProjectIds = Array.from(copiedCellData.structure.keys());
+        const sourceDates = Array.from(new Set(
+          Array.from(copiedCellData.structure.values())
+            .flatMap(dateMap => Array.from(dateMap.keys()))
+        )).sort();
+        
+        const startProjectIndex = projects.findIndex(p => p.id === selectedCell.projectId);
+        const startDateIndex = dates.findIndex(d => d.toISOString().split('T')[0] === selectedCell.date);
+        
+        if (startProjectIndex === -1 || startDateIndex === -1) return;
+        
+        const updates: any[] = [];
+        sourceProjectIds.forEach((sourceProjectId, pOffset) => {
+          const targetProjectIndex = startProjectIndex + pOffset;
+          if (targetProjectIndex >= projects.length) return;
+          
+          const targetProjectId = projects[targetProjectIndex].id;
+          const sourceDateMap = copiedCellData.structure.get(sourceProjectId);
+          
+          sourceDates.forEach((sourceDate, dOffset) => {
+            const targetDateIndex = startDateIndex + dOffset;
+            if (targetDateIndex >= dates.length) return;
+            
+            const targetDate = dates[targetDateIndex].toISOString().split('T')[0];
+            const sourceCell = sourceDateMap?.get(sourceDate);
+            
+            if (sourceCell) {
+              updates.push({
+                project_id: targetProjectId,
+                date: targetDate,
+                content: sourceCell.content,
+                background_color: sourceCell.backgroundColor,
+                text_color: sourceCell.textColor,
+                user_id: user.id,
+              });
+            }
+          });
+        });
+        
+        // バッチ更新
+        for (const updateData of updates) {
+          await supabase
+            .from(tableName)
+            .upsert(updateData, {
+              onConflict: 'project_id,date'
+            });
+        }
+        
+        await loadSchedules();
+        
+        // 視覚的フィードバック
+        if (selectedCell) {
+          const targetCell = document.querySelector(`[data-cell-id="${selectedCell.projectId}-${selectedCell.date}"]`);
+          if (targetCell) {
+            targetCell.classList.add('ring-2', 'ring-green-400');
+            setTimeout(() => {
+              targetCell.classList.remove('ring-2', 'ring-green-400');
+            }, 500);
+          }
+        }
+      }
+    } catch (error) {
+      console.error('ペーストエラー:', error);
+      alert('ペーストに失敗しました');
+    }
+  };
+  
   const handlePaste = async (e: React.ClipboardEvent, projectId: string, date: Date) => {
     e.preventDefault();
     
