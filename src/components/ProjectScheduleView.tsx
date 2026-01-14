@@ -831,6 +831,17 @@ const isCurrentMonth = (date: Date): boolean => {
       
       setSchedules(updatedSchedules);
       setShowColorPicker(null);
+      
+      // 視覚的フィードバック
+      targetCells.forEach(cellKey => {
+        const cell = document.querySelector(`[data-cell-id="${cellKey}"]`);
+        if (cell) {
+          cell.classList.add('ring-2', 'ring-green-400');
+          setTimeout(() => {
+            cell.classList.remove('ring-2', 'ring-green-400');
+          }, 500);
+        }
+      });
     } catch (error) {
       console.error('色変更エラー:', error);
       alert(`色の変更に失敗しました: ${error instanceof Error ? error.message : '不明なエラー'}`);
