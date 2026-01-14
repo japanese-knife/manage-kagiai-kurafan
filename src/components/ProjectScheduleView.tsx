@@ -460,6 +460,12 @@ const isCurrentMonth = (date: Date): boolean => {
       return;
     }
 
+    if ((e.ctrlKey || e.metaKey) && e.key === 'v') {
+      e.preventDefault();
+      handleKeyboardPaste();
+      return;
+    }
+
     if (e.key === 'Escape' && !editingCell) {
       e.preventDefault();
       setSelectedCells(new Set());
