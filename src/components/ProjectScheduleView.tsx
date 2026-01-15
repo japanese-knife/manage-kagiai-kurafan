@@ -182,19 +182,20 @@ const [selectionStart, setSelectionStart] = useState<{ projectId: string; date: 
                 .single();
               
               if (creatorBrandData) {
-                // creatorsテーブルからクリエイター名を取得
-                const { data: creatorData } = await supabase
-                  .from('creators')
-                  .select('name')
-                  .eq('id', creatorBrandData.creator_id)
-                  .single();
-                
-                return {
-                  ...project,
-                  creatorName: creatorData?.name,
-                  brandName: brandData.name
-                };
-              }
+  // creatorsテーブルからクリエイター名を取得
+  const { data: creatorData } = await supabase
+    .from('creators')
+    .select('name')
+    .eq('id', creatorBrandData.creator_id)
+    .single();
+  
+  return {
+    ...project,
+    creatorName: creatorData?.name,
+    brandName: brandData.name,
+    creatorId: creatorBrandData.creator_id
+  };
+}
             }
           }
           
