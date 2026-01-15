@@ -9,7 +9,6 @@ interface ProjectScheduleViewProps {
   activeBrandTab: BrandType | 'all';
   viewType: 'daily' | 'monthly';
   onSelectProject: (project: Project) => void;
-  onSelectCreatorForBrand?: (creatorId: string) => void;
 }
 
 interface ScheduleCell {
@@ -23,10 +22,9 @@ interface ScheduleCell {
 interface ProjectWithBrandInfo extends Project {
   creatorName?: string;
   brandName?: string;
-  creatorId?: string;
 }
 
-export default function ProjectScheduleView({ user, activeBrandTab, viewType, onSelectProject, onSelectCreatorForBrand }: ProjectScheduleViewProps) {
+export default function ProjectScheduleView({ user, activeBrandTab, viewType, onSelectProject }: ProjectScheduleViewProps) {
   const [projects, setProjects] = useState<ProjectWithBrandInfo[]>([]);
   const [schedules, setSchedules] = useState<Map<string, ScheduleCell>>(new Map());
   const [dates, setDates] = useState<Date[]>([]);
@@ -183,20 +181,19 @@ const [selectionStart, setSelectionStart] = useState<{ projectId: string; date: 
                 .single();
               
               if (creatorBrandData) {
-  // creatorsテーブルからクリエイター名を取得
-  const { data: creatorData } = await supabase
-    .from('creators')
-    .select('name')
-    .eq('id', creatorBrandData.creator_id)
-    .single();
-  
-  return {
-    ...project,
-    creatorName: creatorData?.name,
-    brandName: brandData.name,
-    creatorId: creatorBrandData.creator_id
-  };
-}
+                // creatorsテーブルからクリエイター名を取得
+                const { data: creatorData } = await supabase
+                  .from('creators')
+                  .select('name')
+                  .eq('id', creatorBrandData.creator_id)
+                  .single();
+                
+                return {
+                  ...project,
+                  creatorName: creatorData?.name,
+                  brandName: brandData.name
+                };
+              }
             }
           }
           
@@ -1110,7 +1107,7 @@ const isCurrentMonth = (date: Date): boolean => {
       ? 'left-[60px] sm:left-[80px]'
       : 'left-[80px] sm:left-[120px]'
     : 'left-[80px] sm:left-[200px]'
-} z-40 bg-neutral-50 border border-neutral-200 px-1 sm:px-2 py-2 text-center font-semibold text-neutral-900 w-[40px] sm:w-[60px] shadow-sm`}>
+} z-40 bg-neutral-50 border border-neutral-200 px-1 sm:px-2 py-2 text-center font-semibold text-neutral-900 w-[40px] sm:w-[60px]`}>
   リンク
 </th>
       {dates.map((date, index) => (
@@ -1157,7 +1154,7 @@ const isCurrentMonth = (date: Date): boolean => {
     );
   };
 
-  const renderProjectRows = (brandProjects: ProjectWithBrandInfo[], brandName?: string) => {
+  const renderProjectRows = (brandProjects: ProjectWithBrandInfo[]) => {
   return (
     <>
       {brandProjects.map((project) => (
@@ -1197,48 +1194,14 @@ const isCurrentMonth = (date: Date): boolean => {
 </td>
 
 <td className={`sticky ${
-  brandName === 'BRAND-BASE' || activeBrandTab === 'BRAND-BASE'
+  activeBrandTab === 'BRAND-BASE'
     ? viewType === 'monthly'
       ? 'left-[60px] sm:left-[80px]'
       : 'left-[80px] sm:left-[120px]'
     : 'left-[80px] sm:left-[200px]'
 } z-20 bg-white border border-neutral-200 px-1 sm:px-2 py-2 text-center shadow-sm w-[40px] sm:w-[60px]`}>
   <button
-    onClick={async () => {
-      // BRAND-BASEの年間スケジュール（monthly）の場合、クリエイター＞ブランド一覧に遷移
-      if ((brandName === 'BRAND-BASE' || activeBrandTab === 'BRAND-BASE') && viewType === 'monthly' && onSelectCreatorForBrand) {
-        try {
-          // プロジェクトに紐づくブランドを取得
-          const { data: brandProjectData } = await supabase
-            .from('brand_projects')
-            .select('brand_id')
-            .eq('project_id', project.id)
-            .single();
-          
-          if (brandProjectData) {
-            // ブランドに紐づくクリエイターを取得
-            const { data: creatorBrandData } = await supabase
-              .from('creator_brands')
-              .select('creator_id')
-              .eq('brand_id', brandProjectData.brand_id)
-              .single();
-            
-            if (creatorBrandData) {
-              onSelectCreatorForBrand(creatorBrandData.creator_id);
-            } else {
-              onSelectProject(project);
-            }
-          } else {
-            onSelectProject(project);
-          }
-        } catch (error) {
-          console.error('クリエイター取得エラー:', error);
-          onSelectProject(project);
-        }
-      } else {
-        onSelectProject(project);
-      }
-    }}
+    onClick={() => onSelectProject(project)}
     className="px-1 sm:px-2 py-1 text-xs text-primary-600 underline hover:text-primary-700 hover:no-underline transition-colors"
     title="プロジェクトを開く"
   >
@@ -1423,7 +1386,7 @@ const isCurrentMonth = (date: Date): boolean => {
   {renderDateHeaders(brandName)}
 </thead>
                     <tbody>
-                      {renderProjectRows(brandProjects, brandName)}
+                      {renderProjectRows(brandProjects)}
                     </tbody>
                   </table>
                 </div>
@@ -1438,7 +1401,7 @@ const isCurrentMonth = (date: Date): boolean => {
   {renderDateHeaders()}
 </thead>
             <tbody>
-              {renderProjectRows(projects, activeBrandTab !== 'all' ? activeBrandTab : undefined)}
+              {renderProjectRows(projects)}
             </tbody>
           </table>
         </div>
