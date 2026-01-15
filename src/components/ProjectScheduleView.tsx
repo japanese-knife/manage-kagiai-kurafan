@@ -9,6 +9,7 @@ interface ProjectScheduleViewProps {
   activeBrandTab: BrandType | 'all';
   viewType: 'daily' | 'monthly';
   onSelectProject: (project: Project) => void;
+  onSelectCreatorForBrand?: (creatorId: string) => void;
 }
 
 interface ScheduleCell {
