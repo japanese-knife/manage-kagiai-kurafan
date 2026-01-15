@@ -1154,7 +1154,7 @@ const isCurrentMonth = (date: Date): boolean => {
     );
   };
 
-  const renderProjectRows = (brandProjects: ProjectWithBrandInfo[]) => {
+  const renderProjectRows = (brandProjects: ProjectWithBrandInfo[], brandName?: string) => {
   return (
     <>
       {brandProjects.map((project) => (
