@@ -5,6 +5,7 @@ import ProjectScheduleView from '../ProjectScheduleView';
 interface GanttChartTabProps {
   user: User;
   onSelectProject: (project: Project) => void;
+  onSelectCreatorForBrand?: (creatorId: string) => void;
 }
 
 <ProjectScheduleView
