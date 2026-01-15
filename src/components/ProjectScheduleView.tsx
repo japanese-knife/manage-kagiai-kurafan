@@ -1194,7 +1194,7 @@ const isCurrentMonth = (date: Date): boolean => {
 </td>
 
 <td className={`sticky ${
-  activeBrandTab === 'BRAND-BASE'
+  brandName === 'BRAND-BASE' || activeBrandTab === 'BRAND-BASE'
     ? viewType === 'monthly'
       ? 'left-[60px] sm:left-[80px]'
       : 'left-[80px] sm:left-[120px]'
