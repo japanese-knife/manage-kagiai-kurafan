@@ -249,17 +249,12 @@ export default function Dashboard({ onSelectProject, user, onLogout }: Dashboard
         )}
 
         {/* タブコンテンツ */}
-        {activeTab === 'schedule' && <GanttChartTab 
-  user={user} 
-  onSelectProject={handleSelectProject}
-  onSelectCreatorForBrand={(creatorId) => {
-    // BRAND-BASEタブに切り替え
-    setActiveTab('BRAND-BASE'); // または該当するstate更新関数
-    // クリエイターを選択してブランド一覧表示
-    setSelectedCreatorId(creatorId);
-    setBrandBaseView('brands');
-  }}
-/>
+        {activeTab === 'schedule' && (
+          <GanttChartTab 
+            user={user} 
+            onSelectProject={onSelectProject}
+          />
+        )}
         {activeTab === 'kaigai' && (
           <KaigaiKurafanTab
             projects={projects}
