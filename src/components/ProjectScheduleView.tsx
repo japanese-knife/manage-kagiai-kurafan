@@ -1202,7 +1202,41 @@ const isCurrentMonth = (date: Date): boolean => {
     : 'left-[80px] sm:left-[200px]'
 } z-20 bg-white border border-neutral-200 px-1 sm:px-2 py-2 text-center shadow-sm w-[40px] sm:w-[60px]`}>
   <button
-    onClick={() => onSelectProject(project)}
+    onClick={async () => {
+      // BRAND-BASEの年間スケジュール（monthly）の場合、クリエイター＞ブランド一覧に遷移
+      if ((brandName === 'BRAND-BASE' || activeBrandTab === 'BRAND-BASE') && viewType === 'monthly' && onSelectCreatorForBrand) {
+        try {
+          // プロジェクトに紐づくブランドを取得
+          const { data: brandProjectData } = await supabase
+            .from('brand_projects')
+            .select('brand_id')
+            .eq('project_id', project.id)
+            .single();
+          
+          if (brandProjectData) {
+            // ブランドに紐づくクリエイターを取得
+            const { data: creatorBrandData } = await supabase
+              .from('creator_brands')
+              .select('creator_id')
+              .eq('brand_id', brandProjectData.brand_id)
+              .single();
+            
+            if (creatorBrandData) {
+              onSelectCreatorForBrand(creatorBrandData.creator_id);
+            } else {
+              onSelectProject(project);
+            }
+          } else {
+            onSelectProject(project);
+          }
+        } catch (error) {
+          console.error('クリエイター取得エラー:', error);
+          onSelectProject(project);
+        }
+      } else {
+        onSelectProject(project);
+      }
+    }}
     className="px-1 sm:px-2 py-1 text-xs text-primary-600 underline hover:text-primary-700 hover:no-underline transition-colors"
     title="プロジェクトを開く"
   >
