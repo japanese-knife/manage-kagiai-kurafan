@@ -252,6 +252,8 @@ export default function Dashboard({ onSelectProject, user, onLogout }: Dashboard
         {activeTab === 'schedule' && (
           <GanttChartTab 
             user={user} 
+            activeBrandTab="all"
+            viewType="daily"
             onSelectProject={onSelectProject}
           />
         )}
