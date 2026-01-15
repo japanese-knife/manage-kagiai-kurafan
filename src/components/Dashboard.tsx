@@ -248,7 +248,7 @@ export default function Dashboard({ onSelectProject, user, onLogout }: Dashboard
           </div>
         )}
 
-        {/* タブコンテンツ */}
+       {/* タブコンテンツ */}
         {activeTab === 'schedule' && (
           <GanttChartTab 
             user={user} 
