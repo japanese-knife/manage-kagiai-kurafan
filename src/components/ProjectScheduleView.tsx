@@ -23,6 +23,7 @@ interface ScheduleCell {
 interface ProjectWithBrandInfo extends Project {
   creatorName?: string;
   brandName?: string;
+  creatorId?: string;
 }
 
 export default function ProjectScheduleView({ user, activeBrandTab, viewType, onSelectProject, onSelectCreatorForBrand }: ProjectScheduleViewProps) {
