@@ -1,13 +1,10 @@
 import { User } from '@supabase/supabase-js';
 import { Project } from '../../types';
 import ProjectScheduleView from '../ProjectScheduleView';
-
 interface GanttChartTabProps {
   user: User;
   onSelectProject: (project: Project) => void;
-  onSelectCreatorForBrand?: (creatorId: string) => void;
 }
-
 <ProjectScheduleView
   user={user}
   activeBrandTab={activeBrandTab}
@@ -20,8 +17,7 @@ interface GanttChartTabProps {
     // view='brands'に切り替える処理を実装
   }}
 />
-
-export default function GanttChartTab({ user, onSelectProject, onSelectCreatorForBrand }: GanttChartTabProps) {
+export default function GanttChartTab({ user, onSelectProject }: GanttChartTabProps) {
   return (
     <div className="space-y-8">
       <div>
@@ -40,7 +36,6 @@ export default function GanttChartTab({ user, onSelectProject, onSelectCreatorFo
           activeBrandTab="BRAND-BASE" 
           viewType="monthly" 
           onSelectProject={onSelectProject}
-          onSelectCreatorForBrand={onSelectCreatorForBrand}
         />
       </div>
     </div>
