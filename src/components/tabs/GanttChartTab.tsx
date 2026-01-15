@@ -21,7 +21,7 @@ interface GanttChartTabProps {
   }}
 />
 
-export default function GanttChartTab({ user, onSelectProject }: GanttChartTabProps) {
+export default function GanttChartTab({ user, onSelectProject, onSelectCreatorForBrand }: GanttChartTabProps) {
   return (
     <div className="space-y-8">
       <div>
@@ -40,6 +40,7 @@ export default function GanttChartTab({ user, onSelectProject }: GanttChartTabPr
           activeBrandTab="BRAND-BASE" 
           viewType="monthly" 
           onSelectProject={onSelectProject}
+          onSelectCreatorForBrand={onSelectCreatorForBrand}
         />
       </div>
     </div>
