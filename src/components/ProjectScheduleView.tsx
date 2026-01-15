@@ -1386,7 +1386,7 @@ const isCurrentMonth = (date: Date): boolean => {
   {renderDateHeaders(brandName)}
 </thead>
                     <tbody>
-                      {renderProjectRows(brandProjects)}
+                      {renderProjectRows(brandProjects, brandName)}
                     </tbody>
                   </table>
                 </div>
