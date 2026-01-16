@@ -1102,10 +1102,10 @@ const isCurrentMonth = (date: Date): boolean => {
   {headerLabel}
 </th>
 <th className={`sticky ${
-  brandName === 'BRAND-BASE' || activeBrandTab === 'BRAND-BASE'
+  (brandName === 'BRAND-BASE' || activeBrandTab === 'BRAND-BASE')
     ? 'left-[120px]'
-    : 'left-[80px] sm:left-[200px]'
-} z-40 bg-neutral-50 border border-neutral-200 px-1 sm:px-2 py-2 text-center font-semibold text-neutral-900 w-[40px] sm:w-[60px]`}>
+    : 'left-[200px]'
+} z-40 bg-neutral-50 border border-neutral-200 px-1 sm:px-2 py-2 text-center font-semibold text-neutral-900 w-[60px]`}>
   リンク
 </th>
       {dates.map((date, index) => (
