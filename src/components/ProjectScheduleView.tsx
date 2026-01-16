@@ -1157,10 +1157,8 @@ const isCurrentMonth = (date: Date): boolean => {
         <tr key={project.id} className="hover:bg-neutral-50/50">
           <td className={`sticky left-0 z-20 bg-white border border-neutral-200 px-2 sm:px-4 py-2 text-neutral-900 shadow-sm ${
   activeBrandTab === 'BRAND-BASE' 
-    ? viewType === 'monthly'
-      ? 'w-[80px] sm:w-[100px]'
-      : 'w-[120px]'
-    : 'min-w-[80px] sm:min-w-[200px]'
+    ? 'w-[120px]'
+    : 'w-[200px]'
 }`}>
   {activeBrandTab === 'BRAND-BASE' ? (
     <>
