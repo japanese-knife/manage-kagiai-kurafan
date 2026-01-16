@@ -1094,16 +1094,20 @@ const isCurrentMonth = (date: Date): boolean => {
     <tr>
       <th className={`sticky left-0 z-40 bg-neutral-50 border border-neutral-200 px-2 sm:px-4 py-2 text-left font-semibold text-neutral-900 ${
   brandName === 'BRAND-BASE' || activeBrandTab === 'BRAND-BASE' 
-    ? 'w-[120px]'
-    : 'w-[200px]'
+    ? viewType === 'monthly' 
+      ? 'min-w-[60px] sm:min-w-[80px] max-w-[80px] sm:max-w-[100px]' 
+      : 'min-w-[80px] sm:min-w-[120px]'
+    : 'min-w-[80px] sm:min-w-[200px]'
 }`}>
   {headerLabel}
 </th>
 <th className={`sticky ${
-  (brandName === 'BRAND-BASE' || activeBrandTab === 'BRAND-BASE')
-    ? 'left-[120px]'
-    : 'left-[200px]'
-} z-40 bg-neutral-50 border border-neutral-200 px-1 sm:px-2 py-2 text-center font-semibold text-neutral-900 w-[60px]`}>
+  brandName === 'BRAND-BASE' || activeBrandTab === 'BRAND-BASE'
+    ? viewType === 'monthly'
+      ? 'left-[60px] sm:left-[80px]'
+      : 'left-[80px] sm:left-[120px]'
+    : 'left-[80px] sm:left-[200px]'
+} z-40 bg-neutral-50 border border-neutral-200 px-1 sm:px-2 py-2 text-center font-semibold text-neutral-900 w-[40px] sm:w-[60px]`}>
   リンク
 </th>
       {dates.map((date, index) => (
@@ -1157,8 +1161,10 @@ const isCurrentMonth = (date: Date): boolean => {
         <tr key={project.id} className="hover:bg-neutral-50/50">
           <td className={`sticky left-0 z-20 bg-white border border-neutral-200 px-2 sm:px-4 py-2 text-neutral-900 shadow-sm ${
   activeBrandTab === 'BRAND-BASE' 
-    ? 'w-[120px]'
-    : 'w-[200px]'
+    ? viewType === 'monthly'
+      ? 'min-w-[60px] sm:min-w-[80px] max-w-[80px] sm:max-w-[100px]'
+      : 'min-w-[80px] sm:min-w-[120px]'
+    : 'min-w-[80px] sm:min-w-[200px]'
 }`}>
   {activeBrandTab === 'BRAND-BASE' ? (
     <>
@@ -1189,9 +1195,11 @@ const isCurrentMonth = (date: Date): boolean => {
 
 <td className={`sticky ${
   activeBrandTab === 'BRAND-BASE'
-    ? 'left-[120px]'
-    : 'left-[200px]'
-} z-20 bg-white border border-neutral-200 px-1 sm:px-2 py-2 text-center shadow-sm w-[60px]`}>
+    ? viewType === 'monthly'
+      ? 'left-[60px] sm:left-[80px]'
+      : 'left-[80px] sm:left-[120px]'
+    : 'left-[80px] sm:left-[200px]'
+} z-20 bg-white border border-neutral-200 px-1 sm:px-2 py-2 text-center shadow-sm w-[40px] sm:w-[60px]`}>
   <button
     onClick={() => onSelectProject(project)}
     className="px-1 sm:px-2 py-1 text-xs text-primary-600 underline hover:text-primary-700 hover:no-underline transition-colors"
