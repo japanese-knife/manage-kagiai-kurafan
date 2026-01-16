@@ -89,47 +89,70 @@ export default function Dashboard({ onSelectProject, user, onLogout }: Dashboard
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
       <header className="bg-white/80 backdrop-blur-sm border-b border-neutral-200/50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8 lg:px-12 py-6 sm:py-8 md:py-10">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between w-full sm:relative gap-4 sm:gap-0">
-            <div className="flex items-center justify-center order-1 sm:order-2 sm:absolute sm:left-1/2 sm:transform sm:-translate-x-1/2">
-              <img
-                src="/kaigai-kurafan-logo.png"
-                alt="海外クラファン.com"
-                className="h-8 sm:h-10 md:h-12 w-auto"
-              />
-            </div>
-            <div className="flex items-center space-x-3 sm:space-x-4 flex-1 order-2 sm:order-1">
-              <div className="w-10 h-10 sm:w-11 sm:h-11 bg-primary-50 rounded-xl flex items-center justify-center">
-                <FolderKanban className="w-5 h-5 sm:w-6 sm:h-6 text-primary-600" />
-              </div>
-              <div>
-                <h1 className="text-lg sm:text-xl md:text-2xl font-semibold text-neutral-900 tracking-tight">
-                  プロジェクト管理
-                </h1>
-                <p className="text-xs sm:text-sm text-neutral-500 mt-1 sm:mt-1.5">
-                  {projects.length}件のプロジェクト
-                </p>
-              </div>
-            </div>
-            <div className="flex items-center gap-2 sm:gap-3 flex-1 justify-end order-3 sm:order-3">
-              <button
-                onClick={() => setShowCreateForm(true)}
-                className="inline-flex items-center justify-center px-4 sm:px-5 py-2 sm:py-2.5 btn-gradient-animated text-white text-sm font-medium rounded-lg shadow-soft-lg"
-              >
-                <Plus className="w-4 h-4 mr-1.5 sm:mr-2" />
-                <span className="hidden sm:inline">新規プロジェクト</span>
-              </button>
-              <button
-                onClick={onLogout}
-                className="inline-flex items-center justify-center px-3 sm:px-4 py-2 sm:py-2.5 text-neutral-600 hover:text-neutral-900 hover:bg-neutral-100 text-sm font-medium rounded-lg transition-all"
-              >
-                <LogOut className="w-4 h-4 sm:mr-2" />
-                <span className="hidden sm:inline">ログアウト</span>
-              </button>
-            </div>
+  <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8 lg:px-12 py-3 sm:py-8 md:py-10">
+    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between w-full sm:relative gap-3 sm:gap-0">
+      {/* SP: ロゴを上部に配置 */}
+      <div className="flex items-center justify-center sm:order-2 sm:absolute sm:left-1/2 sm:transform sm:-translate-x-1/2">
+        <img
+          src="/kaigai-kurafan-logo.png"
+          alt="海外クラファン.com"
+          className="h-7 sm:h-10 md:h-12 w-auto"
+        />
+      </div>
+      
+      {/* SP: タイトルとボタンを横並びに */}
+      <div className="flex items-center justify-between w-full sm:w-auto sm:flex-1 sm:order-1 gap-2">
+        <div className="flex items-center space-x-2 sm:space-x-4 flex-1">
+          <div className="w-8 h-8 sm:w-11 sm:h-11 bg-primary-50 rounded-xl flex items-center justify-center flex-shrink-0">
+            <FolderKanban className="w-4 h-4 sm:w-6 sm:h-6 text-primary-600" />
+          </div>
+          <div className="min-w-0">
+            <h1 className="text-base sm:text-xl md:text-2xl font-semibold text-neutral-900 tracking-tight truncate">
+              プロジェクト管理
+            </h1>
+            <p className="text-xs sm:text-sm text-neutral-500">
+              {projects.length}件
+            </p>
           </div>
         </div>
-      </header>
+        
+        {/* SP: ボタンを右側に配置 */}
+        <div className="flex items-center gap-2 sm:hidden flex-shrink-0">
+          <button
+            onClick={() => setShowCreateForm(true)}
+            className="inline-flex items-center justify-center w-9 h-9 btn-gradient-animated text-white rounded-lg shadow-soft-lg"
+          >
+            <Plus className="w-5 h-5" />
+          </button>
+          <button
+            onClick={onLogout}
+            className="inline-flex items-center justify-center w-9 h-9 text-neutral-600 hover:text-neutral-900 hover:bg-neutral-100 rounded-lg transition-all"
+          >
+            <LogOut className="w-4 h-4" />
+          </button>
+        </div>
+      </div>
+      
+      {/* PC: ボタンを右側に配置 */}
+      <div className="hidden sm:flex items-center gap-2 sm:gap-3 flex-1 justify-end sm:order-3">
+        <button
+          onClick={() => setShowCreateForm(true)}
+          className="inline-flex items-center justify-center px-5 py-2.5 btn-gradient-animated text-white text-sm font-medium rounded-lg shadow-soft-lg"
+        >
+          <Plus className="w-4 h-4 mr-2" />
+          新規プロジェクト
+        </button>
+        <button
+          onClick={onLogout}
+          className="inline-flex items-center justify-center px-4 py-2.5 text-neutral-600 hover:text-neutral-900 hover:bg-neutral-100 text-sm font-medium rounded-lg transition-all"
+        >
+          <LogOut className="w-4 h-4 mr-2" />
+          ログアウト
+        </button>
+      </div>
+    </div>
+  </div>
+</header>
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8 lg:px-12 py-6 sm:py-8 md:py-12">
         {/* タブナビゲーション */}
