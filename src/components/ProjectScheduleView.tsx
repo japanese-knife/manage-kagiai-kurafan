@@ -1162,8 +1162,8 @@ const isCurrentMonth = (date: Date): boolean => {
           <td className={`sticky left-0 z-20 bg-white border border-neutral-200 px-2 sm:px-4 py-2 text-neutral-900 shadow-sm ${
   activeBrandTab === 'BRAND-BASE' 
     ? viewType === 'monthly'
-      ? 'min-w-[60px] sm:min-w-[80px] max-w-[80px] sm:max-w-[100px]'
-      : 'min-w-[80px] sm:min-w-[120px]'
+      ? 'w-[80px] sm:w-[100px]'
+      : 'w-[120px]'
     : 'min-w-[80px] sm:min-w-[200px]'
 }`}>
   {activeBrandTab === 'BRAND-BASE' ? (
