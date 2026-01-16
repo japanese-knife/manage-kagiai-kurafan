@@ -1094,10 +1094,8 @@ const isCurrentMonth = (date: Date): boolean => {
     <tr>
       <th className={`sticky left-0 z-40 bg-neutral-50 border border-neutral-200 px-2 sm:px-4 py-2 text-left font-semibold text-neutral-900 ${
   brandName === 'BRAND-BASE' || activeBrandTab === 'BRAND-BASE' 
-    ? viewType === 'monthly' 
-      ? 'w-[80px] sm:w-[100px]' 
-      : 'w-[120px]'
-    : 'min-w-[80px] sm:min-w-[200px]'
+    ? 'w-[120px]'
+    : 'w-[200px]'
 }`}>
   {headerLabel}
 </th>
