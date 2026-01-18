@@ -258,7 +258,10 @@ const [selectionStart, setSelectionStart] = useState<{ projectId: string; date: 
 
       const scheduleMap = new Map<string, ScheduleCell>();
       (data || []).forEach((schedule) => {
-        const key = `${schedule.project_id}-${schedule.date}`;
+        // viewTypeに応じて異なるキー形式を使用して完全に分離
+        const key = viewType === 'monthly' 
+          ? `monthly-${schedule.project_id}-${schedule.date}`
+          : `daily-${schedule.project_id}-${schedule.date}`;
         const bgColor = schedule.background_color || '#ffffff';
         const autoTextColor = getTextColorForBackground(bgColor);
         scheduleMap.set(key, {
