@@ -1277,12 +1277,20 @@ if (viewType === 'monthly') {
     : 'left-[80px] sm:left-[200px]'
 } z-20 bg-white border border-neutral-200 px-1 sm:px-2 py-2 text-center shadow-sm w-[40px] sm:w-[60px]`}>
   <button
-    onClick={() => onSelectProject(project)}
-    className="px-1 sm:px-2 py-1 text-xs text-primary-600 underline hover:text-primary-700 hover:no-underline transition-colors"
-    title="プロジェクトを開く"
-  >
-    開く
-  </button>
+  onClick={() => {
+    // 年間スケジュール（月次ビュー）かつBRAND-BASEの場合はクリエイターのブランド一覧に遷移
+    if (viewType === 'monthly' && activeBrandTab === 'BRAND-BASE' && project.creatorId && onNavigateToCreatorBrands) {
+      onNavigateToCreatorBrands(project.creatorId);
+    } else {
+      // それ以外はプロジェクト詳細を開く
+      onSelectProject(project);
+    }
+  }}
+  className="px-1 sm:px-2 py-1 text-xs text-primary-600 underline hover:text-primary-700 hover:no-underline transition-colors"
+  title={viewType === 'monthly' && activeBrandTab === 'BRAND-BASE' ? "ブランド一覧を開く" : "プロジェクトを開く"}
+>
+  開く
+</button>
 </td>
           
           {dates.map((date, dateIndex) => {
