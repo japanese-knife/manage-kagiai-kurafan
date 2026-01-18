@@ -277,7 +277,7 @@ const [selectionStart, setSelectionStart] = useState<{ projectId: string; date: 
     }
   };
 
-  const getCellKey = (projectIdconst getCellKey = (projectId: string, date: Date): string => {
+  const getCellKey = (projectId: string, date: Date): string => {
     if (viewType === 'monthly') {
       // 月次ビューの場合は YYYY-MM 形式
       const year = date.getFullYear();
