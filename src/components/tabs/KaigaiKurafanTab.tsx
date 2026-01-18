@@ -471,7 +471,7 @@ return (
       </div>
     ) : (
       <div className="space-y-8 sm:space-y-10 md:space-y-12">
-      {(['PICKS', '進行中', '保留', '完了'] as ProjectStatus[]).map((status) => {
+      {(['進行中', 'PICKS', '保留', '完了'] as ProjectStatus[]).map((status) => {
           const statusProjects = getProjectsByStatus(status);
           if (statusProjects.length === 0) return null;
 
