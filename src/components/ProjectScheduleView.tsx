@@ -424,9 +424,7 @@ const isCurrentMonth = (date: Date): boolean => {
   const handleCellBlur = async () => {
     if (!editingCell) return;
 
-    const key = viewType === 'monthly'
-  ? `monthly-${editingCell.projectId}-${editingCell.date}`
-  : `daily-${editingCell.projectId}-${editingCell.date}`;
+    const key = `${editingCell.projectId}-${editingCell.date}`;
     const existingCell = schedules.get(key);
     const tableName = viewType === 'monthly' ? 'annual_schedules' : 'project_schedules';
 
