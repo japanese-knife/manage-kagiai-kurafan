@@ -193,10 +193,11 @@ const [selectionStart, setSelectionStart] = useState<{ projectId: string; date: 
                   .single();
                 
                 return {
-                  ...project,
-                  creatorName: creatorData?.name,
-                  brandName: brandData.name
-                };
+  ...project,
+  creatorName: creatorData?.name,
+  brandName: brandData.name,
+  creatorId: creatorBrandData.creator_id
+};
               }
             }
           }
