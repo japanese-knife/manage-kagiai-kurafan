@@ -1,4 +1,4 @@
-export type ProjectStatus = '進行中' | '完了' | '保留';
+export type ProjectStatus = '進行中' | 'PICKS' | '保留' | '完了';
 export type BrandType = '海外クラファン.com' | 'BRAND-BASE';
 
 export interface Creator {
