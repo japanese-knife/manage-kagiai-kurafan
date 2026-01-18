@@ -595,24 +595,27 @@ export default function KaigaiKurafanTab({
                                   <Trash2 className="w-4 h-4" />
                                 </button>
                                 <select
-                                  value={project.status}
-                                  onChange={(e) => {
-                                    e.stopPropagation();
-                                    handleStatusChange(project.id, e.target.value as ProjectStatus);
-                                  }}
-                                  onClick={(e) => e.stopPropagation()}
-                                  className={`px-3 py-1 text-xs font-medium rounded-full border-0 cursor-pointer ${
-                                    project.status === '完了'
-                                      ? 'bg-green-50 text-green-700'
-                                      : project.status === '保留'
-                                      ? 'bg-yellow-50 text-yellow-700'
-                                      : 'bg-primary-50 text-primary-700'
-                                  }`}
-                                >
-                                  <option value="進行中">進行中</option>
-                                  <option value="保留">保留</option>
-                                  <option value="完了">完了</option>
-                                </select>
+  value={project.status}
+  onChange={(e) => {
+    e.stopPropagation();
+    handleStatusChange(project.id, e.target.value as ProjectStatus);
+  }}
+  onClick={(e) => e.stopPropagation()}
+  className={`px-3 py-1 text-xs font-medium rounded-full border-0 cursor-pointer ${
+    project.status === '完了'
+      ? 'bg-green-50 text-green-700'
+      : project.status === 'PICKS'
+      ? 'bg-purple-50 text-purple-700'
+      : project.status === '保留'
+      ? 'bg-yellow-50 text-yellow-700'
+      : 'bg-primary-50 text-primary-700'
+  }`}
+>
+  <option value="進行中">進行中</option>
+  <option value="PICKS">PICKS</option>
+  <option value="保留">保留</option>
+  <option value="完了">完了</option>
+</select>
                               </div>
                             </div>
 
