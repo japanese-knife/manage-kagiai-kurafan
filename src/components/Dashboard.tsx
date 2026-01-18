@@ -291,13 +291,14 @@ export default function Dashboard({ onSelectProject, user, onLogout }: Dashboard
           />
         )}
         {activeTab === 'brandbase' && (
-          <BrandBaseTab
-            projects={projects}
-            user={user}
-            onSelectProject={onSelectProject}
-            onProjectsChange={loadProjects}
-          />
-        )}
+  <BrandBaseTab
+    projects={projects}
+    user={user}
+    onSelectProject={onSelectProject}
+    onProjectsChange={loadProjects}
+    initialCreatorId={selectedCreatorId}
+  />
+)}
       </main>
       <Footer />
     </div>
