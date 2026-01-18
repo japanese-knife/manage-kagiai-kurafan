@@ -67,6 +67,21 @@ export default function BrandBaseTab({
   const [creators, setCreators] = useState<Creator[]>([]);
   const [selectedCreatorId, setSelectedCreatorId] = useState<string | null>(initialSelectedCreatorId);
   
+  // 追加: 初期値が変更されたときに state を更新
+  useEffect(() => {
+    if (initialView) {
+      setView(initialView);
+    }
+  }, [initialView]);
+
+  useEffect(() => {
+    if (initialSelectedCreatorId) {
+      setSelectedCreatorId(initialSelectedCreatorId);
+    }
+  }, [initialSelectedCreatorId]);
+  
+  // 残りのコードは変更なし
+  
   // 残りのuseStateとロジックは変更なし
   // ...
   const [brands, setBrands] = useState<Brand[]>([]);
