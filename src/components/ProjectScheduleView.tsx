@@ -9,6 +9,7 @@ interface ProjectScheduleViewProps {
   activeBrandTab: BrandType | 'all';
   viewType: 'daily' | 'monthly';
   onSelectProject: (project: Project) => void;
+  onOpenCreatorBrands?: (project: Project) => void;
 }
 
 interface ScheduleCell {
@@ -24,8 +25,15 @@ interface ProjectWithBrandInfo extends Project {
   brandName?: string;
 }
 
-export default function ProjectScheduleView({ user, activeBrandTab, viewType, onSelectProject }: ProjectScheduleViewProps) {
+export default function ProjectScheduleView({ 
+  user, 
+  activeBrandTab, 
+  viewType, 
+  onSelectProject,
+  onOpenCreatorBrands 
+}: ProjectScheduleViewProps) {
   const [projects, setProjects] = useState<ProjectWithBrandInfo[]>([]);
+  // ... 以下のコードはそのまま
   const [schedules, setSchedules] = useState<Map<string, ScheduleCell>>(new Map());
   const [dates, setDates] = useState<Date[]>([]);
   const [selectedCell, setSelectedCell] = useState<{ projectId: string; date: string } | null>(null);
@@ -1274,12 +1282,30 @@ if (viewType === 'monthly') {
     : 'left-[80px] sm:left-[200px]'
 } z-20 bg-white border border-neutral-200 px-1 sm:px-2 py-2 text-center shadow-sm w-[40px] sm:w-[60px]`}>
   <button
-    onClick={() => onSelectProject(project)}
-    className="px-1 sm:px-2 py-1 text-xs text-primary-600 underline hover:text-primary-700 hover:no-underline transition-colors"
-    title="プロジェクトを開く"
-  >
-    開く
-  </button>
+  onClick={() => {
+    console.log('Button clicked, activeBrandTab:', activeBrandTab, 'viewType:', viewType);
+    console.log('onOpenCreatorBrands exists:', !!onOpenCreatorBrands);
+    console.log('project:', project);
+    
+    if (activeBrandTab === 'BRAND-BASE' && viewType === 'monthly') {
+      // 年間スケジュールの場合は、onOpenCreatorBrandsを呼び出す
+      if (onOpenCreatorBrands) {
+        console.log('Calling onOpenCreatorBrands');
+        onOpenCreatorBrands(project);
+      } else {
+        console.log('onOpenCreatorBrands is not defined');
+      }
+    } else {
+      // それ以外の場合は通常通りプロジェクトを開く
+      console.log('Calling onSelectProject');
+      onSelectProject(project);
+    }
+  }}
+  className="px-1 sm:px-2 py-1 text-xs text-primary-600 underline hover:text-primary-700 hover:no-underline transition-colors"
+  title={activeBrandTab === 'BRAND-BASE' && viewType === 'monthly' ? 'ブランド一覧を開く' : 'プロジェクトを開く'}
+>
+  開く
+</button>
 </td>
           
           {dates.map((date, dateIndex) => {

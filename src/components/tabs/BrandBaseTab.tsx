@@ -9,6 +9,8 @@ interface BrandBaseTabProps {
   user: User;
   onSelectProject: (project: Project) => void;
   onProjectsChange: () => void;
+  initialView?: 'creators' | 'brands';
+  initialSelectedCreatorId?: string | null;
 }
 
 interface ProjectStats {
@@ -55,13 +57,33 @@ export default function BrandBaseTab({
   projects, 
   user, 
   onSelectProject, 
-  onProjectsChange 
+  onProjectsChange,
+  initialView = 'creators',
+  initialSelectedCreatorId = null
 }: BrandBaseTabProps) {
-  const [view, setView] = useState<'creators' | 'brands'>('creators');
-const [creatorsDisplayMode, setCreatorsDisplayMode] = useState<'creators' | 'projects'>('creators');
-const [brandsDisplayMode, setBrandsDisplayMode] = useState<'brands' | 'projects'>('brands');
+  const [view, setView] = useState<'creators' | 'brands'>(initialView);
+  const [creatorsDisplayMode, setCreatorsDisplayMode] = useState<'creators' | 'projects'>('creators');
+  const [brandsDisplayMode, setBrandsDisplayMode] = useState<'brands' | 'projects'>('brands');
   const [creators, setCreators] = useState<Creator[]>([]);
-  const [selectedCreatorId, setSelectedCreatorId] = useState<string | null>(null);
+  const [selectedCreatorId, setSelectedCreatorId] = useState<string | null>(initialSelectedCreatorId);
+  
+  // 追加: 初期値が変更されたときに state を更新
+  useEffect(() => {
+    if (initialView) {
+      setView(initialView);
+    }
+  }, [initialView]);
+
+  useEffect(() => {
+    if (initialSelectedCreatorId) {
+      setSelectedCreatorId(initialSelectedCreatorId);
+    }
+  }, [initialSelectedCreatorId]);
+  
+  // 残りのコードは変更なし
+  
+  // 残りのuseStateとロジックは変更なし
+  // ...
   const [brands, setBrands] = useState<Brand[]>([]);
   const [creatorBrands, setCreatorBrands] = useState<Map<string, string[]>>(new Map());
   const [brandProjects, setBrandProjects] = useState<Map<string, string[]>>(new Map());
