@@ -34,31 +34,43 @@ export default function GanttChartTab({ user, onSelectProject }: GanttChartTabPr
   };
 
   const handleOpenCreatorBrands = async (project: Project) => {
-    try {
-      // プロジェクトからブランドIDを取得
-      const { data: brandProjectData } = await supabase
-        .from('brand_projects')
-        .select('brand_id')
-        .eq('project_id', project.id)
+  console.log('handleOpenCreatorBrands called with project:', project);
+  
+  try {
+    // プロジェクトからブランドIDを取得
+    const { data: brandProjectData, error: brandProjectError } = await supabase
+      .from('brand_projects')
+      .select('brand_id')
+      .eq('project_id', project.id)
+      .single();
+
+    console.log('brandProjectData:', brandProjectData, 'error:', brandProjectError);
+
+    if (brandProjectData) {
+      // ブランドIDからクリエイターIDを取得
+      const { data: creatorBrandData, error: creatorBrandError } = await supabase
+        .from('creator_brands')
+        .select('creator_id')
+        .eq('brand_id', brandProjectData.brand_id)
         .single();
 
-      if (brandProjectData) {
-        // ブランドIDからクリエイターIDを取得
-        const { data: creatorBrandData } = await supabase
-          .from('creator_brands')
-          .select('creator_id')
-          .eq('brand_id', brandProjectData.brand_id)
-          .single();
+      console.log('creatorBrandData:', creatorBrandData, 'error:', creatorBrandError);
 
-        if (creatorBrandData) {
-          setSelectedCreatorId(creatorBrandData.creator_id);
-          setShowBrandBase(true);
-        }
+      if (creatorBrandData) {
+        console.log('Setting selectedCreatorId to:', creatorBrandData.creator_id);
+        setSelectedCreatorId(creatorBrandData.creator_id);
+        setShowBrandBase(true);
+      } else {
+        alert('このプロジェクトに紐づくクリエイターが見つかりません');
       }
-    } catch (error) {
-      console.error('クリエイター情報取得エラー:', error);
+    } else {
+      alert('このプロジェクトに紐づくブランドが見つかりません');
     }
-  };
+  } catch (error) {
+    console.error('クリエイター情報取得エラー:', error);
+    alert('エラーが発生しました: ' + error);
+  }
+};
 
   if (showBrandBase && selectedCreatorId) {
     return (
