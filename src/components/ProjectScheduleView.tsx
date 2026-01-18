@@ -635,10 +635,33 @@ const isCurrentMonth = (date: Date): boolean => {
 
       const cellsData = sortedCells.map(key => {
         const cell = schedules.get(key);
-        const keyParts = key.split('-');
-const prefix = keyParts[0]; // 'monthly' or 'daily'
-const dateStr = keyParts.slice(-3).join('-'); // 最後の3つをdate部分として取得
-const projectId = keyParts.slice(1, -3).join('-'); // prefixの次からdate部分の前まで
+        // sortedCells.map内
+const cellsData = sortedCells.map(key => {
+  const cell = schedules.get(key);
+  let projectId: string;
+  let dateStr: string;
+  
+  if (viewType === 'monthly') {
+    // 月次ビュー: {projectId}-YYYY-MM 形式
+    const parts = key.split('-');
+    dateStr = parts.slice(-2).join('-'); // YYYY-MM
+    projectId = parts.slice(0, -2).join('-');
+  } else {
+    // 日次ビュー: {projectId}-YYYY-MM-DD 形式
+    const parts = key.split('-');
+    dateStr = parts.slice(-3).join('-'); // YYYY-MM-DD
+    projectId = parts.slice(0, -3).join('-');
+  }
+  
+  return {
+    key,
+    projectId,
+    dateStr,
+    content: cell?.content || '',
+    backgroundColor: cell?.backgroundColor || '#ffffff',
+    textColor: cell?.textColor || '#000000'
+  };
+});
         
         return {
           key,
