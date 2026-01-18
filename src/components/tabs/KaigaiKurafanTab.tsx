@@ -436,6 +436,42 @@ export default function KaigaiKurafanTab({
   };
   
   const getProjectsByStatus = (status: ProjectStatus): Project[] => {
+  const kaigaiProjects = projects.filter((p) => p.brand_type === '海外クラファン.com');
+  return filterProjects(kaigaiProjects).filter((p) => p.status === status);
+};
+
+const kaigaiProjects = filterProjects(projects.filter(p => p.brand_type === '海外クラファン.com'));
+
+return (
+  <div className="mt-8">
+    {/* 検索バー */}
+    <div className="mb-6">
+      <input
+        type="text"
+        value={searchQuery}
+        onChange={(e) => setSearchQuery(e.target.value)}
+        placeholder="プロジェクト名や説明で検索..."
+        className="w-full px-4 py-3 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-100 focus:border-primary-500 bg-white text-sm"
+      />
+    </div>
+
+    <h2 className="text-lg font-semibold text-neutral-900 mb-6">プロジェクト一覧</h2>
+
+    {kaigaiProjects.length === 0 ? (
+      <div className="text-center py-16 sm:py-20 md:py-24 px-4">
+        <div className="w-16 h-16 sm:w-20 sm:h-20 bg-neutral-100 rounded-2xl flex items-center justify-center mx-auto mb-4 sm:mb-6">
+          <FolderKanban className="w-8 h-8 sm:w-10 sm:h-10 text-neutral-400" />
+        </div>
+        <h2 className="text-base sm:text-lg font-semibold text-neutral-900 mb-2">
+          プロジェクトがありません
+        </h2>
+        <p className="text-sm sm:text-base text-neutral-500 mb-6 sm:mb-8 leading-relaxed">
+          新しいプロジェクトを作成して始めましょう
+        </p>
+      </div>
+    ) : (
+      <div className="space-y-8 sm:space-y-10 md:space-y-12">
+      {(['PICKS', '進行中', '保留', '完了'] as ProjectStatus[]).map((status) => {
           const statusProjects = getProjectsByStatus(status);
           if (statusProjects.length === 0) return null;
 
