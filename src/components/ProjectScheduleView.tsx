@@ -634,14 +634,10 @@ const isCurrentMonth = (date: Date): boolean => {
 
       const cellsData = sortedCells.map(key => {
         const cell = schedules.get(key);
-        const [projectId, dateStr] = key.split('-').reduce((acc, part, idx, arr) => {
-          if (idx < arr.length - 3) {
-            acc[0] = acc[0] ? `${acc[0]}-${part}` : part;
-          } else {
-            acc[1] = acc[1] ? `${acc[1]}-${part}` : part;
-          }
-          return acc;
-        }, ['', '']);
+        const keyParts = key.split('-');
+const prefix = keyParts[0]; // 'monthly' or 'daily'
+const dateStr = keyParts.slice(-3).join('-'); // 最後の3つをdate部分として取得
+const projectId = keyParts.slice(1, -3).join('-'); // prefixの次からdate部分の前まで
         
         return {
           key,
