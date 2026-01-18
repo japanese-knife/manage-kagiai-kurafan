@@ -207,14 +207,37 @@ const [selectionStart, setSelectionStart] = useState<{ projectId: string; date: 
       setProjects(projectsWithInfo);
     } else if (activeBrandTab === 'all' && data) {
       const sortedData = data.sort((a, b) => {
+        // ステータス順: 進行中 → PICKS
+        const statusOrder = { '進行中': 1, 'PICKS': 2 };
+        const aOrder = statusOrder[a.status as keyof typeof statusOrder] || 999;
+        const bOrder = statusOrder[b.status as keyof typeof statusOrder] || 999;
+        
+        if (aOrder !== bOrder) {
+          return aOrder - bOrder;
+        }
+        
+        // 同じステータス内ではブランドタイプ順
         if (a.brand_type !== b.brand_type) {
           return a.brand_type === '海外クラファン.com' ? -1 : 1;
         }
+        
         return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
       });
       setProjects(sortedData);
     } else {
-      setProjects(data || []);
+      // 単一ブランドタブでもステータス順にソート
+      const sortedData = (data || []).sort((a, b) => {
+        const statusOrder = { '進行中': 1, 'PICKS': 2 };
+        const aOrder = statusOrder[a.status as keyof typeof statusOrder] || 999;
+        const bOrder = statusOrder[b.status as keyof typeof statusOrder] || 999;
+        
+        if (aOrder !== bOrder) {
+          return aOrder - bOrder;
+        }
+        
+        return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+      });
+      setProjects(sortedData);
     }
   } catch (error) {
     console.error('プロジェクト読み込みエラー:', error);
