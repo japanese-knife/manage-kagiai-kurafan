@@ -280,7 +280,11 @@ const [selectionStart, setSelectionStart] = useState<{ projectId: string; date: 
   };
 
   const getCellKey = (projectId: string, date: Date): string => {
-    return `${projectId}-${date.toISOString().split('T')[0]}`;
+    const dateStr = date.toISOString().split('T')[0];
+    // viewTypeに応じて異なるプレフィックスを付けて完全に分離
+    return viewType === 'monthly' 
+      ? `monthly-${projectId}-${dateStr}`
+      : `daily-${projectId}-${dateStr}`;
   };
 
   const getTextColorForBackground = (bgColor: string): string => {
