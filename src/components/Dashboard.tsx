@@ -21,10 +21,7 @@ export default function Dashboard({ onSelectProject, user, onLogout }: Dashboard
   const [newProjectName, setNewProjectName] = useState('');
   const [newProjectDescription, setNewProjectDescription] = useState('');
   const [newBrandType, setNewBrandType] = useState<BrandType>('海外クラファン.com');
-  const handleNavigateToCreatorBrands = (creatorId: string) => {
-  setSelectedCreatorId(creatorId);
-  setActiveTab('brandbase');
-};
+  const [activeTab, setActiveTab] = useState<'schedule' | 'kaigai' | 'brandbase'>('schedule');
 
   useEffect(() => {
     loadProjects();
@@ -275,13 +272,7 @@ export default function Dashboard({ onSelectProject, user, onLogout }: Dashboard
         )}
 
         {/* タブコンテンツ */}
-        {activeTab === 'schedule' && (
-  <GanttChartTab 
-    user={user} 
-    onSelectProject={onSelectProject} 
-    onNavigateToCreatorBrands={handleNavigateToCreatorBrands}
-  />
-)}
+        {activeTab === 'schedule' && <GanttChartTab user={user} onSelectProject={onSelectProject} />}
         {activeTab === 'kaigai' && (
           <KaigaiKurafanTab
             projects={projects}
@@ -291,14 +282,13 @@ export default function Dashboard({ onSelectProject, user, onLogout }: Dashboard
           />
         )}
         {activeTab === 'brandbase' && (
-  <BrandBaseTab
-    projects={projects}
-    user={user}
-    onSelectProject={onSelectProject}
-    onProjectsChange={loadProjects}
-    initialCreatorId={selectedCreatorId}
-  />
-)}
+          <BrandBaseTab
+            projects={projects}
+            user={user}
+            onSelectProject={onSelectProject}
+            onProjectsChange={loadProjects}
+          />
+        )}
       </main>
       <Footer />
     </div>
