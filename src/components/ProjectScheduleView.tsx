@@ -278,17 +278,17 @@ const [selectionStart, setSelectionStart] = useState<{ projectId: string; date: 
   };
 
   const getCellKey = (projectId: string, date: Date): string => {
-    if (viewType === 'monthly') {
-      // 月次ビューの場合は YYYY-MM 形式
-      const year = date.getFullYear();
-      const month = String(date.getMonth() + 1).padStart(2, '0');
-      return `${projectId}-${year}-${month}`;
-    } else {
-      // 日次ビューの場合は YYYY-MM-DD 形式
-      const dateStr = date.toISOString().split('T')[0];
-      return `${projectId}-${dateStr}`;
-    }
-  };
+  if (viewType === 'monthly') {
+    // 月次ビューの場合は YYYY-MM 形式
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    return `${projectId}-${year}-${month}`;
+  } else {
+    // 日次ビューの場合は YYYY-MM-DD 形式
+    const dateStr = date.toISOString().split('T')[0];
+    return `${projectId}-${dateStr}`;
+  }
+};
 
   const getTextColorForBackground = (bgColor: string): string => {
     const hex = bgColor.replace('#', '');
