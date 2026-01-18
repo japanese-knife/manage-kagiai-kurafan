@@ -1510,7 +1510,7 @@ const [editBrandFeatures, setEditBrandFeatures] = useState('');
                           <div className="space-y-3 mt-5">
                             <div className="flex items-center justify-between">
                               <span className="text-xs text-neutral-500 font-medium">ステータス</span>
-                              <<select
+                              <select
   value={project.status}
   onChange={(e) => handleStatusChange(project.id, e.target.value as ProjectStatus)}
   className="text-xs px-2 py-1 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-100 focus:border-primary-500"
