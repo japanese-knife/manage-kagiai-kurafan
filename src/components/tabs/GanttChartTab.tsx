@@ -5,9 +5,10 @@ import ProjectScheduleView from '../ProjectScheduleView';
 interface GanttChartTabProps {
   user: User;
   onSelectProject: (project: Project) => void;
+  onNavigateToCreatorBrands?: (creatorId: string) => void;
 }
 
-export default function GanttChartTab({ user, onSelectProject }: GanttChartTabProps) {
+export default function GanttChartTab({ user, onSelectProject, onNavigateToCreatorBrands }: GanttChartTabProps) {
   return (
     <div className="space-y-8">
       <div>
