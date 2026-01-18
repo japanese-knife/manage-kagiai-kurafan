@@ -150,6 +150,9 @@ const [selectionStart, setSelectionStart] = useState<{ projectId: string; date: 
       query = query.eq('brand_type', activeBrandTab);
     }
     
+    // ステータスフィルター: 「進行中」と「PICKS」のみ表示
+    query = query.in('status', ['進行中', 'PICKS']);
+    
     const { data, error } = await query.order('created_at', { ascending: false });
     if (error) throw error;
     
