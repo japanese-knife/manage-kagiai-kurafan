@@ -750,8 +750,16 @@ const cellsData = sortedCells.map(key => {
         
         selectedCells.forEach(cellKey => {
           const parts = cellKey.split('-');
-const targetDateStr = parts.slice(-3).join('-');
-const targetProjectId = parts.slice(1, -3).join('-'); // prefixを除外
+let targetDateStr: string;
+let targetProjectId: string;
+
+if (viewType === 'monthly') {
+  targetDateStr = parts.slice(-2).join('-'); // YYYY-MM
+  targetProjectId = parts.slice(0, -2).join('-');
+} else {
+  targetDateStr = parts.slice(-3).join('-'); // YYYY-MM-DD
+  targetProjectId = parts.slice(0, -3).join('-');
+}
           
           console.log('Processing cellKey:', cellKey, 'projectId:', targetProjectId, 'date:', targetDateStr);
           
