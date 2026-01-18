@@ -275,7 +275,13 @@ export default function Dashboard({ onSelectProject, user, onLogout }: Dashboard
         )}
 
         {/* タブコンテンツ */}
-        {activeTab === 'schedule' && <GanttChartTab user={user} onSelectProject={onSelectProject} />}
+        {activeTab === 'schedule' && (
+  <GanttChartTab 
+    user={user} 
+    onSelectProject={onSelectProject} 
+    onNavigateToCreatorBrands={handleNavigateToCreatorBrands}
+  />
+)}
         {activeTab === 'kaigai' && (
           <KaigaiKurafanTab
             projects={projects}
