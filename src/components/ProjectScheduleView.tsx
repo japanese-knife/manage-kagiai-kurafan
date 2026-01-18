@@ -313,7 +313,9 @@ const isCurrentMonth = (date: Date): boolean => {
 
   const handleCellClick = (projectId: string, date: Date, e?: React.MouseEvent) => {
     const dateStr = date.toISOString().split('T')[0];
-    const cellKey = `${projectId}-${dateStr}`;
+    const cellKey = viewType === 'monthly' 
+  ? `monthly-${projectId}-${dateStr}`
+  : `daily-${projectId}-${dateStr}`;
     
     if (e?.shiftKey && selectedCell) {
       // Shift + クリックで範囲選択
