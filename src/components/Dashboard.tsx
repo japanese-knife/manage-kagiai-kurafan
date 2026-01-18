@@ -21,7 +21,10 @@ export default function Dashboard({ onSelectProject, user, onLogout }: Dashboard
   const [newProjectName, setNewProjectName] = useState('');
   const [newProjectDescription, setNewProjectDescription] = useState('');
   const [newBrandType, setNewBrandType] = useState<BrandType>('海外クラファン.com');
-  const [activeTab, setActiveTab] = useState<'schedule' | 'kaigai' | 'brandbase'>('schedule');
+  const handleNavigateToCreatorBrands = (creatorId: string) => {
+  setSelectedCreatorId(creatorId);
+  setActiveTab('brandbase');
+};
 
   useEffect(() => {
     loadProjects();
