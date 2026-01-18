@@ -13,19 +13,6 @@ interface BrandBaseTabProps {
   initialSelectedCreatorId?: string | null;
 }
 
-export default function BrandBaseTab({ 
-  projects, 
-  user, 
-  onSelectProject, 
-  onProjectsChange,
-  initialView = 'creators',
-  initialSelectedCreatorId = null
-}: BrandBaseTabProps) {
-  const [view, setView] = useState<'creators' | 'brands'>(initialView);
-  const [selectedCreatorId, setSelectedCreatorId] = useState<string | null>(initialSelectedCreatorId);
-  
-  // 以降のコードは変更なし
-
 interface ProjectStats {
   projectId: string;
   totalTasks: number;
@@ -70,13 +57,18 @@ export default function BrandBaseTab({
   projects, 
   user, 
   onSelectProject, 
-  onProjectsChange 
+  onProjectsChange,
+  initialView = 'creators',
+  initialSelectedCreatorId = null
 }: BrandBaseTabProps) {
-  const [view, setView] = useState<'creators' | 'brands'>('creators');
-const [creatorsDisplayMode, setCreatorsDisplayMode] = useState<'creators' | 'projects'>('creators');
-const [brandsDisplayMode, setBrandsDisplayMode] = useState<'brands' | 'projects'>('brands');
+  const [view, setView] = useState<'creators' | 'brands'>(initialView);
+  const [creatorsDisplayMode, setCreatorsDisplayMode] = useState<'creators' | 'projects'>('creators');
+  const [brandsDisplayMode, setBrandsDisplayMode] = useState<'brands' | 'projects'>('brands');
   const [creators, setCreators] = useState<Creator[]>([]);
-  const [selectedCreatorId, setSelectedCreatorId] = useState<string | null>(null);
+  const [selectedCreatorId, setSelectedCreatorId] = useState<string | null>(initialSelectedCreatorId);
+  
+  // 残りのuseStateとロジックは変更なし
+  // ...
   const [brands, setBrands] = useState<Brand[]>([]);
   const [creatorBrands, setCreatorBrands] = useState<Map<string, string[]>>(new Map());
   const [brandProjects, setBrandProjects] = useState<Map<string, string[]>>(new Map());
