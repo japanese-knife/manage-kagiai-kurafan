@@ -9,7 +9,6 @@ interface BrandBaseTabProps {
   user: User;
   onSelectProject: (project: Project) => void;
   onProjectsChange: () => void;
-  initialCreatorId?: string | null;
 }
 
 interface ProjectStats {
@@ -56,14 +55,13 @@ export default function BrandBaseTab({
   projects, 
   user, 
   onSelectProject, 
-  onProjectsChange,
-  initialCreatorId 
+  onProjectsChange 
 }: BrandBaseTabProps) {
-  const [view, setView] = useState<'creators' | 'brands'>(initialCreatorId ? 'brands' : 'creators');
-  const [selectedCreatorId, setSelectedCreatorId] = useState<string | null>(initialCreatorId || null);
+  const [view, setView] = useState<'creators' | 'brands'>('creators');
 const [creatorsDisplayMode, setCreatorsDisplayMode] = useState<'creators' | 'projects'>('creators');
 const [brandsDisplayMode, setBrandsDisplayMode] = useState<'brands' | 'projects'>('brands');
   const [creators, setCreators] = useState<Creator[]>([]);
+  const [selectedCreatorId, setSelectedCreatorId] = useState<string | null>(null);
   const [brands, setBrands] = useState<Brand[]>([]);
   const [creatorBrands, setCreatorBrands] = useState<Map<string, string[]>>(new Map());
   const [brandProjects, setBrandProjects] = useState<Map<string, string[]>>(new Map());
