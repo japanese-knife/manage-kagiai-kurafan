@@ -9,6 +9,7 @@ interface BrandBaseTabProps {
   user: User;
   onSelectProject: (project: Project) => void;
   onProjectsChange: () => void;
+  initialCreatorId?: string | null;
 }
 
 interface ProjectStats {
