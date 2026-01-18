@@ -23,11 +23,12 @@ export default function GanttChartTab({ user, onSelectProject, onNavigateToCreat
       <div>
         <h2 className="text-lg font-semibold text-neutral-900 mb-6">BRAND-BASE 年間スケジュール</h2>
         <ProjectScheduleView 
-          user={user} 
-          activeBrandTab="BRAND-BASE" 
-          viewType="monthly" 
-          onSelectProject={onSelectProject}
-        />
+  user={user} 
+  activeBrandTab="BRAND-BASE" 
+  viewType="monthly" 
+  onSelectProject={onSelectProject}
+  onNavigateToCreatorBrands={onNavigateToCreatorBrands}
+/>
       </div>
     </div>
   );
