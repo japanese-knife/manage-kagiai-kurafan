@@ -45,20 +45,20 @@ export default function Dashboard({ onSelectProject, user, onLogout }: Dashboard
   };
 
   const handleCreateProject = async (e: React.FormEvent) => {
-    e.preventDefault();
+  e.preventDefault();
 
-    if (!newProjectName.trim()) return;
+  if (!newProjectName.trim()) return;
 
-    try {
-      const { data, error } = await supabase
-        .from('projects')
-        .insert({
-          name: newProjectName,
-          description: newProjectDescription,
-          status: '進行中',
-          brand_type: newBrandType,
-          user_id: user.id,
-        })
+  try {
+    const { data, error } = await supabase
+      .from('projects')
+      .insert({
+        name: newProjectName,
+        description: newProjectDescription,
+        status: '進行中', // デフォルトは「進行中」のまま
+        brand_type: newBrandType,
+        user_id: user.id,
+      })
         .select()
         .single();
 
