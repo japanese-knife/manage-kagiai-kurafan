@@ -9,7 +9,16 @@ interface ProjectScheduleViewProps {
   activeBrandTab: BrandType | 'all';
   viewType: 'daily' | 'monthly';
   onSelectProject: (project: Project) => void;
+  onOpenCreatorBrands?: (project: Project) => void;
 }
+
+export default function ProjectScheduleView({ 
+  user, 
+  activeBrandTab, 
+  viewType, 
+  onSelectProject,
+  onOpenCreatorBrands 
+}: ProjectScheduleViewProps) {
 
 interface ScheduleCell {
   projectId: string;
