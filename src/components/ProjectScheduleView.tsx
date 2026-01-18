@@ -982,8 +982,8 @@ const targetProjectId = parts.slice(1, -3).join('-'); // prefixを除外
       
       for (const cellKey of targetCells) {
         const parts = cellKey.split('-');
-        const targetDateStr = parts.slice(-3).join('-');
-        const targetProjectId = parts.slice(0, -3).join('-');
+const targetDateStr = parts.slice(-3).join('-');
+const targetProjectId = parts.slice(1, -3).join('-'); // prefixを除外
         
         const existingCell = schedules.get(cellKey);
         
