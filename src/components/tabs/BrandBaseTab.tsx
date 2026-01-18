@@ -9,7 +9,22 @@ interface BrandBaseTabProps {
   user: User;
   onSelectProject: (project: Project) => void;
   onProjectsChange: () => void;
+  initialView?: 'creators' | 'brands';
+  initialSelectedCreatorId?: string | null;
 }
+
+export default function BrandBaseTab({ 
+  projects, 
+  user, 
+  onSelectProject, 
+  onProjectsChange,
+  initialView = 'creators',
+  initialSelectedCreatorId = null
+}: BrandBaseTabProps) {
+  const [view, setView] = useState<'creators' | 'brands'>(initialView);
+  const [selectedCreatorId, setSelectedCreatorId] = useState<string | null>(initialSelectedCreatorId);
+  
+  // 以降のコードは変更なし
 
 interface ProjectStats {
   projectId: string;
