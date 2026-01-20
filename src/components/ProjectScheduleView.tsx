@@ -744,17 +744,29 @@ const isCurrentMonth = (date: Date): boolean => {
         const updates: any[] = [];
         
         selectedCells.forEach(cellKey => {
-          const parts = cellKey.split('-');
-let targetDateStr: string;
-let targetProjectId: string;
-
-if (viewType === 'monthly') {
-  targetDateStr = parts.slice(-2).join('-'); // YYYY-MM
-  targetProjectId = parts.slice(0, -2).join('-');
-} else {
-  targetDateStr = parts.slice(-3).join('-'); // YYYY-MM-DD
-  targetProjectId = parts.slice(0, -3).join('-');
-}
+          // getCellKey関数と同じロジックを使用
+          let targetDateStr: string;
+          let targetProjectId: string;
+          
+          if (viewType === 'monthly') {
+            // 月次ビュー: {projectId}-YYYY-MM 形式
+            // 最後の2つの部分（YYYY-MM）が日付
+            const lastHyphenIndex = cellKey.lastIndexOf('-');
+            const secondLastHyphenIndex = cellKey.lastIndexOf('-', lastHyphenIndex - 1);
+            targetProjectId = cellKey.substring(0, secondLastHyphenIndex);
+            targetDateStr = cellKey.substring(secondLastHyphenIndex + 1);
+          } else {
+            // 日次ビュー: {projectId}-YYYY-MM-DD 形式
+            // 最後の3つの部分（YYYY-MM-DD）が日付
+            const parts = cellKey.split('-');
+            if (parts.length >= 4) {
+              targetDateStr = parts.slice(-3).join('-'); // YYYY-MM-DD
+              targetProjectId = parts.slice(0, -3).join('-');
+            } else {
+              console.error('Invalid cellKey format:', cellKey);
+              return;
+            }
+          }
           
           console.log('Processing cellKey:', cellKey, 'projectId:', targetProjectId, 'date:', targetDateStr);
           
