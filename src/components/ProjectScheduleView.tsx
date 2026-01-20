@@ -1006,7 +1006,11 @@ const isCurrentMonth = (date: Date): boolean => {
             const targetDateIndex = startDateIndex + dOffset;
             if (targetDateIndex >= dates.length) return;
             
-            const targetDate = dates[targetDateIndex].toISOString().split('T')[0];
+            // viewType に応じて日付文字列を生成
+            const targetDate = viewType === 'monthly'
+              ? `${dates[targetDateIndex].getFullYear()}-${String(dates[targetDateIndex].getMonth() + 1).padStart(2, '0')}`
+              : dates[targetDateIndex].toISOString().split('T')[0];
+            
             const sourceCell = sourceDateMap?.get(sourceDate);
             
             if (sourceCell) {
