@@ -339,8 +339,29 @@ const isCurrentMonth = (date: Date): boolean => {
         // 削除後に残っているセルがあれば、最後のセルを選択状態に
         if (newSelectedCells.size > 0) {
           const lastCell = Array.from(newSelectedCells)[newSelectedCells.size - 1];
-          const [pid, ...dateParts] = lastCell.split('-');
-          setSelectedCell({ projectId: pid, date: dateParts.join('-') });
+          // cellKeyから正しくprojectIdとdateを抽出
+          let pid: string;
+          let lastDateStr: string;
+          if (viewType === 'monthly') {
+            const match = lastCell.match(/^(.+)-(\d{4})-(\d{2})$/);
+            if (match) {
+              pid = match[1];
+              lastDateStr = `${match[2]}-${match[3]}`;
+            } else {
+              pid = projectId;
+              lastDateStr = dateStr;
+            }
+          } else {
+            const match = lastCell.match(/^(.+)-(\d{4})-(\d{2})-(\d{2})$/);
+            if (match) {
+              pid = match[1];
+              lastDateStr = `${match[2]}-${match[3]}-${match[4]}`;
+            } else {
+              pid = projectId;
+              lastDateStr = dateStr;
+            }
+          }
+          setSelectedCell({ projectId: pid, date: lastDateStr });
         } else {
           setSelectedCell(null);
         }
