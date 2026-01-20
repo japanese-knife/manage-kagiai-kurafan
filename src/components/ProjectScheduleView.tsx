@@ -323,10 +323,10 @@ const isCurrentMonth = (date: Date): boolean => {
   
 
   const handleCellClick = (projectId: string, date: Date, e?: React.MouseEvent) => {
+    const cellKey = getCellKey(projectId, date);
     const dateStr = viewType === 'monthly'
       ? `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`
       : date.toISOString().split('T')[0];
-    const cellKey = `${projectId}-${dateStr}`;
     
     if (e?.shiftKey && selectedCell) {
       // Shift + クリックで範囲選択
@@ -360,9 +360,7 @@ const isCurrentMonth = (date: Date): boolean => {
     // 編集中やカラーピッカー表示中はドラッグ選択しない
     if (editingCell || showColorPicker) return;
     
-    const dateStr = viewType === 'monthly'
-      ? `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`
-      : date.toISOString().split('T')[0];
+    const dateStr = date.toISOString().split('T')[0];
     
     if (!e.shiftKey && !e.ctrlKey && !e.metaKey) {
       // 通常のマウスダウンでドラッグ選択を開始
@@ -376,9 +374,7 @@ const isCurrentMonth = (date: Date): boolean => {
   const handleCellMouseEnter = (projectId: string, date: Date) => {
     if (!isSelecting || !selectionStart) return;
     
-    const dateStr = viewType === 'monthly'
-      ? `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`
-      : date.toISOString().split('T')[0];
+    const dateStr = date.toISOString().split('T')[0];
     handleRangeSelection(projectId, dateStr, selectionStart);
   };
 
@@ -401,21 +397,8 @@ const isCurrentMonth = (date: Date): boolean => {
     
     const startProjectIndex = projects.findIndex(p => p.id === baseCell.projectId);
     const endProjectIndex = projects.findIndex(p => p.id === endProjectId);
-    
-    // 日付インデックスの検索を viewType に応じて変更
-    const startDateIndex = dates.findIndex(d => {
-      const dateStr = viewType === 'monthly'
-        ? `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`
-        : d.toISOString().split('T')[0];
-      return dateStr === baseCell.date;
-    });
-    
-    const endDateIndex = dates.findIndex(d => {
-      const dateStr = viewType === 'monthly'
-        ? `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`
-        : d.toISOString().split('T')[0];
-      return dateStr === endDate;
-    });
+    const startDateIndex = dates.findIndex(d => d.toISOString().split('T')[0] === baseCell.date);
+    const endDateIndex = dates.findIndex(d => d.toISOString().split('T')[0] === endDate);
     
     if (startProjectIndex === -1 || endProjectIndex === -1 || startDateIndex === -1 || endDateIndex === -1) {
       return;
@@ -429,10 +412,7 @@ const isCurrentMonth = (date: Date): boolean => {
     const newSelectedCells = new Set<string>();
     for (let pIndex = minProjectIndex; pIndex <= maxProjectIndex; pIndex++) {
       for (let dIndex = minDateIndex; dIndex <= maxDateIndex; dIndex++) {
-        const dateStr = viewType === 'monthly'
-          ? `${dates[dIndex].getFullYear()}-${String(dates[dIndex].getMonth() + 1).padStart(2, '0')}`
-          : dates[dIndex].toISOString().split('T')[0];
-        const cellKey = `${projects[pIndex].id}-${dateStr}`;
+        const cellKey = `${projects[pIndex].id}-${dates[dIndex].toISOString().split('T')[0]}`;
         newSelectedCells.add(cellKey);
       }
     }
@@ -441,10 +421,8 @@ const isCurrentMonth = (date: Date): boolean => {
   };
 
   const handleCellDoubleClick = (projectId: string, date: Date) => {
-    const dateStr = viewType === 'monthly'
-      ? `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`
-      : date.toISOString().split('T')[0];
-    const key = `${projectId}-${dateStr}`;
+    const dateStr = date.toISOString().split('T')[0];
+    const key = getCellKey(projectId, date);
     const cell = schedules.get(key);
     
     setEditingCell({ projectId, date: dateStr });
@@ -548,12 +526,7 @@ const isCurrentMonth = (date: Date): boolean => {
     }
 
     const currentProjectIndex = projects.findIndex(p => p.id === selectedCell.projectId);
-    const currentDateIndex = dates.findIndex(d => {
-  const dateStr = viewType === 'monthly'
-    ? `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`
-    : d.toISOString().split('T')[0];
-  return dateStr === selectedCell.date;
-});
+    const currentDateIndex = dates.findIndex(d => d.toISOString().split('T')[0] === selectedCell.date);
     
     switch (e.key) {
       case 'ArrowUp':
@@ -589,9 +562,7 @@ const isCurrentMonth = (date: Date): boolean => {
       case 'ArrowLeft':
         e.preventDefault();
         if (currentDateIndex > 0) {
-          const newDate = viewType === 'monthly'
-            ? `${dates[currentDateIndex - 1].getFullYear()}-${String(dates[currentDateIndex - 1].getMonth() + 1).padStart(2, '0')}`
-            : dates[currentDateIndex - 1].toISOString().split('T')[0];
+          const newDate = dates[currentDateIndex - 1].toISOString().split('T')[0];
           setSelectedCell({ 
             projectId: selectedCell.projectId, 
             date: newDate
@@ -607,9 +578,7 @@ const isCurrentMonth = (date: Date): boolean => {
       case 'ArrowRight':
         e.preventDefault();
         if (currentDateIndex < dates.length - 1) {
-          const newDate = viewType === 'monthly'
-            ? `${dates[currentDateIndex + 1].getFullYear()}-${String(dates[currentDateIndex + 1].getMonth() + 1).padStart(2, '0')}`
-            : dates[currentDateIndex + 1].toISOString().split('T')[0];
+          const newDate = dates[currentDateIndex + 1].toISOString().split('T')[0];
           setSelectedCell({ 
             projectId: selectedCell.projectId, 
             date: newDate
@@ -674,20 +643,33 @@ const isCurrentMonth = (date: Date): boolean => {
 
       const cellsData = sortedCells.map(key => {
         const cell = schedules.get(key);
-        let projectId: string;
-        let dateStr: string;
-        
-        if (viewType === 'monthly') {
-          // 月次ビュー: {projectId}-YYYY-MM 形式
-          const parts = key.split('-');
-          dateStr = parts.slice(-2).join('-'); // YYYY-MM
-          projectId = parts.slice(0, -2).join('-');
-        } else {
-          // 日次ビュー: {projectId}-YYYY-MM-DD 形式
-          const parts = key.split('-');
-          dateStr = parts.slice(-3).join('-'); // YYYY-MM-DD
-          projectId = parts.slice(0, -3).join('-');
-        }
+        // sortedCells.map内
+const cellsData = sortedCells.map(key => {
+  const cell = schedules.get(key);
+  let projectId: string;
+  let dateStr: string;
+  
+  if (viewType === 'monthly') {
+    // 月次ビュー: {projectId}-YYYY-MM 形式
+    const parts = key.split('-');
+    dateStr = parts.slice(-2).join('-'); // YYYY-MM
+    projectId = parts.slice(0, -2).join('-');
+  } else {
+    // 日次ビュー: {projectId}-YYYY-MM-DD 形式
+    const parts = key.split('-');
+    dateStr = parts.slice(-3).join('-'); // YYYY-MM-DD
+    projectId = parts.slice(0, -3).join('-');
+  }
+  
+  return {
+    key,
+    projectId,
+    dateStr,
+    content: cell?.content || '',
+    backgroundColor: cell?.backgroundColor || '#ffffff',
+    textColor: cell?.textColor || '#000000'
+  };
+});
         
         return {
           key,
@@ -907,9 +889,7 @@ if (viewType === 'monthly') {
   const handlePaste = async (e: React.ClipboardEvent, projectId: string, date: Date) => {
     e.preventDefault();
     
-    const dateStr = viewType === 'monthly'
-      ? `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`
-      : date.toISOString().split('T')[0];
+    const dateStr = date.toISOString().split('T')[0];
     const tableName = viewType === 'monthly' ? 'annual_schedules' : 'project_schedules';
 
     try {
@@ -1028,9 +1008,7 @@ if (viewType === 'monthly') {
   };
 
   const handleColorChange = async (projectId: string, date: Date, color: string, textColor: string) => {
-    const dateStr = viewType === 'monthly'
-      ? `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`
-      : date.toISOString().split('T')[0];
+    const dateStr = date.toISOString().split('T')[0];
     const clickedCellKey = `${projectId}-${dateStr}`;
     
     const targetCells = selectedCells.size > 0 && selectedCells.has(clickedCellKey) 
