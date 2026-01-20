@@ -607,7 +607,9 @@ const isCurrentMonth = (date: Date): boolean => {
       case 'ArrowRight':
         e.preventDefault();
         if (currentDateIndex < dates.length - 1) {
-          const newDate = dates[currentDateIndex + 1].toISOString().split('T')[0];
+          const newDate = viewType === 'monthly'
+            ? `${dates[currentDateIndex + 1].getFullYear()}-${String(dates[currentDateIndex + 1].getMonth() + 1).padStart(2, '0')}`
+            : dates[currentDateIndex + 1].toISOString().split('T')[0];
           setSelectedCell({ 
             projectId: selectedCell.projectId, 
             date: newDate
