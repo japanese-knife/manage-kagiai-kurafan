@@ -381,14 +381,17 @@ const isCurrentMonth = (date: Date): boolean => {
     // 編集中やカラーピッカー表示中はドラッグ選択しない
     if (editingCell || showColorPicker) return;
     
-    const dateStr = date.toISOString().split('T')[0];
+    const cellKey = getCellKey(projectId, date);
+    const dateStr = viewType === 'monthly'
+      ? `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`
+      : date.toISOString().split('T')[0];
     
     if (!e.shiftKey && !e.ctrlKey && !e.metaKey) {
       // 通常のマウスダウンでドラッグ選択を開始
       setIsSelecting(true);
       setSelectionStart({ projectId, date: dateStr });
       setSelectedCell({ projectId, date: dateStr });
-      setSelectedCells(new Set([`${projectId}-${dateStr}`]));
+      setSelectedCells(new Set([cellKey]));
     }
   };
 
