@@ -803,9 +803,6 @@ const isCurrentMonth = (date: Date): boolean => {
         const updates: any[] = [];
         
         selectedCells.forEach(cellKey => {
-          // schedules Map から直接取得して projectId と date を確認
-          const existingCell = schedules.get(cellKey);
-          
           // cellKey から projectId と date を抽出（getCellKey の逆変換）
           let targetProjectId: string;
           let targetDateStr: string;
@@ -889,7 +886,17 @@ const isCurrentMonth = (date: Date): boolean => {
         )).sort();
         
         const startProjectIndex = projects.findIndex(p => p.id === selectedCell.projectId);
-        const startDateIndex = dates.findIndex(d => d.toISOString().split('T')[0] === selectedCell.date);
+        
+        // viewType に応じて日付インデックスを検索
+        let startDateIndex: number;
+        if (viewType === 'monthly') {
+          startDateIndex = dates.findIndex(d => {
+            const dateStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+            return dateStr === selectedCell.date;
+          });
+        } else {
+          startDateIndex = dates.findIndex(d => d.toISOString().split('T')[0] === selectedCell.date);
+        }
         
         if (startProjectIndex === -1 || startDateIndex === -1) return;
         
@@ -905,7 +912,11 @@ const isCurrentMonth = (date: Date): boolean => {
             const targetDateIndex = startDateIndex + dOffset;
             if (targetDateIndex >= dates.length) return;
             
-            const targetDate = dates[targetDateIndex].toISOString().split('T')[0];
+            // viewType に応じて日付文字列を生成
+            const targetDate = viewType === 'monthly'
+              ? `${dates[targetDateIndex].getFullYear()}-${String(dates[targetDateIndex].getMonth() + 1).padStart(2, '0')}`
+              : dates[targetDateIndex].toISOString().split('T')[0];
+            
             const sourceCell = sourceDateMap?.get(sourceDate);
             
             if (sourceCell) {
@@ -934,7 +945,8 @@ const isCurrentMonth = (date: Date): boolean => {
         
         // 視覚的フィードバック
         if (selectedCell) {
-          const targetCell = document.querySelector(`[data-cell-id="${selectedCell.projectId}-${selectedCell.date}"]`);
+          const targetCellKey = getCellKey(selectedCell.projectId, new Date(selectedCell.date));
+          const targetCell = document.querySelector(`[data-cell-id="${targetCellKey}"]`);
           if (targetCell) {
             targetCell.classList.add('ring-2', 'ring-green-400');
             setTimeout(() => {
