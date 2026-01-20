@@ -423,8 +423,24 @@ const isCurrentMonth = (date: Date): boolean => {
     
     const startProjectIndex = projects.findIndex(p => p.id === baseCell.projectId);
     const endProjectIndex = projects.findIndex(p => p.id === endProjectId);
-    const startDateIndex = dates.findIndex(d => d.toISOString().split('T')[0] === baseCell.date);
-    const endDateIndex = dates.findIndex(d => d.toISOString().split('T')[0] === endDate);
+    
+    // 日付の比較を viewType に応じて行う
+    let startDateIndex: number;
+    let endDateIndex: number;
+    
+    if (viewType === 'monthly') {
+      startDateIndex = dates.findIndex(d => {
+        const dateStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+        return dateStr === baseCell.date;
+      });
+      endDateIndex = dates.findIndex(d => {
+        const dateStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+        return dateStr === endDate;
+      });
+    } else {
+      startDateIndex = dates.findIndex(d => d.toISOString().split('T')[0] === baseCell.date);
+      endDateIndex = dates.findIndex(d => d.toISOString().split('T')[0] === endDate);
+    }
     
     if (startProjectIndex === -1 || endProjectIndex === -1 || startDateIndex === -1 || endDateIndex === -1) {
       return;
@@ -438,7 +454,7 @@ const isCurrentMonth = (date: Date): boolean => {
     const newSelectedCells = new Set<string>();
     for (let pIndex = minProjectIndex; pIndex <= maxProjectIndex; pIndex++) {
       for (let dIndex = minDateIndex; dIndex <= maxDateIndex; dIndex++) {
-        const cellKey = `${projects[pIndex].id}-${dates[dIndex].toISOString().split('T')[0]}`;
+        const cellKey = getCellKey(projects[pIndex].id, dates[dIndex]);
         newSelectedCells.add(cellKey);
       }
     }
