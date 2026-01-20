@@ -9,7 +9,6 @@ interface ProjectScheduleViewProps {
   activeBrandTab: BrandType | 'all';
   viewType: 'daily' | 'monthly';
   onSelectProject: (project: Project) => void;
-  onOpenCreatorBrands?: (project: Project) => void;
 }
 
 interface ScheduleCell {
@@ -25,15 +24,8 @@ interface ProjectWithBrandInfo extends Project {
   brandName?: string;
 }
 
-export default function ProjectScheduleView({ 
-  user, 
-  activeBrandTab, 
-  viewType, 
-  onSelectProject,
-  onOpenCreatorBrands 
-}: ProjectScheduleViewProps) {
+export default function ProjectScheduleView({ user, activeBrandTab, viewType, onSelectProject }: ProjectScheduleViewProps) {
   const [projects, setProjects] = useState<ProjectWithBrandInfo[]>([]);
-  // ... 以下のコードはそのまま
   const [schedules, setSchedules] = useState<Map<string, ScheduleCell>>(new Map());
   const [dates, setDates] = useState<Date[]>([]);
   const [selectedCell, setSelectedCell] = useState<{ projectId: string; date: string } | null>(null);
@@ -158,9 +150,6 @@ const [selectionStart, setSelectionStart] = useState<{ projectId: string; date: 
       query = query.eq('brand_type', activeBrandTab);
     }
     
-    // ステータスフィルター: 「進行中」と「PICKS」のみ表示
-    query = query.in('status', ['進行中', 'PICKS']);
-    
     const { data, error } = await query.order('created_at', { ascending: false });
     if (error) throw error;
     
@@ -215,37 +204,14 @@ const [selectionStart, setSelectionStart] = useState<{ projectId: string; date: 
       setProjects(projectsWithInfo);
     } else if (activeBrandTab === 'all' && data) {
       const sortedData = data.sort((a, b) => {
-        // ステータス順: 進行中 → PICKS
-        const statusOrder = { '進行中': 1, 'PICKS': 2 };
-        const aOrder = statusOrder[a.status as keyof typeof statusOrder] || 999;
-        const bOrder = statusOrder[b.status as keyof typeof statusOrder] || 999;
-        
-        if (aOrder !== bOrder) {
-          return aOrder - bOrder;
-        }
-        
-        // 同じステータス内ではブランドタイプ順
         if (a.brand_type !== b.brand_type) {
           return a.brand_type === '海外クラファン.com' ? -1 : 1;
         }
-        
         return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
       });
       setProjects(sortedData);
     } else {
-      // 単一ブランドタブでもステータス順にソート
-      const sortedData = (data || []).sort((a, b) => {
-        const statusOrder = { '進行中': 1, 'PICKS': 2 };
-        const aOrder = statusOrder[a.status as keyof typeof statusOrder] || 999;
-        const bOrder = statusOrder[b.status as keyof typeof statusOrder] || 999;
-        
-        if (aOrder !== bOrder) {
-          return aOrder - bOrder;
-        }
-        
-        return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
-      });
-      setProjects(sortedData);
+      setProjects(data || []);
     }
   } catch (error) {
     console.error('プロジェクト読み込みエラー:', error);
@@ -266,8 +232,7 @@ const [selectionStart, setSelectionStart] = useState<{ projectId: string; date: 
 
       const scheduleMap = new Map<string, ScheduleCell>();
       (data || []).forEach((schedule) => {
-        // キー生成ロジックを統一
-        const key = getCellKey(schedule.project_id, new Date(schedule.date + 'T00:00:00'));
+        const key = `${schedule.project_id}-${schedule.date}`;
         const bgColor = schedule.background_color || '#ffffff';
         const autoTextColor = getTextColorForBackground(bgColor);
         scheduleMap.set(key, {
@@ -286,17 +251,8 @@ const [selectionStart, setSelectionStart] = useState<{ projectId: string; date: 
   };
 
   const getCellKey = (projectId: string, date: Date): string => {
-  if (viewType === 'monthly') {
-    // 月次ビューの場合は YYYY-MM 形式
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    return `${projectId}-${year}-${month}`;
-  } else {
-    // 日次ビューの場合は YYYY-MM-DD 形式
-    const dateStr = date.toISOString().split('T')[0];
-    return `${projectId}-${dateStr}`;
-  }
-};
+    return `${projectId}-${date.toISOString().split('T')[0]}`;
+  };
 
   const getTextColorForBackground = (bgColor: string): string => {
     const hex = bgColor.replace('#', '');
@@ -323,10 +279,8 @@ const isCurrentMonth = (date: Date): boolean => {
   
 
   const handleCellClick = (projectId: string, date: Date, e?: React.MouseEvent) => {
-    const cellKey = getCellKey(projectId, date);
-    const dateStr = viewType === 'monthly'
-      ? `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`
-      : date.toISOString().split('T')[0];
+    const dateStr = date.toISOString().split('T')[0];
+    const cellKey = `${projectId}-${dateStr}`;
     
     if (e?.shiftKey && selectedCell) {
       // Shift + クリックで範囲選択
@@ -339,29 +293,8 @@ const isCurrentMonth = (date: Date): boolean => {
         // 削除後に残っているセルがあれば、最後のセルを選択状態に
         if (newSelectedCells.size > 0) {
           const lastCell = Array.from(newSelectedCells)[newSelectedCells.size - 1];
-          // cellKeyから正しくprojectIdとdateを抽出
-          let pid: string;
-          let lastDateStr: string;
-          if (viewType === 'monthly') {
-            const match = lastCell.match(/^(.+)-(\d{4})-(\d{2})$/);
-            if (match) {
-              pid = match[1];
-              lastDateStr = `${match[2]}-${match[3]}`;
-            } else {
-              pid = projectId;
-              lastDateStr = dateStr;
-            }
-          } else {
-            const match = lastCell.match(/^(.+)-(\d{4})-(\d{2})-(\d{2})$/);
-            if (match) {
-              pid = match[1];
-              lastDateStr = `${match[2]}-${match[3]}-${match[4]}`;
-            } else {
-              pid = projectId;
-              lastDateStr = dateStr;
-            }
-          }
-          setSelectedCell({ projectId: pid, date: lastDateStr });
+          const [pid, ...dateParts] = lastCell.split('-');
+          setSelectedCell({ projectId: pid, date: dateParts.join('-') });
         } else {
           setSelectedCell(null);
         }
@@ -381,26 +314,21 @@ const isCurrentMonth = (date: Date): boolean => {
     // 編集中やカラーピッカー表示中はドラッグ選択しない
     if (editingCell || showColorPicker) return;
     
-    const cellKey = getCellKey(projectId, date);
-    const dateStr = viewType === 'monthly'
-      ? `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`
-      : date.toISOString().split('T')[0];
+    const dateStr = date.toISOString().split('T')[0];
     
     if (!e.shiftKey && !e.ctrlKey && !e.metaKey) {
       // 通常のマウスダウンでドラッグ選択を開始
       setIsSelecting(true);
       setSelectionStart({ projectId, date: dateStr });
       setSelectedCell({ projectId, date: dateStr });
-      setSelectedCells(new Set([cellKey]));
+      setSelectedCells(new Set([`${projectId}-${dateStr}`]));
     }
   };
 
   const handleCellMouseEnter = (projectId: string, date: Date) => {
     if (!isSelecting || !selectionStart) return;
     
-    const dateStr = viewType === 'monthly'
-      ? `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`
-      : date.toISOString().split('T')[0];
+    const dateStr = date.toISOString().split('T')[0];
     handleRangeSelection(projectId, dateStr, selectionStart);
   };
 
@@ -423,24 +351,8 @@ const isCurrentMonth = (date: Date): boolean => {
     
     const startProjectIndex = projects.findIndex(p => p.id === baseCell.projectId);
     const endProjectIndex = projects.findIndex(p => p.id === endProjectId);
-    
-    // 日付の比較を viewType に応じて行う
-    let startDateIndex: number;
-    let endDateIndex: number;
-    
-    if (viewType === 'monthly') {
-      startDateIndex = dates.findIndex(d => {
-        const dateStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
-        return dateStr === baseCell.date;
-      });
-      endDateIndex = dates.findIndex(d => {
-        const dateStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
-        return dateStr === endDate;
-      });
-    } else {
-      startDateIndex = dates.findIndex(d => d.toISOString().split('T')[0] === baseCell.date);
-      endDateIndex = dates.findIndex(d => d.toISOString().split('T')[0] === endDate);
-    }
+    const startDateIndex = dates.findIndex(d => d.toISOString().split('T')[0] === baseCell.date);
+    const endDateIndex = dates.findIndex(d => d.toISOString().split('T')[0] === endDate);
     
     if (startProjectIndex === -1 || endProjectIndex === -1 || startDateIndex === -1 || endDateIndex === -1) {
       return;
@@ -454,7 +366,7 @@ const isCurrentMonth = (date: Date): boolean => {
     const newSelectedCells = new Set<string>();
     for (let pIndex = minProjectIndex; pIndex <= maxProjectIndex; pIndex++) {
       for (let dIndex = minDateIndex; dIndex <= maxDateIndex; dIndex++) {
-        const cellKey = getCellKey(projects[pIndex].id, dates[dIndex]);
+        const cellKey = `${projects[pIndex].id}-${dates[dIndex].toISOString().split('T')[0]}`;
         newSelectedCells.add(cellKey);
       }
     }
@@ -463,9 +375,7 @@ const isCurrentMonth = (date: Date): boolean => {
   };
 
   const handleCellDoubleClick = (projectId: string, date: Date) => {
-    const dateStr = viewType === 'monthly'
-      ? `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`
-      : date.toISOString().split('T')[0];
+    const dateStr = date.toISOString().split('T')[0];
     const key = getCellKey(projectId, date);
     const cell = schedules.get(key);
     
@@ -564,24 +474,13 @@ const isCurrentMonth = (date: Date): boolean => {
     }
 
     if (!selectedCell) {
-      const dateStr = viewType === 'monthly'
-        ? `${dates[dateIndex].getFullYear()}-${String(dates[dateIndex].getMonth() + 1).padStart(2, '0')}`
-        : dates[dateIndex].toISOString().split('T')[0];
+      const dateStr = dates[dateIndex].toISOString().split('T')[0];
       setSelectedCell({ projectId, date: dateStr });
       return;
     }
 
     const currentProjectIndex = projects.findIndex(p => p.id === selectedCell.projectId);
-    let currentDateIndex: number;
-    
-    if (viewType === 'monthly') {
-      currentDateIndex = dates.findIndex(d => {
-        const dateStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
-        return dateStr === selectedCell.date;
-      });
-    } else {
-      currentDateIndex = dates.findIndex(d => d.toISOString().split('T')[0] === selectedCell.date);
-    }
+    const currentDateIndex = dates.findIndex(d => d.toISOString().split('T')[0] === selectedCell.date);
     
     switch (e.key) {
       case 'ArrowUp':
@@ -617,9 +516,7 @@ const isCurrentMonth = (date: Date): boolean => {
       case 'ArrowLeft':
         e.preventDefault();
         if (currentDateIndex > 0) {
-          const newDate = viewType === 'monthly'
-            ? `${dates[currentDateIndex - 1].getFullYear()}-${String(dates[currentDateIndex - 1].getMonth() + 1).padStart(2, '0')}`
-            : dates[currentDateIndex - 1].toISOString().split('T')[0];
+          const newDate = dates[currentDateIndex - 1].toISOString().split('T')[0];
           setSelectedCell({ 
             projectId: selectedCell.projectId, 
             date: newDate
@@ -633,23 +530,21 @@ const isCurrentMonth = (date: Date): boolean => {
         }
         break;
       case 'ArrowRight':
-  e.preventDefault();
-  if (currentDateIndex < dates.length - 1) {
-    const newDate = viewType === 'monthly'
-      ? `${dates[currentDateIndex + 1].getFullYear()}-${String(dates[currentDateIndex + 1].getMonth() + 1).padStart(2, '0')}`
-      : dates[currentDateIndex + 1].toISOString().split('T')[0];
-    setSelectedCell({ 
-      projectId: selectedCell.projectId, 
-      date: newDate
-    });
-    setTimeout(() => {
-      const newCell = document.querySelector(
-        `[data-cell-id="${selectedCell.projectId}-${newDate}"]`
-      ) as HTMLElement;
-      newCell?.focus();
-    }, 0);
-  }
-  break;
+        e.preventDefault();
+        if (currentDateIndex < dates.length - 1) {
+          const newDate = dates[currentDateIndex + 1].toISOString().split('T')[0];
+          setSelectedCell({ 
+            projectId: selectedCell.projectId, 
+            date: newDate
+          });
+          setTimeout(() => {
+            const newCell = document.querySelector(
+              `[data-cell-id="${selectedCell.projectId}-${newDate}"]`
+            ) as HTMLElement;
+            newCell?.focus();
+          }, 0);
+        }
+        break;
       case 'Enter':
         e.preventDefault();
         handleCellDoubleClick(selectedCell.projectId, new Date(selectedCell.date));
@@ -702,20 +597,14 @@ const isCurrentMonth = (date: Date): boolean => {
 
       const cellsData = sortedCells.map(key => {
         const cell = schedules.get(key);
-        let projectId: string;
-        let dateStr: string;
-        
-        if (viewType === 'monthly') {
-          // 月次ビュー: {projectId}-YYYY-MM 形式
-          const parts = key.split('-');
-          dateStr = parts.slice(-2).join('-'); // YYYY-MM
-          projectId = parts.slice(0, -2).join('-');
-        } else {
-          // 日次ビュー: {projectId}-YYYY-MM-DD 形式
-          const parts = key.split('-');
-          dateStr = parts.slice(-3).join('-'); // YYYY-MM-DD
-          projectId = parts.slice(0, -3).join('-');
-        }
+        const [projectId, dateStr] = key.split('-').reduce((acc, part, idx, arr) => {
+          if (idx < arr.length - 3) {
+            acc[0] = acc[0] ? `${acc[0]}-${part}` : part;
+          } else {
+            acc[1] = acc[1] ? `${acc[1]}-${part}` : part;
+          }
+          return acc;
+        }, ['', '']);
         
         return {
           key,
@@ -803,31 +692,9 @@ const isCurrentMonth = (date: Date): boolean => {
         const updates: any[] = [];
         
         selectedCells.forEach(cellKey => {
-          // cellKey から projectId と date を抽出（getCellKey の逆変換）
-          let targetProjectId: string;
-          let targetDateStr: string;
-          
-          if (viewType === 'monthly') {
-            // 月次ビュー: {projectId}-YYYY-MM 形式
-            const match = cellKey.match(/^(.+)-(\d{4})-(\d{2})$/);
-            if (match) {
-              targetProjectId = match[1];
-              targetDateStr = `${match[2]}-${match[3]}`;
-            } else {
-              console.error('Invalid monthly cellKey format:', cellKey);
-              return;
-            }
-          } else {
-            // 日次ビュー: {projectId}-YYYY-MM-DD 形式
-            const match = cellKey.match(/^(.+)-(\d{4})-(\d{2})-(\d{2})$/);
-            if (match) {
-              targetProjectId = match[1];
-              targetDateStr = `${match[2]}-${match[3]}-${match[4]}`;
-            } else {
-              console.error('Invalid daily cellKey format:', cellKey);
-              return;
-            }
-          }
+          const parts = cellKey.split('-');
+          const targetDateStr = parts.slice(-3).join('-');
+          const targetProjectId = parts.slice(0, -3).join('-');
           
           console.log('Processing cellKey:', cellKey, 'projectId:', targetProjectId, 'date:', targetDateStr);
           
@@ -886,17 +753,7 @@ const isCurrentMonth = (date: Date): boolean => {
         )).sort();
         
         const startProjectIndex = projects.findIndex(p => p.id === selectedCell.projectId);
-        
-        // viewType に応じて日付インデックスを検索
-        let startDateIndex: number;
-        if (viewType === 'monthly') {
-          startDateIndex = dates.findIndex(d => {
-            const dateStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
-            return dateStr === selectedCell.date;
-          });
-        } else {
-          startDateIndex = dates.findIndex(d => d.toISOString().split('T')[0] === selectedCell.date);
-        }
+        const startDateIndex = dates.findIndex(d => d.toISOString().split('T')[0] === selectedCell.date);
         
         if (startProjectIndex === -1 || startDateIndex === -1) return;
         
@@ -912,11 +769,7 @@ const isCurrentMonth = (date: Date): boolean => {
             const targetDateIndex = startDateIndex + dOffset;
             if (targetDateIndex >= dates.length) return;
             
-            // viewType に応じて日付文字列を生成
-            const targetDate = viewType === 'monthly'
-              ? `${dates[targetDateIndex].getFullYear()}-${String(dates[targetDateIndex].getMonth() + 1).padStart(2, '0')}`
-              : dates[targetDateIndex].toISOString().split('T')[0];
-            
+            const targetDate = dates[targetDateIndex].toISOString().split('T')[0];
             const sourceCell = sourceDateMap?.get(sourceDate);
             
             if (sourceCell) {
@@ -945,8 +798,7 @@ const isCurrentMonth = (date: Date): boolean => {
         
         // 視覚的フィードバック
         if (selectedCell) {
-          const targetCellKey = getCellKey(selectedCell.projectId, new Date(selectedCell.date));
-          const targetCell = document.querySelector(`[data-cell-id="${targetCellKey}"]`);
+          const targetCell = document.querySelector(`[data-cell-id="${selectedCell.projectId}-${selectedCell.date}"]`);
           if (targetCell) {
             targetCell.classList.add('ring-2', 'ring-green-400');
             setTimeout(() => {
@@ -964,9 +816,7 @@ const isCurrentMonth = (date: Date): boolean => {
   const handlePaste = async (e: React.ClipboardEvent, projectId: string, date: Date) => {
     e.preventDefault();
     
-    const dateStr = viewType === 'monthly'
-      ? `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`
-      : date.toISOString().split('T')[0];
+    const dateStr = date.toISOString().split('T')[0];
     const tableName = viewType === 'monthly' ? 'annual_schedules' : 'project_schedules';
 
     try {
@@ -979,17 +829,7 @@ const isCurrentMonth = (date: Date): boolean => {
         )).sort();
         
         const startProjectIndex = projects.findIndex(p => p.id === projectId);
-        
-        // viewType に応じて日付インデックスを検索
-        let startDateIndex: number;
-        if (viewType === 'monthly') {
-          startDateIndex = dates.findIndex(d => {
-            const dStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
-            return dStr === dateStr;
-          });
-        } else {
-          startDateIndex = dates.findIndex(d => d.toISOString().split('T')[0] === dateStr);
-        }
+        const startDateIndex = dates.findIndex(d => d.toISOString().split('T')[0] === dateStr);
         
         if (startProjectIndex === -1 || startDateIndex === -1) return;
         
@@ -1006,11 +846,7 @@ const isCurrentMonth = (date: Date): boolean => {
             const targetDateIndex = startDateIndex + dOffset;
             if (targetDateIndex >= dates.length) return;
             
-            // viewType に応じて日付文字列を生成
-            const targetDate = viewType === 'monthly'
-              ? `${dates[targetDateIndex].getFullYear()}-${String(dates[targetDateIndex].getMonth() + 1).padStart(2, '0')}`
-              : dates[targetDateIndex].toISOString().split('T')[0];
-            
+            const targetDate = dates[targetDateIndex].toISOString().split('T')[0];
             const sourceCell = sourceDateMap?.get(sourceDate);
             
             if (sourceCell) {
@@ -1040,17 +876,7 @@ const isCurrentMonth = (date: Date): boolean => {
         const lines = clipboardText.split('\n').filter(line => line.trim());
         
         const startProjectIndex = projects.findIndex(p => p.id === projectId);
-        
-        // viewType に応じて日付インデックスを検索
-        let startDateIndex: number;
-        if (viewType === 'monthly') {
-          startDateIndex = dates.findIndex(d => {
-            const dStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
-            return dStr === dateStr;
-          });
-        } else {
-          startDateIndex = dates.findIndex(d => d.toISOString().split('T')[0] === dateStr);
-        }
+        const startDateIndex = dates.findIndex(d => d.toISOString().split('T')[0] === dateStr);
         
         if (startProjectIndex === -1 || startDateIndex === -1) return;
         
@@ -1067,10 +893,7 @@ const isCurrentMonth = (date: Date): boolean => {
             const targetDateIndex = startDateIndex + colOffset;
             if (targetDateIndex >= dates.length) return;
             
-            // viewType に応じて日付文字列を生成
-            const targetDate = viewType === 'monthly'
-              ? `${dates[targetDateIndex].getFullYear()}-${String(dates[targetDateIndex].getMonth() + 1).padStart(2, '0')}`
-              : dates[targetDateIndex].toISOString().split('T')[0];
+            const targetDate = dates[targetDateIndex].toISOString().split('T')[0];
             const backgroundColor = '#ffffff';
             const textColor = getTextColorForBackground(backgroundColor);
             
@@ -1125,30 +948,9 @@ const isCurrentMonth = (date: Date): boolean => {
       const updatedSchedules = new Map(schedules);
       
       for (const cellKey of targetCells) {
-        let targetDateStr: string;
-        let targetProjectId: string;
-        
-        if (viewType === 'monthly') {
-          // 月次ビュー: {projectId}-YYYY-MM 形式
-          const match = cellKey.match(/^(.+)-(\d{4})-(\d{2})$/);
-          if (match) {
-            targetProjectId = match[1];
-            targetDateStr = `${match[2]}-${match[3]}`;
-          } else {
-            console.error('Invalid monthly cellKey format:', cellKey);
-            continue;
-          }
-        } else {
-          // 日次ビュー: {projectId}-YYYY-MM-DD 形式
-          const match = cellKey.match(/^(.+)-(\d{4})-(\d{2})-(\d{2})$/);
-          if (match) {
-            targetProjectId = match[1];
-            targetDateStr = `${match[2]}-${match[3]}-${match[4]}`;
-          } else {
-            console.error('Invalid daily cellKey format:', cellKey);
-            continue;
-          }
-        }
+        const parts = cellKey.split('-');
+        const targetDateStr = parts.slice(-3).join('-');
+        const targetProjectId = parts.slice(0, -3).join('-');
         
         const existingCell = schedules.get(cellKey);
         
@@ -1399,39 +1201,19 @@ const isCurrentMonth = (date: Date): boolean => {
     : 'left-[80px] sm:left-[200px]'
 } z-20 bg-white border border-neutral-200 px-1 sm:px-2 py-2 text-center shadow-sm w-[40px] sm:w-[60px]`}>
   <button
-  onClick={() => {
-    console.log('Button clicked, activeBrandTab:', activeBrandTab, 'viewType:', viewType);
-    console.log('onOpenCreatorBrands exists:', !!onOpenCreatorBrands);
-    console.log('project:', project);
-    
-    if (activeBrandTab === 'BRAND-BASE' && viewType === 'monthly') {
-      // 年間スケジュールの場合は、onOpenCreatorBrandsを呼び出す
-      if (onOpenCreatorBrands) {
-        console.log('Calling onOpenCreatorBrands');
-        onOpenCreatorBrands(project);
-      } else {
-        console.log('onOpenCreatorBrands is not defined');
-      }
-    } else {
-      // それ以外の場合は通常通りプロジェクトを開く
-      console.log('Calling onSelectProject');
-      onSelectProject(project);
-    }
-  }}
-  className="px-1 sm:px-2 py-1 text-xs text-primary-600 underline hover:text-primary-700 hover:no-underline transition-colors"
-  title={activeBrandTab === 'BRAND-BASE' && viewType === 'monthly' ? 'ブランド一覧を開く' : 'プロジェクトを開く'}
->
-  開く
-</button>
+    onClick={() => onSelectProject(project)}
+    className="px-1 sm:px-2 py-1 text-xs text-primary-600 underline hover:text-primary-700 hover:no-underline transition-colors"
+    title="プロジェクトを開く"
+  >
+    開く
+  </button>
 </td>
           
           {dates.map((date, dateIndex) => {
             const key = getCellKey(project.id, date);
             const cell = schedules.get(key);
-            const dateStr = viewType === 'monthly'
-              ? `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`
-              : date.toISOString().split('T')[0];
-            const cellKey = getCellKey(project.id, date);
+            const dateStr = date.toISOString().split('T')[0];
+            const cellKey = `${project.id}-${dateStr}`;
             const isSelected = selectedCells.has(cellKey);
             const isPrimarySelected = selectedCell?.projectId === project.id && selectedCell?.date === dateStr;
             const isEditing = editingCell?.projectId === project.id && editingCell?.date === dateStr;
@@ -1439,7 +1221,7 @@ const isCurrentMonth = (date: Date): boolean => {
             return (
               <td
   key={dateIndex}
-  data-cell-id={cellKey}
+  data-cell-id={`${project.id}-${dateStr}`}
   className={`p-0 cursor-cell relative select-none ${
     isPrimarySelected
       ? 'border-4 border-primary-600 shadow-lg' 
