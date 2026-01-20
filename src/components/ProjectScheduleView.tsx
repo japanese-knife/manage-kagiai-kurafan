@@ -644,9 +644,6 @@ const isCurrentMonth = (date: Date): boolean => {
       });
 
       const cellsData = sortedCells.map(key => {
-        const cell = schedules.get(key);
-        // sortedCells.map内
-const cellsData = sortedCells.map(key => {
   const cell = schedules.get(key);
   let projectId: string;
   let dateStr: string;
