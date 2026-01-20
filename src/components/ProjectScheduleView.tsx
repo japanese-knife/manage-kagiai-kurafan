@@ -1020,17 +1020,26 @@ const isCurrentMonth = (date: Date): boolean => {
       const updatedSchedules = new Map(schedules);
       
       for (const cellKey of targetCells) {
-        const parts = cellKey.split('-');
-let targetDateStr: string;
-let targetProjectId: string;
-
-if (viewType === 'monthly') {
-  targetDateStr = parts.slice(-2).join('-'); // YYYY-MM
-  targetProjectId = parts.slice(0, -2).join('-');
-} else {
-  targetDateStr = parts.slice(-3).join('-'); // YYYY-MM-DD
-  targetProjectId = parts.slice(0, -3).join('-');
-}
+        let targetDateStr: string;
+        let targetProjectId: string;
+        
+        if (viewType === 'monthly') {
+          // 月次ビュー: {projectId}-YYYY-MM 形式
+          const lastHyphenIndex = cellKey.lastIndexOf('-');
+          const secondLastHyphenIndex = cellKey.lastIndexOf('-', lastHyphenIndex - 1);
+          targetProjectId = cellKey.substring(0, secondLastHyphenIndex);
+          targetDateStr = cellKey.substring(secondLastHyphenIndex + 1);
+        } else {
+          // 日次ビュー: {projectId}-YYYY-MM-DD 形式
+          const parts = cellKey.split('-');
+          if (parts.length >= 4) {
+            targetDateStr = parts.slice(-3).join('-'); // YYYY-MM-DD
+            targetProjectId = parts.slice(0, -3).join('-');
+          } else {
+            console.error('Invalid cellKey format:', cellKey);
+            continue;
+          }
+        }
         
         const existingCell = schedules.get(cellKey);
         
