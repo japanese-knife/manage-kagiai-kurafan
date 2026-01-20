@@ -564,13 +564,24 @@ const isCurrentMonth = (date: Date): boolean => {
     }
 
     if (!selectedCell) {
-      const dateStr = dates[dateIndex].toISOString().split('T')[0];
+      const dateStr = viewType === 'monthly'
+        ? `${dates[dateIndex].getFullYear()}-${String(dates[dateIndex].getMonth() + 1).padStart(2, '0')}`
+        : dates[dateIndex].toISOString().split('T')[0];
       setSelectedCell({ projectId, date: dateStr });
       return;
     }
 
     const currentProjectIndex = projects.findIndex(p => p.id === selectedCell.projectId);
-    const currentDateIndex = dates.findIndex(d => d.toISOString().split('T')[0] === selectedCell.date);
+    let currentDateIndex: number;
+    
+    if (viewType === 'monthly') {
+      currentDateIndex = dates.findIndex(d => {
+        const dateStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+        return dateStr === selectedCell.date;
+      });
+    } else {
+      currentDateIndex = dates.findIndex(d => d.toISOString().split('T')[0] === selectedCell.date);
+    }
     
     switch (e.key) {
       case 'ArrowUp':
