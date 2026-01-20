@@ -463,7 +463,9 @@ const isCurrentMonth = (date: Date): boolean => {
   };
 
   const handleCellDoubleClick = (projectId: string, date: Date) => {
-    const dateStr = date.toISOString().split('T')[0];
+    const dateStr = viewType === 'monthly'
+      ? `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`
+      : date.toISOString().split('T')[0];
     const key = getCellKey(projectId, date);
     const cell = schedules.get(key);
     
