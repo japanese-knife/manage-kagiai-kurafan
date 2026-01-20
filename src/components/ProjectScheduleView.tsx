@@ -398,7 +398,9 @@ const isCurrentMonth = (date: Date): boolean => {
   const handleCellMouseEnter = (projectId: string, date: Date) => {
     if (!isSelecting || !selectionStart) return;
     
-    const dateStr = date.toISOString().split('T')[0];
+    const dateStr = viewType === 'monthly'
+      ? `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`
+      : date.toISOString().split('T')[0];
     handleRangeSelection(projectId, dateStr, selectionStart);
   };
 
