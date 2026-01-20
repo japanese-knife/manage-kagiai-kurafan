@@ -1030,18 +1030,22 @@ const isCurrentMonth = (date: Date): boolean => {
         
         if (viewType === 'monthly') {
           // 月次ビュー: {projectId}-YYYY-MM 形式
-          const lastHyphenIndex = cellKey.lastIndexOf('-');
-          const secondLastHyphenIndex = cellKey.lastIndexOf('-', lastHyphenIndex - 1);
-          targetProjectId = cellKey.substring(0, secondLastHyphenIndex);
-          targetDateStr = cellKey.substring(secondLastHyphenIndex + 1);
+          const match = cellKey.match(/^(.+)-(\d{4})-(\d{2})$/);
+          if (match) {
+            targetProjectId = match[1];
+            targetDateStr = `${match[2]}-${match[3]}`;
+          } else {
+            console.error('Invalid monthly cellKey format:', cellKey);
+            continue;
+          }
         } else {
           // 日次ビュー: {projectId}-YYYY-MM-DD 形式
-          const parts = cellKey.split('-');
-          if (parts.length >= 4) {
-            targetDateStr = parts.slice(-3).join('-'); // YYYY-MM-DD
-            targetProjectId = parts.slice(0, -3).join('-');
+          const match = cellKey.match(/^(.+)-(\d{4})-(\d{2})-(\d{2})$/);
+          if (match) {
+            targetProjectId = match[1];
+            targetDateStr = `${match[2]}-${match[3]}-${match[4]}`;
           } else {
-            console.error('Invalid cellKey format:', cellKey);
+            console.error('Invalid daily cellKey format:', cellKey);
             continue;
           }
         }
