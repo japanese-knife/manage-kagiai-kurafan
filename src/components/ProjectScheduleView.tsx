@@ -1040,7 +1040,17 @@ const isCurrentMonth = (date: Date): boolean => {
         const lines = clipboardText.split('\n').filter(line => line.trim());
         
         const startProjectIndex = projects.findIndex(p => p.id === projectId);
-        const startDateIndex = dates.findIndex(d => d.toISOString().split('T')[0] === dateStr);
+        
+        // viewType に応じて日付インデックスを検索
+        let startDateIndex: number;
+        if (viewType === 'monthly') {
+          startDateIndex = dates.findIndex(d => {
+            const dStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+            return dStr === dateStr;
+          });
+        } else {
+          startDateIndex = dates.findIndex(d => d.toISOString().split('T')[0] === dateStr);
+        }
         
         if (startProjectIndex === -1 || startDateIndex === -1) return;
         
@@ -1057,7 +1067,10 @@ const isCurrentMonth = (date: Date): boolean => {
             const targetDateIndex = startDateIndex + colOffset;
             if (targetDateIndex >= dates.length) return;
             
-            const targetDate = dates[targetDateIndex].toISOString().split('T')[0];
+            // viewType に応じて日付文字列を生成
+            const targetDate = viewType === 'monthly'
+              ? `${dates[targetDateIndex].getFullYear()}-${String(dates[targetDateIndex].getMonth() + 1).padStart(2, '0')}`
+              : dates[targetDateIndex].toISOString().split('T')[0];
             const backgroundColor = '#ffffff';
             const textColor = getTextColorForBackground(backgroundColor);
             
