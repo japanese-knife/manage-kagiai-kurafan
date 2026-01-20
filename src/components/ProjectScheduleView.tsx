@@ -633,23 +633,23 @@ const isCurrentMonth = (date: Date): boolean => {
         }
         break;
       case 'ArrowRight':
-        e.preventDefault();
-        if (currentDateIndex < dates.length - 1) {
-          const newDate = viewType === 'monthly'
-            ? `${dates[currentDateIndex + 1].getFullYear()}-${String(dates[currentDateIndex + 1].padStart(2, '0')}`
-            : dates[currentDateIndex + 1].toISOString().split('T')[0];
-          setSelectedCell({ 
-            projectId: selectedCell.projectId, 
-            date: newDate
-          });
-          setTimeout(() => {
-            const newCell = document.querySelector(
-              `[data-cell-id="${selectedCell.projectId}-${newDate}"]`
-            ) as HTMLElement;
-            newCell?.focus();
-          }, 0);
-        }
-        break;
+  e.preventDefault();
+  if (currentDateIndex < dates.length - 1) {
+    const newDate = viewType === 'monthly'
+      ? `${dates[currentDateIndex + 1].getFullYear()}-${String(dates[currentDateIndex + 1].getMonth() + 1).padStart(2, '0')}`
+      : dates[currentDateIndex + 1].toISOString().split('T')[0];
+    setSelectedCell({ 
+      projectId: selectedCell.projectId, 
+      date: newDate
+    });
+    setTimeout(() => {
+      const newCell = document.querySelector(
+        `[data-cell-id="${selectedCell.projectId}-${newDate}"]`
+      ) as HTMLElement;
+      newCell?.focus();
+    }, 0);
+  }
+  break;
       case 'Enter':
         e.preventDefault();
         handleCellDoubleClick(selectedCell.projectId, new Date(selectedCell.date));
