@@ -744,26 +744,31 @@ const isCurrentMonth = (date: Date): boolean => {
         const updates: any[] = [];
         
         selectedCells.forEach(cellKey => {
-          // getCellKey関数と同じロジックを使用
-          let targetDateStr: string;
+          // schedules Map から直接取得して projectId と date を確認
+          const existingCell = schedules.get(cellKey);
+          
+          // cellKey から projectId と date を抽出（getCellKey の逆変換）
           let targetProjectId: string;
+          let targetDateStr: string;
           
           if (viewType === 'monthly') {
             // 月次ビュー: {projectId}-YYYY-MM 形式
-            // 最後の2つの部分（YYYY-MM）が日付
-            const lastHyphenIndex = cellKey.lastIndexOf('-');
-            const secondLastHyphenIndex = cellKey.lastIndexOf('-', lastHyphenIndex - 1);
-            targetProjectId = cellKey.substring(0, secondLastHyphenIndex);
-            targetDateStr = cellKey.substring(secondLastHyphenIndex + 1);
+            const match = cellKey.match(/^(.+)-(\d{4})-(\d{2})$/);
+            if (match) {
+              targetProjectId = match[1];
+              targetDateStr = `${match[2]}-${match[3]}`;
+            } else {
+              console.error('Invalid monthly cellKey format:', cellKey);
+              return;
+            }
           } else {
             // 日次ビュー: {projectId}-YYYY-MM-DD 形式
-            // 最後の3つの部分（YYYY-MM-DD）が日付
-            const parts = cellKey.split('-');
-            if (parts.length >= 4) {
-              targetDateStr = parts.slice(-3).join('-'); // YYYY-MM-DD
-              targetProjectId = parts.slice(0, -3).join('-');
+            const match = cellKey.match(/^(.+)-(\d{4})-(\d{2})-(\d{2})$/);
+            if (match) {
+              targetProjectId = match[1];
+              targetDateStr = `${match[2]}-${match[3]}-${match[4]}`;
             } else {
-              console.error('Invalid cellKey format:', cellKey);
+              console.error('Invalid daily cellKey format:', cellKey);
               return;
             }
           }
