@@ -1387,8 +1387,10 @@ const isCurrentMonth = (date: Date): boolean => {
           {dates.map((date, dateIndex) => {
             const key = getCellKey(project.id, date);
             const cell = schedules.get(key);
-            const dateStr = date.toISOString().split('T')[0];
-            const cellKey = `${project.id}-${dateStr}`;
+            const dateStr = viewType === 'monthly'
+              ? `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`
+              : date.toISOString().split('T')[0];
+            const cellKey = getCellKey(project.id, date);
             const isSelected = selectedCells.has(cellKey);
             const isPrimarySelected = selectedCell?.projectId === project.id && selectedCell?.date === dateStr;
             const isEditing = editingCell?.projectId === project.id && editingCell?.date === dateStr;
@@ -1396,7 +1398,7 @@ const isCurrentMonth = (date: Date): boolean => {
             return (
               <td
   key={dateIndex}
-  const dateStr = date.toISOString().split('T')[0];
+  data-cell-id={cellKey}
   className={`p-0 cursor-cell relative select-none ${
     isPrimarySelected
       ? 'border-4 border-primary-600 shadow-lg' 
