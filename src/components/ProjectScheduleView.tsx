@@ -964,7 +964,9 @@ const isCurrentMonth = (date: Date): boolean => {
   const handlePaste = async (e: React.ClipboardEvent, projectId: string, date: Date) => {
     e.preventDefault();
     
-    const dateStr = date.toISOString().split('T')[0];
+    const dateStr = viewType === 'monthly'
+      ? `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`
+      : date.toISOString().split('T')[0];
     const tableName = viewType === 'monthly' ? 'annual_schedules' : 'project_schedules';
 
     try {
@@ -977,7 +979,17 @@ const isCurrentMonth = (date: Date): boolean => {
         )).sort();
         
         const startProjectIndex = projects.findIndex(p => p.id === projectId);
-        const startDateIndex = dates.findIndex(d => d.toISOString().split('T')[0] === dateStr);
+        
+        // viewType に応じて日付インデックスを検索
+        let startDateIndex: number;
+        if (viewType === 'monthly') {
+          startDateIndex = dates.findIndex(d => {
+            const dStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+            return dStr === dateStr;
+          });
+        } else {
+          startDateIndex = dates.findIndex(d => d.toISOString().split('T')[0] === dateStr);
+        }
         
         if (startProjectIndex === -1 || startDateIndex === -1) return;
         
