@@ -1007,7 +1007,9 @@ if (viewType === 'monthly') {
   };
 
   const handleColorChange = async (projectId: string, date: Date, color: string, textColor: string) => {
-    const dateStr = date.toISOString().split('T')[0];
+    const dateStr = viewType === 'monthly'
+      ? `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`
+      : date.toISOString().split('T')[0];
     const clickedCellKey = `${projectId}-${dateStr}`;
     
     const targetCells = selectedCells.size > 0 && selectedCells.has(clickedCellKey) 
