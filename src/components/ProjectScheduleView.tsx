@@ -888,7 +888,9 @@ if (viewType === 'monthly') {
   const handlePaste = async (e: React.ClipboardEvent, projectId: string, date: Date) => {
     e.preventDefault();
     
-    const dateStr = date.toISOString().split('T')[0];
+    const dateStr = viewType === 'monthly'
+      ? `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`
+      : date.toISOString().split('T')[0];
     const tableName = viewType === 'monthly' ? 'annual_schedules' : 'project_schedules';
 
     try {
