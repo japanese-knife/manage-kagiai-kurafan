@@ -548,7 +548,12 @@ const isCurrentMonth = (date: Date): boolean => {
     }
 
     const currentProjectIndex = projects.findIndex(p => p.id === selectedCell.projectId);
-    const currentDateIndex = dates.findIndex(d => d.toISOString().split('T')[0] === selectedCell.date);
+    const currentDateIndex = dates.findIndex(d => {
+  const dateStr = viewType === 'monthly'
+    ? `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`
+    : d.toISOString().split('T')[0];
+  return dateStr === selectedCell.date;
+});
     
     switch (e.key) {
       case 'ArrowUp':
