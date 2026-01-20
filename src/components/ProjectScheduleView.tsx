@@ -1396,7 +1396,7 @@ const isCurrentMonth = (date: Date): boolean => {
             return (
               <td
   key={dateIndex}
-  data-cell-id={`${project.id}-${dateStr}`}
+  const dateStr = date.toISOString().split('T')[0];
   className={`p-0 cursor-cell relative select-none ${
     isPrimarySelected
       ? 'border-4 border-primary-600 shadow-lg' 
