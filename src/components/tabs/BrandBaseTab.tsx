@@ -324,12 +324,16 @@ const [editBrandFeatures, setEditBrandFeatures] = useState('');
 
     if (linkError) throw linkError;
 
+    // クリエイター名を取得
+    const selectedCreator = creators.find(c => c.id === selectedCreatorId);
+    if (!selectedCreator) throw new Error('クリエイターが見つかりません');
+
     // 年間スケジュール用のプロジェクトを自動作成
     const { data: newProject, error: projectError } = await supabase
       .from('projects')
       .insert({
-        name: newBrandName,
-        description: newBrandTheme || newBrandFeatures || '',
+        name: selectedCreator.name,  // クリエイターの名前をプロジェクト名に
+        description: newBrandName,  // ブランド名を商品欄に
         status: '進行中',
         brand_type: 'BRAND-BASE',
         user_id: user.id,
