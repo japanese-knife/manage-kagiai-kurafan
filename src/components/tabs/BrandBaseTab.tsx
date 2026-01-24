@@ -568,11 +568,16 @@ const creator = creators.find(c => c.id === selectedCreatorId);
 if (!creator) throw new Error('クリエイターが見つかりません');
 
 // 年間スケジュール用のプロジェクトを自動作成
+// クリエイター名を取得
+const creator = creators.find(c => c.id === selectedCreatorId);
+if (!creator) throw new Error('クリエイターが見つかりません');
+
+// 年間スケジュール用のプロジェクトを自動作成
 const { data: newProject, error: projectError } = await supabase
   .from('projects')
   .insert({
-    name: creator.name,
-    description: newBrandName,
+    name: creator.name,  // クリエイターの名前をプロジェクト名に
+    description: newBrandName,  // ブランド名を商品欄に
     status: '進行中',
     brand_type: 'BRAND-BASE',
     user_id: user.id,
