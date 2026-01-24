@@ -18,7 +18,10 @@ function App() {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
-  const [activeTab, setActiveTab] = useState<TabType>('overview');
+  const [activeTab, setActiveTab] = useState<TabType>(() => {
+    const saved = localStorage.getItem('selected_project_tab');
+    return (saved as TabType) || 'overview';
+  });
   const [shareToken, setShareToken] = useState<string | null>(null);
 
   useEffect(() => {
@@ -26,27 +29,71 @@ function App() {
     const token = urlParams.get('share');
     setShareToken(token);
 
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
       setUser(session?.user ?? null);
+      
+      // ログイン済みの場合、保存されたプロジェクトIDを復元
+      if (session?.user) {
+        const savedProjectId = localStorage.getItem('selected_project_id');
+        if (savedProjectId) {
+          try {
+            const { data: project, error } = await supabase
+              .from('projects')
+              .select('*')
+              .eq('id', savedProjectId)
+              .maybeSingle();
+            
+            if (project && !error) {
+              setSelectedProject(project);
+            } else {
+              // プロジェクトが見つからない場合は保存された状態をクリア
+              localStorage.removeItem('selected_project_id');
+              localStorage.removeItem('selected_project_tab');
+            }
+          } catch (error) {
+            console.error('プロジェクト復元エラー:', error);
+            localStorage.removeItem('selected_project_id');
+            localStorage.removeItem('selected_project_tab');
+          }
+        }
+      }
+      
       setLoading(false);
     });
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       (async () => {
         setUser(session?.user ?? null);
+        // ログアウト時は保存された状態をクリア
+        if (!session?.user) {
+          localStorage.removeItem('selected_project_id');
+          localStorage.removeItem('selected_project_tab');
+          localStorage.removeItem('dashboard_active_tab');
+        }
       })();
     });
 
     return () => subscription.unsubscribe();
   }, []);
 
+  // activeTabが変更されたらlocalStorageに保存
+  useEffect(() => {
+    if (selectedProject) {
+      localStorage.setItem('selected_project_tab', activeTab);
+    }
+  }, [activeTab, selectedProject]);
+
   const handleSelectProject = (project: Project) => {
     setSelectedProject(project);
     setActiveTab('overview');
+    localStorage.setItem('selected_project_id', project.id);
+    localStorage.setItem('selected_project_tab', 'overview');
   };
 
   const handleBackToDashboard = () => {
     setSelectedProject(null);
+    localStorage.removeItem('selected_project_id');
+    localStorage.removeItem('selected_project_tab');
   };
 
   const handleLogout = async () => {
