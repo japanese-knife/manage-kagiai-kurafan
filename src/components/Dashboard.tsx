@@ -22,18 +22,24 @@ export default function Dashboard({ onSelectProject, user, onLogout }: Dashboard
   const [newProjectDescription, setNewProjectDescription] = useState('');
   const [newBrandType, setNewBrandType] = useState<BrandType>('海外クラファン.com');
   const [activeTab, setActiveTab] = useState<'schedule' | 'kaigai' | 'brandbase'>(() => {
-  const saved = localStorage.getItem('dashboard_active_tab');
-  return (saved as 'schedule' | 'kaigai' | 'brandbase') || 'schedule';
-});
+    const saved = localStorage.getItem('dashboard_active_tab');
+    return (saved as 'schedule' | 'kaigai' | 'brandbase') || 'schedule';
+  });
 
-useEffect(() => {
-  loadProjects();
-}, []);
+  useEffect(() => {
+    loadProjects();
+  }, []);
 
-// activeTabが変更されたらlocalStorageに保存
-useEffect(() => {
-  localStorage.setItem('dashboard_active_tab', activeTab);
-}, [activeTab]);
+  // activeTabが変更されたらlocalStorageに保存
+  useEffect(() => {
+    localStorage.setItem('dashboard_active_tab', activeTab);
+  }, [activeTab]);
+
+  // プロジェクト選択時にIDを保存
+  const handleSelectProject = (project: Project) => {
+    localStorage.setItem('selected_project_id', project.id);
+    onSelectProject(project);
+  };
 
   const loadProjects = async () => {
     try {
