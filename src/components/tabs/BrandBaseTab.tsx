@@ -563,17 +563,22 @@ const [editBrandFeatures, setEditBrandFeatures] = useState('');
 
     try {
       // プロジェクトを複製
-      const { data: newProject, error: projectError } = await supabase
-        .from('projects')
-        .insert({
-          name: `${project.name}のコピー`,
-          description: project.description,
-          status: project.status,
-          brand_type: project.brand_type || 'BRAND-BASE',
-          user_id: user.id,
-        })
-        .select()
-        .single();
+      // クリエイター名を取得
+const creator = creators.find(c => c.id === selectedCreatorId);
+if (!creator) throw new Error('クリエイターが見つかりません');
+
+// 年間スケジュール用のプロジェクトを自動作成
+const { data: newProject, error: projectError } = await supabase
+  .from('projects')
+  .insert({
+    name: creator.name,
+    description: newBrandName,
+    status: '進行中',
+    brand_type: 'BRAND-BASE',
+    user_id: user.id,
+  })
+  .select()
+  .single();
 
       if (projectError) throw projectError;
 
