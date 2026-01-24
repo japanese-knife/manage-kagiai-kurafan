@@ -9,6 +9,7 @@ interface ProjectScheduleViewProps {
   activeBrandTab: BrandType | 'all';
   viewType: 'daily' | 'monthly';
   onSelectProject: (project: Project) => void;
+  onOpenCreatorBrands?: (project: Project) => void;
 }
 
 interface ScheduleCell {
@@ -24,7 +25,7 @@ interface ProjectWithBrandInfo extends Project {
   brandName?: string;
 }
 
-export default function ProjectScheduleView({ user, activeBrandTab, viewType, onSelectProject }: ProjectScheduleViewProps) {
+export default function ProjectScheduleView({ user, activeBrandTab, viewType, onSelectProject, onOpenCreatorBrands }: ProjectScheduleViewProps) {
   const [projects, setProjects] = useState<ProjectWithBrandInfo[]>([]);
   const [schedules, setSchedules] = useState<Map<string, ScheduleCell>>(new Map());
   const [dates, setDates] = useState<Date[]>([]);
@@ -1201,9 +1202,15 @@ const isCurrentMonth = (date: Date): boolean => {
     : 'left-[80px] sm:left-[200px]'
 } z-20 bg-white border border-neutral-200 px-1 sm:px-2 py-2 text-center shadow-sm w-[40px] sm:w-[60px]`}>
   <button
-    onClick={() => onSelectProject(project)}
+    onClick={() => {
+      if (activeBrandTab === 'BRAND-BASE' && viewType === 'monthly' && onOpenCreatorBrands) {
+        onOpenCreatorBrands(project);
+      } else {
+        onSelectProject(project);
+      }
+    }}
     className="px-1 sm:px-2 py-1 text-xs text-primary-600 underline hover:text-primary-700 hover:no-underline transition-colors"
-    title="プロジェクトを開く"
+    title={activeBrandTab === 'BRAND-BASE' && viewType === 'monthly' ? 'ブランド一覧を開く' : 'プロジェクトを開く'}
   >
     開く
   </button>
