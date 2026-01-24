@@ -97,9 +97,12 @@ function App() {
   };
 
   const handleLogout = async () => {
-    await supabase.auth.signOut();
-    setSelectedProject(null);
-  };
+  localStorage.removeItem('selected_project_id');
+  localStorage.removeItem('selected_project_tab');
+  localStorage.removeItem('dashboard_active_tab');
+  await supabase.auth.signOut();
+  setSelectedProject(null);
+};
 
   const handleProjectUpdate = () => {
     if (selectedProject) {
