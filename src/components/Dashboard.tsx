@@ -21,11 +21,19 @@ export default function Dashboard({ onSelectProject, user, onLogout }: Dashboard
   const [newProjectName, setNewProjectName] = useState('');
   const [newProjectDescription, setNewProjectDescription] = useState('');
   const [newBrandType, setNewBrandType] = useState<BrandType>('海外クラファン.com');
-  const [activeTab, setActiveTab] = useState<'schedule' | 'kaigai' | 'brandbase'>('schedule');
+  const [activeTab, setActiveTab] = useState<'schedule' | 'kaigai' | 'brandbase'>(() => {
+  const saved = localStorage.getItem('dashboard_active_tab');
+  return (saved as 'schedule' | 'kaigai' | 'brandbase') || 'schedule';
+});
 
-  useEffect(() => {
-    loadProjects();
-  }, []);
+useEffect(() => {
+  loadProjects();
+}, []);
+
+// activeTabが変更されたらlocalStorageに保存
+useEffect(() => {
+  localStorage.setItem('dashboard_active_tab', activeTab);
+}, [activeTab]);
 
   const loadProjects = async () => {
     try {
