@@ -296,45 +296,71 @@ const [editBrandFeatures, setEditBrandFeatures] = useState('');
   };
 
   const handleCreateBrand = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newBrandName.trim() || !selectedCreatorId) return;
+  e.preventDefault();
+  if (!newBrandName.trim() || !selectedCreatorId) return;
 
-    try {
-      // ブランドを作成
-      const { data: newBrand, error: brandError } = await supabase
-        .from('brands')
-        .insert({
-          name: newBrandName,
-          theme: newBrandTheme,
-          features: newBrandFeatures,
-          user_id: user.id,
-        })
-        .select()
-        .single();
+  try {
+    // ブランドを作成
+    const { data: newBrand, error: brandError } = await supabase
+      .from('brands')
+      .insert({
+        name: newBrandName,
+        theme: newBrandTheme,
+        features: newBrandFeatures,
+        user_id: user.id,
+      })
+      .select()
+      .single();
 
-      if (brandError) throw brandError;
+    if (brandError) throw brandError;
 
-      // クリエイターとブランドを紐付け
-      const { error: linkError } = await supabase
-        .from('creator_brands')
-        .insert({
-          creator_id: selectedCreatorId,
-          brand_id: newBrand.id,
-        });
+    // クリエイターとブランドを紐付け
+    const { error: linkError } = await supabase
+      .from('creator_brands')
+      .insert({
+        creator_id: selectedCreatorId,
+        brand_id: newBrand.id,
+      });
 
-      if (linkError) throw linkError;
+    if (linkError) throw linkError;
 
-      setNewBrandName('');
-      setNewBrandTheme('');
-      setNewBrandFeatures('');
-      setShowNewBrandForm(false);
-      loadBrands();
-      alert('ブランドを作成しました');
-    } catch (error) {
-      console.error('ブランド作成エラー:', error);
-      alert('ブランドの作成に失敗しました');
-    }
-  };
+    // 年間スケジュール用のプロジェクトを自動作成
+    const { data: newProject, error: projectError } = await supabase
+      .from('projects')
+      .insert({
+        name: newBrandName,
+        description: newBrandTheme || newBrandFeatures || '',
+        status: '進行中',
+        brand_type: 'BRAND-BASE',
+        user_id: user.id,
+      })
+      .select()
+      .single();
+
+    if (projectError) throw projectError;
+
+    // ブランドとプロジェクトを紐付け
+    const { error: brandProjectError } = await supabase
+      .from('brand_projects')
+      .insert({
+        brand_id: newBrand.id,
+        project_id: newProject.id,
+      });
+
+    if (brandProjectError) throw brandProjectError;
+
+    setNewBrandName('');
+    setNewBrandTheme('');
+    setNewBrandFeatures('');
+    setShowNewBrandForm(false);
+    loadBrands();
+    onProjectsChange(); // プロジェクト一覧を更新
+    alert('ブランドとプロジェクトを作成しました');
+  } catch (error) {
+    console.error('ブランド作成エラー:', error);
+    alert('ブランドの作成に失敗しました');
+  }
+};
 
   const handleUpdateBrand = async (brandId: string) => {
   if (!editBrandName.trim()) {
