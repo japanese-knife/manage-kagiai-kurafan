@@ -216,20 +216,22 @@ export default function ImageAssetsSection({ projectId, readOnly = false }: Imag
                 画像を表示
               </a>
             )}
-            <div className="flex space-x-2 mt-2">
-              <button
-                onClick={() => handleEdit(asset)}
-                className="p-1 text-gray-500 hover:text-primary-600"
-              >
-                <Edit2 className="w-4 h-4" />
-              </button>
-              <button
-                onClick={() => handleDelete(asset.id)}
-                className="p-1 text-gray-500 hover:text-red-600"
-              >
-                <Trash2 className="w-4 h-4" />
-              </button>
-            </div>
+            {!readOnly && (
+  <div className="flex space-x-2 mt-2">
+    <button
+      onClick={() => handleEdit(asset)}
+      className="p-1 text-gray-500 hover:text-primary-600"
+    >
+      <Edit2 className="w-4 h-4" />
+    </button>
+    <button
+      onClick={() => handleDelete(asset.id)}
+      className="p-1 text-gray-500 hover:text-red-600"
+    >
+      <Trash2 className="w-4 h-4" />
+    </button>
+  </div>
+)}
           </div>
         ))}
           </div>
