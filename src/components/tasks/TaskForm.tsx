@@ -46,34 +46,31 @@ export default function TaskForm({ projectId, parentId, task, onSave, onCancel }
           return;
         }
       } else {
+        
         // タスク新規作成
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user) {
-          alert('ユーザー情報が取得できませんでした');
-          setIsSubmitting(false);
-          return;
-        }
+const { data: { user } } = await supabase.auth.getUser();
+const userId = user?.id || null; // ユーザーがいない場合はnull
 
-        const { data: maxOrder } = await supabase
-          .from('tasks')
-          .select('order_index')
-          .eq('project_id', projectId)
-          .order('order_index', { ascending: false })
-          .limit(1)
-          .maybeSingle();
+const { data: maxOrder } = await supabase
+  .from('tasks')
+  .select('order_index')
+  .eq('project_id', projectId)
+  .order('order_index', { ascending: false })
+  .limit(1)
+  .maybeSingle();
 
-        const nextOrder = maxOrder ? maxOrder.order_index + 1 : 0;
+const nextOrder = maxOrder ? maxOrder.order_index + 1 : 0;
 
-        const { error } = await supabase.from('tasks').insert({
-          title: formData.title,
-          description: formData.description,
-          status: formData.status,
-          project_id: projectId,
-          parent_id: parentId,
-          order_index: nextOrder,
-          due_date: formData.due_date || null,
-          user_id: user.id,
-        });
+const { error } = await supabase.from('tasks').insert({
+  title: formData.title,
+  description: formData.description,
+  status: formData.status,
+  project_id: projectId,
+  parent_id: parentId,
+  order_index: nextOrder,
+  due_date: formData.due_date || null,
+  user_id: userId,
+});
 
         if (error) {
           console.error('タスク作成エラー:', error);
