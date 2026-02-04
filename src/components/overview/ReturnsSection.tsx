@@ -26,15 +26,15 @@ export default function ReturnsSection({ projectId, readOnly = false }: ReturnsS
   }, [projectId]);
 
   const loadReturns = async () => {
-    const { data } = await supabase
-      .from('returns')
-      .select('*')
-      .eq('project_id', projectId)
-      .order('created_at', { ascending: true })
-      .order('id', { ascending: true });
+  const { data } = await supabase
+    .from('returns')
+    .select('*')
+    .eq('project_id', projectId)
+    .order('order_index', { ascending: true })
+    .order('id', { ascending: true });
 
-    setReturns(data || []);
-  };
+  setReturns(data || []);
+};
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
