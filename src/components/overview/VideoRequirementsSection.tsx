@@ -102,6 +102,42 @@ export default function VideoRequirementsSection({ projectId, readOnly = false }
     }
   };
 
+  const handleMoveUp = async (req: VideoRequirement, index: number) => {
+  if (index === 0) return;
+
+  const prevReq = requirements[index - 1];
+  
+  await supabase
+    .from('video_requirements')
+    .update({ order_index: prevReq.order_index })
+    .eq('id', req.id);
+    
+  await supabase
+    .from('video_requirements')
+    .update({ order_index: req.order_index })
+    .eq('id', prevReq.id);
+    
+  loadRequirements();
+};
+
+const handleMoveDown = async (req: VideoRequirement, index: number) => {
+  if (index === requirements.length - 1) return;
+
+  const nextReq = requirements[index + 1];
+  
+  await supabase
+    .from('video_requirements')
+    .update({ order_index: nextReq.order_index })
+    .eq('id', req.id);
+    
+  await supabase
+    .from('video_requirements')
+    .update({ order_index: req.order_index })
+    .eq('id', nextReq.id);
+    
+  loadRequirements();
+};
+
   return (
     <section>
       <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-4 gap-3">
