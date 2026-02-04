@@ -259,44 +259,60 @@ const handleMoveDown = async (item: TextContentRequirement, index: number) => {
           )}
 
           <div className="space-y-3">
-            {items.map((item) => (
-              <div
-                key={item.id}
-                className="bg-gray-50 p-4 rounded-lg flex items-start justify-between"
-              >
-                <div className="flex-1">
-                  <h3 className="font-semibold text-gray-900 mb-1">{item.name}</h3>
-                  {item.url && (
-                    <a
-                      href={item.url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-sm text-primary-600 hover:underline flex items-center mb-1"
-                    >
-                      <ExternalLink className="w-3 h-3 mr-1" />
-                      リンクを開く
-                    </a>
-                  )}
-                  {item.memo && <p className="text-sm text-gray-600">{item.memo}</p>}
-                </div>
-                {!readOnly && (
-                  <div className="flex space-x-2">
-                    <button
-                      onClick={() => handleEdit(item)}
-                      className="p-1 text-gray-500 hover:text-primary-600"
-                    >
-                      <Edit2 className="w-4 h-4" />
-                    </button>
-                    <button
-                      onClick={() => handleDelete(item.id)}
-                      className="p-1 text-gray-500 hover:text-red-600"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
-                  </div>
-                )}
-              </div>
-            ))}
+            {items.map((item, index) => (
+  <div
+    key={item.id}
+    className="bg-gray-50 p-4 rounded-lg flex items-start justify-between"
+  >
+    <div className="flex-1">
+      <h3 className="font-semibold text-gray-900 mb-1">{item.name}</h3>
+      {item.url && (
+        
+          href={item.url}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-sm text-primary-600 hover:underline flex items-center mb-1"
+        >
+          <ExternalLink className="w-3 h-3 mr-1" />
+          リンクを開く
+        </a>
+      )}
+      {item.memo && <p className="text-sm text-gray-600">{item.memo}</p>}
+    </div>
+    {!readOnly && (
+      <div className="flex space-x-2">
+        <button
+          onClick={() => handleMoveUp(item, index)}
+          disabled={index === 0}
+          className="p-1 text-gray-500 hover:text-primary-600 disabled:opacity-30 disabled:cursor-not-allowed"
+          title="上に移動"
+        >
+          <ChevronUp className="w-4 h-4" />
+        </button>
+        <button
+          onClick={() => handleMoveDown(item, index)}
+          disabled={index === items.length - 1}
+          className="p-1 text-gray-500 hover:text-primary-600 disabled:opacity-30 disabled:cursor-not-allowed"
+          title="下に移動"
+        >
+          <ChevronDown className="w-4 h-4" />
+        </button>
+        <button
+          onClick={() => handleEdit(item)}
+          className="p-1 text-gray-500 hover:text-primary-600"
+        >
+          <Edit2 className="w-4 h-4" />
+        </button>
+        <button
+          onClick={() => handleDelete(item.id)}
+          className="p-1 text-gray-500 hover:text-red-600"
+        >
+          <Trash2 className="w-4 h-4" />
+        </button>
+      </div>
+    )}
+  </div>
+))}
           </div>
         </>
       )}
