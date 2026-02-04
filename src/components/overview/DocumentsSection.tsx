@@ -221,7 +221,7 @@ const handleMoveDown = async (doc: Document, index: number) => {
     <div className="flex-1">
       <h3 className="font-semibold text-gray-900 mb-1">{doc.name}</h3>
       {doc.url && (
-  
+  <a
     href={doc.url}
     target="_blank"
     rel="noopener noreferrer"
