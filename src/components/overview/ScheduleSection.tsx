@@ -226,8 +226,8 @@ const handleMoveDown = async (schedule: Schedule, index: number) => {
           )}
 
           <div className="space-y-3">
-            {schedules.map((schedule) => (
-              <div key={schedule.id} className="bg-white border border-neutral-200/60 p-5 rounded-xl hover:border-neutral-300 hover:shadow-soft transition-all group">
+            {schedules.map((schedule, index) => (
+  <div key={schedule.id} className="bg-white border border-neutral-200/60 p-5 rounded-xl hover:border-neutral-300 hover:shadow-soft transition-all group">
                 <div className="flex justify-between items-start">
                   <div className="flex-1">
                     {schedule.content && (
