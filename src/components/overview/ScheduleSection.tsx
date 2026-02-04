@@ -106,6 +106,44 @@ export default function ScheduleSection({ projectId, readOnly = false }: Schedul
     }
   };
 
+  const handleMoveUp = async (schedule: Schedule, index: number) => {
+  if (index === 0) return; // 一番上は上に移動できない
+
+  const prevSchedule = schedules[index - 1];
+  
+  // order_index を入れ替え
+  await supabase
+    .from('schedules')
+    .update({ order_index: prevSchedule.order_index })
+    .eq('id', schedule.id);
+    
+  await supabase
+    .from('schedules')
+    .update({ order_index: schedule.order_index })
+    .eq('id', prevSchedule.id);
+    
+  loadSchedules();
+};
+
+const handleMoveDown = async (schedule: Schedule, index: number) => {
+  if (index === schedules.length - 1) return; // 一番下は下に移動できない
+
+  const nextSchedule = schedules[index + 1];
+  
+  // order_index を入れ替え
+  await supabase
+    .from('schedules')
+    .update({ order_index: nextSchedule.order_index })
+    .eq('id', schedule.id);
+    
+  await supabase
+    .from('schedules')
+    .update({ order_index: schedule.order_index })
+    .eq('id', nextSchedule.id);
+    
+  loadSchedules();
+};
+  
   return (
     <section className="border-b border-neutral-200/80 pb-10">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-4 gap-3">
