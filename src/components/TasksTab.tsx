@@ -117,7 +117,7 @@ export default function TasksTab({ projectId, readOnly = false }: TasksTabProps)
 )}
       </div>
 
-      {isAdding && (
+      {isAdding && !readOnly && (
   <TaskForm
     projectId={projectId}
     parentId={parentId}
