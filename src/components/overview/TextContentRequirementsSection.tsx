@@ -28,14 +28,14 @@ export default function TextContentRequirementsSection({ projectId, readOnly = f
   }, [readOnly]);
 
   const loadItems = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('text_content_requirements')
-        .select('*')
-        .eq('project_id', projectId)
-        .order('created_at', { ascending: true })
-        .order('id', { ascending: true });
-
+  const { data } = await supabase
+    .from('text_content_requirements')
+    .select('*')
+    .eq('project_id', projectId)
+    .order('order_index', { ascending: true })
+    .order('id', { ascending: true });
+  setItems(data || []);
+};
       if (error) {
         console.error('Error loading text content requirements:', error);
         setItems([]);
