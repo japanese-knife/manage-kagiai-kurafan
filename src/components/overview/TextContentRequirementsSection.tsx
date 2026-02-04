@@ -118,6 +118,42 @@ export default function TextContentRequirementsSection({ projectId, readOnly = f
     }
   };
 
+const handleMoveUp = async (item: TextContentRequirement, index: number) => {
+  if (index === 0) return;
+
+  const prevItem = items[index - 1];
+  
+  await supabase
+    .from('text_content_requirements')
+    .update({ order_index: prevItem.order_index })
+    .eq('id', item.id);
+    
+  await supabase
+    .from('text_content_requirements')
+    .update({ order_index: item.order_index })
+    .eq('id', prevItem.id);
+    
+  loadItems();
+};
+
+const handleMoveDown = async (item: TextContentRequirement, index: number) => {
+  if (index === items.length - 1) return;
+
+  const nextItem = items[index + 1];
+  
+  await supabase
+    .from('text_content_requirements')
+    .update({ order_index: nextItem.order_index })
+    .eq('id', item.id);
+    
+  await supabase
+    .from('text_content_requirements')
+    .update({ order_index: item.order_index })
+    .eq('id', nextItem.id);
+    
+  loadItems();
+};
+
   const effectiveExpanded = readOnly ? localExpanded : isExpanded;
 
   const handleToggle = () => {
