@@ -130,13 +130,13 @@ export default function TasksTab({ projectId, readOnly = false }: TasksTabProps)
       <div className="space-y-2">
         {tasks.map((task) => (
           <TaskItem
-            key={task.id}
-            task={task}
-            onAddChild={handleAddTask}
-            onDelete={handleTaskDeleted}
-            onUpdate={handleTaskUpdated}
-            readOnly={readOnly}
-          />
+  key={task.id}
+  task={task}
+  onAddChild={handleAddTask}
+  onDelete={handleTaskDeleted}
+  onUpdate={handleTaskUpdated}
+  readOnly={false}
+/>
         ))}
       </div>
 
