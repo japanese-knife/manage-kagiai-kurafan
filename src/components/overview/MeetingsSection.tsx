@@ -92,6 +92,42 @@ export default function MeetingsSection({ projectId, readOnly = false }: Meeting
     }
   };
 
+  const handleMoveUp = async (meeting: Meeting, index: number) => {
+  if (index === 0) return;
+
+  const prevMeeting = meetings[index - 1];
+  
+  await supabase
+    .from('meetings')
+    .update({ order_index: prevMeeting.order_index })
+    .eq('id', meeting.id);
+    
+  await supabase
+    .from('meetings')
+    .update({ order_index: meeting.order_index })
+    .eq('id', prevMeeting.id);
+    
+  loadMeetings();
+};
+
+const handleMoveDown = async (meeting: Meeting, index: number) => {
+  if (index === meetings.length - 1) return;
+
+  const nextMeeting = meetings[index + 1];
+  
+  await supabase
+    .from('meetings')
+    .update({ order_index: nextMeeting.order_index })
+    .eq('id', meeting.id);
+    
+  await supabase
+    .from('meetings')
+    .update({ order_index: meeting.order_index })
+    .eq('id', nextMeeting.id);
+    
+  loadMeetings();
+};
+  
   return (
     <section className="border-b border-gray-200 pb-8">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-4 gap-3">
