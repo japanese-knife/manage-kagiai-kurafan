@@ -124,6 +124,42 @@ export default function ReturnsSection({ projectId, readOnly = false }: ReturnsS
     }
   };
 
+  const handleMoveUp = async (returnItem: Return, index: number) => {
+  if (index === 0) return;
+
+  const prevReturn = returns[index - 1];
+  
+  await supabase
+    .from('returns')
+    .update({ order_index: prevReturn.order_index })
+    .eq('id', returnItem.id);
+    
+  await supabase
+    .from('returns')
+    .update({ order_index: returnItem.order_index })
+    .eq('id', prevReturn.id);
+    
+  loadReturns();
+};
+
+const handleMoveDown = async (returnItem: Return, index: number) => {
+  if (index === returns.length - 1) return;
+
+  const nextReturn = returns[index + 1];
+  
+  await supabase
+    .from('returns')
+    .update({ order_index: nextReturn.order_index })
+    .eq('id', returnItem.id);
+    
+  await supabase
+    .from('returns')
+    .update({ order_index: returnItem.order_index })
+    .eq('id', nextReturn.id);
+    
+  loadReturns();
+};
+
   return (
     <section className="border-b border-gray-200 pb-8">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-4 gap-3">
