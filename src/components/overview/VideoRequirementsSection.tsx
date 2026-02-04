@@ -27,15 +27,15 @@ export default function VideoRequirementsSection({ projectId, readOnly = false }
   }, [projectId]);
 
   const loadRequirements = async () => {
-    const { data } = await supabase
-      .from('video_requirements')
-      .select('*')
-      .eq('project_id', projectId)
-      .order('created_at', { ascending: true })
-      .order('id', { ascending: true });
-  
-    setRequirements(data || []);
-  };
+  const { data } = await supabase
+    .from('video_requirements')
+    .select('*')
+    .eq('project_id', projectId)
+    .order('order_index', { ascending: true })
+    .order('id', { ascending: true });
+
+  setRequirements(data || []);
+};
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
