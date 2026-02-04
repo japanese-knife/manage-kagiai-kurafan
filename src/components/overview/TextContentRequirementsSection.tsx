@@ -36,18 +36,7 @@ export default function TextContentRequirementsSection({ projectId, readOnly = f
       .order('order_index', { ascending: true })
       .order('id', { ascending: true });
 
-    if (error) {
-      console.error('Error loading text content requirements:', error);
-      setItems([]);
-      return;
-    }
-
-    setItems(data || []);
-  } catch (error) {
-    console.error('Error loading text content requirements:', error);
-    setItems([]);
-  }
-};
+    
 
   const handleSubmit = async (e: React.FormEvent) => {
   e.preventDefault();
