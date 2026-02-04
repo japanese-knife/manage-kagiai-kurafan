@@ -21,15 +21,15 @@ export default function DesignRequirementsSection({ projectId, readOnly = false 
   }, [projectId]);
 
   const loadItems = async () => {
-    const { data } = await supabase
-      .from('design_requirements')
-      .select('*')
-      .eq('project_id', projectId)
-      .order('created_at', { ascending: true })
-      .order('id', { ascending: true });
+  const { data } = await supabase
+    .from('design_requirements')
+    .select('*')
+    .eq('project_id', projectId)
+    .order('order_index', { ascending: true })
+    .order('id', { ascending: true });
 
-    setItems(data || []);
-  };
+  setItems(data || []);
+};
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
