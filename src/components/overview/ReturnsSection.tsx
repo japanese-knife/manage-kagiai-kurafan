@@ -43,15 +43,27 @@ export default function ReturnsSection({ projectId, readOnly = false }: ReturnsS
       if (editingId) {
         await supabase.from('returns').update(formData).eq('id', editingId);
       } else {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user) return;
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return;
 
-        await supabase.from('returns').insert({
-          ...formData,
-          project_id: projectId,
-          user_id: user.id
-        });
-      }
+  // 最大の order_index を取得
+  const { data: maxOrder } = await supabase
+    .from('returns')
+    .select('order_index')
+    .eq('project_id', projectId)
+    .order('order_index', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  const nextOrder = maxOrder ? maxOrder.order_index + 1 : 0;
+
+  await supabase.from('returns').insert({
+    ...formData,
+    project_id: projectId,
+    user_id: user.id,
+    order_index: nextOrder
+  });
+}
 
       setFormData({ name: '', price_range: '', description: '', status: '案' });
       setIsAdding(false);
