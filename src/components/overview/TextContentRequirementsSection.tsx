@@ -63,25 +63,38 @@ export default function TextContentRequirementsSection({ projectId, readOnly = f
         return;
       }
     } else {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        alert('ユーザー情報が取得できませんでした');
-        return;
-      }
-      const { error } = await supabase
-        .from('text_content_requirements')
-        .insert({
-          ...formData,
-          project_id: projectId,
-          user_id: user.id
-        });
-      
-      if (error) {
-        console.error('追加エラー:', error);
-        alert(`追加に失敗しました: ${error.message}`);
-        return;
-      }
-    }
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) {
+    alert('ユーザー情報が取得できませんでした');
+    return;
+  }
+
+  // 最大の order_index を取得
+  const { data: maxOrder } = await supabase
+    .from('text_content_requirements')
+    .select('order_index')
+    .eq('project_id', projectId)
+    .order('order_index', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  const nextOrder = maxOrder ? maxOrder.order_index + 1 : 0;
+
+  const { error } = await supabase
+    .from('text_content_requirements')
+    .insert({
+      ...formData,
+      project_id: projectId,
+      user_id: user.id,
+      order_index: nextOrder
+    });
+  
+  if (error) {
+    console.error('追加エラー:', error);
+    alert(`追加に失敗しました: ${error.message}`);
+    return;
+  }
+}
     setFormData({ name: '', url: '', memo: '' });
     setIsAdding(false);
     setEditingId(null);
