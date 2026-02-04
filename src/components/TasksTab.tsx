@@ -137,7 +137,7 @@ export default function TasksTab({ projectId, readOnly = false }: TasksTabProps)
   onAddChild={handleAddTask}
   onDelete={handleTaskDeleted}
   onUpdate={handleTaskUpdated}
-  readOnly={false}
+  readOnly={readOnly}
 />
         ))}
       </div>
