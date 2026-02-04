@@ -26,14 +26,14 @@ export default function ImageAssetsSection({ projectId, readOnly = false }: Imag
   }, [projectId]);
 
   const loadAssets = async () => {
-    const { data } = await supabase
-      .from('image_assets')
-      .select('*')
-      .eq('project_id', projectId)
-      .order('created_at', { ascending: true });
-
-    setAssets(data || []);
-  };
+  const { data } = await supabase
+    .from('image_assets')
+    .select('*')
+    .eq('project_id', projectId)
+    .order('order_index', { ascending: true })
+    .order('id', { ascending: true });
+  setAssets(data || []);
+};
 
   const handleSubmit = async (e: React.FormEvent) => {
   e.preventDefault();
