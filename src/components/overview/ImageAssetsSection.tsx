@@ -90,6 +90,42 @@ export default function ImageAssetsSection({ projectId, readOnly = false }: Imag
     }
   };
 
+  const handleMoveUp = async (asset: ImageAsset, index: number) => {
+  if (index === 0) return;
+
+  const prevAsset = assets[index - 1];
+  
+  await supabase
+    .from('image_assets')
+    .update({ order_index: prevAsset.order_index })
+    .eq('id', asset.id);
+    
+  await supabase
+    .from('image_assets')
+    .update({ order_index: asset.order_index })
+    .eq('id', prevAsset.id);
+    
+  loadAssets();
+};
+
+const handleMoveDown = async (asset: ImageAsset, index: number) => {
+  if (index === assets.length - 1) return;
+
+  const nextAsset = assets[index + 1];
+  
+  await supabase
+    .from('image_assets')
+    .update({ order_index: nextAsset.order_index })
+    .eq('id', asset.id);
+    
+  await supabase
+    .from('image_assets')
+    .update({ order_index: asset.order_index })
+    .eq('id', nextAsset.id);
+    
+  loadAssets();
+};
+
   return (
     <section className="border-b border-gray-200 pb-8">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-4 gap-3">
