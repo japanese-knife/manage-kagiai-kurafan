@@ -37,11 +37,13 @@ export function useAccordionState(projectId: string, sectionName: string, defaul
       }
 
       const { data } = await query;
-
-      if (data) {
-        setIsExpanded(data.is_expanded);
-      }
-      setIsLoaded(true);
+if (data !== null && data !== undefined) {
+  setIsExpanded(data.is_expanded);
+} else {
+  // データが存在しない場合はデフォルト値を使用
+  setIsExpanded(defaultExpanded);
+}
+setIsLoaded(true);
     } catch (error) {
       console.error('Error loading accordion state:', error);
       setIsLoaded(true);
