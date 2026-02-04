@@ -15,27 +15,37 @@ export default function TextContentRequirementsSection({ projectId, readOnly = f
   const [editingId, setEditingId] = useState<string | null>(null);
   const [formData, setFormData] = useState({ name: '', url: '', memo: '' });
   const { isExpanded, toggleExpanded, setExpandedWithSave } = useAccordionState(projectId, 'text_content_requirements', true);
+  const [localExpanded, setLocalExpanded] = useState(true);
 
   useEffect(() => {
     loadItems();
   }, [projectId]);
 
-  // デバッグ用
   useEffect(() => {
-    console.log('TextContentRequirementsSection - readOnly:', readOnly);
-    console.log('TextContentRequirementsSection - isExpanded:', isExpanded);
-    console.log('TextContentRequirementsSection - items:', items);
-  }, [readOnly, isExpanded, items]);
-  
-  const loadItems = async () => {
-    const { data } = await supabase
-      .from('text_content_requirements')
-      .select('*')
-      .eq('project_id', projectId)
-      .order('created_at', { ascending: true })
-      .order('id', { ascending: true });
+    if (readOnly) {
+      setLocalExpanded(true);
+    }
+  }, [readOnly]);
 
-    setItems(data || []);
+  const loadItems = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('text_content_requirements')
+        .select('*')
+        .eq('project_id', projectId)
+        .order('created_at', { ascending: true })
+        .order('id', { ascending: true });
+
+      if (error) {
+        console.error('Error loading text content requirements:', error);
+        setItems([]);
+      } else {
+        setItems(data || []);
+      }
+    } catch (error) {
+      console.error('Error loading text content requirements:', error);
+      setItems([]);
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -95,16 +105,26 @@ export default function TextContentRequirementsSection({ projectId, readOnly = f
     }
   };
 
+  const effectiveExpanded = readOnly ? localExpanded : isExpanded;
+
+  const handleToggle = () => {
+    if (readOnly) {
+      setLocalExpanded(!localExpanded);
+    } else {
+      toggleExpanded();
+    }
+  };
+
   return (
     <section className="border-b border-gray-200 pb-8">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-4 gap-3">
         <button
-          onClick={toggleExpanded}
+          onClick={handleToggle}
           className="flex items-center text-lg sm:text-xl font-bold text-gray-900 hover:text-gray-700 transition-colors"
         >
           <FileText className="w-5 h-5 sm:w-6 sm:h-6 mr-2 text-primary-600" />
           掲載文章要項
-          {isExpanded ? (
+          {effectiveExpanded ? (
             <ChevronUp className="w-4 h-4 sm:w-5 sm:h-5 ml-2 text-gray-500" />
           ) : (
             <ChevronDown className="w-4 h-4 sm:w-5 sm:h-5 ml-2 text-gray-500" />
@@ -124,7 +144,7 @@ export default function TextContentRequirementsSection({ projectId, readOnly = f
         )}
       </div>
 
-      {isExpanded && (
+      {effectiveExpanded && (
         <>
           {isAdding && (
             <form onSubmit={handleSubmit} className="bg-gray-50 p-4 rounded-lg mb-4">

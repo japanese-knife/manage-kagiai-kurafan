@@ -14,10 +14,6 @@ interface OverviewTabProps {
 }
 
 export default function OverviewTab({ projectId, readOnly = false, sharedView = false }: OverviewTabProps) {
-
-  // デバッグ用
-  console.log('OverviewTab - readOnly:', readOnly, 'sharedView:', sharedView);
-  
   return (
     <div className="p-4 sm:p-6 md:p-8 space-y-10">
       <ScheduleSection projectId={projectId} readOnly={readOnly} />
