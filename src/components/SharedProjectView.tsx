@@ -118,7 +118,7 @@ export default function SharedProjectView({ shareToken }: SharedProjectViewProps
         <TabNavigation activeTab={activeTab} onTabChange={setActiveTab} />
 
         <div className="bg-white rounded-xl border border-neutral-200/80 shadow-soft">
-          {activeTab === 'overview' && <OverviewTab projectId={project.id} readOnly sharedView />}
+          {activeTab === 'overview' && <OverviewTab projectId={project.id} readOnly={true} sharedView={true} />}
           {activeTab === 'tasks' && <TasksTab projectId={project.id} readOnly={false} />}
           {activeTab === 'calendar' && <CalendarTab projectId={project.id} readOnly={false} />}
         </div>
