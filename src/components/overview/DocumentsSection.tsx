@@ -38,15 +38,27 @@ export default function DocumentsSection({ projectId, readOnly = false }: Docume
       if (editingId) {
         await supabase.from('documents').update(formData).eq('id', editingId);
       } else {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user) return;
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return;
 
-        await supabase.from('documents').insert({
-          ...formData,
-          project_id: projectId,
-          user_id: user.id
-        });
-      }
+  // 最大の order_index を取得
+  const { data: maxOrder } = await supabase
+    .from('documents')
+    .select('order_index')
+    .eq('project_id', projectId)
+    .order('order_index', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  const nextOrder = maxOrder ? maxOrder.order_index + 1 : 0;
+
+  await supabase.from('documents').insert({
+    ...formData,
+    project_id: projectId,
+    user_id: user.id,
+    order_index: nextOrder
+  });
+}
 
       setFormData({ name: '', url: '', memo: '' });
       setIsAdding(false);
