@@ -323,7 +323,7 @@ const handleMoveDown = async (req: VideoRequirement, index: number) => {
       </div>
     )}
     {req.reference_url && (
-      
+      <a
         href={req.reference_url}
         target="_blank"
         rel="noopener noreferrer"
