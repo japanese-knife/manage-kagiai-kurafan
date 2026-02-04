@@ -42,10 +42,10 @@ export default function TextContentRequirementsSection({ projectId, readOnly = f
         .eq('id', editingId);
       
       if (error) {
-        console.error('更新エラー:', error);
-        alert(`更新に失敗しました: ${error.message}`);
-        return;
-      }
+  console.error('更新エラー:', error);
+  alert(`更新に失敗しました: ${error.message}`);
+  return;
+}
     } else {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
@@ -62,10 +62,10 @@ export default function TextContentRequirementsSection({ projectId, readOnly = f
         });
       
       if (error) {
-        console.error('追加エラー:', error);
-        alert(`追加に失敗しました: ${error.message}`);
-        return;
-      }
+  console.error('更新エラー:', error);
+  alert(`更新に失敗しました: ${error.message}`);
+  return;
+}
     }
 
     setFormData({ name: '', url: '', memo: '' });
