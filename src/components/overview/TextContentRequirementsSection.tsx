@@ -33,7 +33,6 @@ export default function TextContentRequirementsSection({ projectId, readOnly = f
 
   const handleSubmit = async (e: React.FormEvent) => {
   e.preventDefault();
-
   try {
     if (editingId) {
       const { error } = await supabase
@@ -42,17 +41,16 @@ export default function TextContentRequirementsSection({ projectId, readOnly = f
         .eq('id', editingId);
       
       if (error) {
-  console.error('更新エラー:', error);
-  alert(`更新に失敗しました: ${error.message}`);
-  return;
-}
+        console.error('更新エラー:', error);
+        alert(`更新に失敗しました: ${error.message}`);
+        return;
+      }
     } else {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
         alert('ユーザー情報が取得できませんでした');
         return;
       }
-
       const { error } = await supabase
         .from('text_content_requirements')
         .insert({
@@ -62,12 +60,11 @@ export default function TextContentRequirementsSection({ projectId, readOnly = f
         });
       
       if (error) {
-  console.error('更新エラー:', error);
-  alert(`更新に失敗しました: ${error.message}`);
-  return;
-}
+        console.error('追加エラー:', error);
+        alert(`追加に失敗しました: ${error.message}`);
+        return;
+      }
     }
-
     setFormData({ name: '', url: '', memo: '' });
     setIsAdding(false);
     setEditingId(null);
