@@ -21,15 +21,15 @@ export default function DocumentsSection({ projectId, readOnly = false }: Docume
   }, [projectId]);
 
   const loadDocuments = async () => {
-    const { data } = await supabase
-      .from('documents')
-      .select('*')
-      .eq('project_id', projectId)
-      .order('created_at', { ascending: true })
-      .order('id', { ascending: true });
+  const { data } = await supabase
+    .from('documents')
+    .select('*')
+    .eq('project_id', projectId)
+    .order('order_index', { ascending: true })
+    .order('id', { ascending: true });
 
-    setDocuments(data || []);
-  };
+  setDocuments(data || []);
+};
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
