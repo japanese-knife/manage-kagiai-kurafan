@@ -269,56 +269,72 @@ const handleMoveDown = async (req: VideoRequirement, index: number) => {
           )}
 
           <div className="space-y-4">
-        {requirements.map((req) => (
-          <div key={req.id} className="bg-gray-50 p-4 rounded-lg">
-            <div className="flex justify-between items-start mb-3">
-              <div>
-                <h3 className="font-semibold text-gray-900">{req.video_type}</h3>
-                {req.duration && (
-                  <p className="text-sm text-gray-600">長さ: {req.duration}</p>
-                )}
-                <p className="text-sm text-gray-600">
-                  ナレーション: {req.has_narration ? 'あり' : 'なし'}
-                </p>
-              </div>
-              {!readOnly && (
-                <div className="flex space-x-2">
-                  <button
-                    onClick={() => handleEdit(req)}
-                    className="p-1 text-gray-500 hover:text-primary-600"
-                  >
-                    <Edit2 className="w-4 h-4" />
-                  </button>
-                  <button
-                    onClick={() => handleDelete(req.id)}
-                    className="p-1 text-gray-500 hover:text-red-600"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </button>
-                </div>
-              )}
-            </div>
-            {req.required_cuts && (
-              <div className="mb-2">
-                <h4 className="text-sm font-medium text-gray-700 mb-1">必須カット</h4>
-                <p className="text-sm text-gray-700 whitespace-pre-wrap">
-                  {req.required_cuts}
-                </p>
-              </div>
-            )}
-            {req.reference_url && (
-              <a
-                href={req.reference_url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-sm text-primary-600 hover:underline flex items-center"
-              >
-                <ExternalLink className="w-3 h-3 mr-1" />
-                動画素材を確認する
-              </a>
-            )}
-          </div>
-        ))}
+        {requirements.map((req, index) => (
+  <div key={req.id} className="bg-gray-50 p-4 rounded-lg">
+    <div className="flex justify-between items-start mb-3">
+      <div>
+        <h3 className="font-semibold text-gray-900">{req.video_type}</h3>
+        {req.duration && (
+          <p className="text-sm text-gray-600">長さ: {req.duration}</p>
+        )}
+        <p className="text-sm text-gray-600">
+          ナレーション: {req.has_narration ? 'あり' : 'なし'}
+        </p>
+      </div>
+      {!readOnly && (
+        <div className="flex space-x-2">
+          <button
+            onClick={() => handleMoveUp(req, index)}
+            disabled={index === 0}
+            className="p-1 text-gray-500 hover:text-primary-600 disabled:opacity-30 disabled:cursor-not-allowed"
+            title="上に移動"
+          >
+            <ChevronUp className="w-4 h-4" />
+          </button>
+          <button
+            onClick={() => handleMoveDown(req, index)}
+            disabled={index === requirements.length - 1}
+            className="p-1 text-gray-500 hover:text-primary-600 disabled:opacity-30 disabled:cursor-not-allowed"
+            title="下に移動"
+          >
+            <ChevronDown className="w-4 h-4" />
+          </button>
+          <button
+            onClick={() => handleEdit(req)}
+            className="p-1 text-gray-500 hover:text-primary-600"
+          >
+            <Edit2 className="w-4 h-4" />
+          </button>
+          <button
+            onClick={() => handleDelete(req.id)}
+            className="p-1 text-gray-500 hover:text-red-600"
+          >
+            <Trash2 className="w-4 h-4" />
+          </button>
+        </div>
+      )}
+    </div>
+    {req.required_cuts && (
+      <div className="mb-2">
+        <h4 className="text-sm font-medium text-gray-700 mb-1">必須カット</h4>
+        <p className="text-sm text-gray-700 whitespace-pre-wrap">
+          {req.required_cuts}
+        </p>
+      </div>
+    )}
+    {req.reference_url && (
+      
+        href={req.reference_url}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="text-sm text-primary-600 hover:underline flex items-center"
+      >
+        <ExternalLink className="w-3 h-3 mr-1" />
+        動画素材を確認する
+      </a>
+    )}
+  </div>
+))}
           </div>
         </>
       )}
