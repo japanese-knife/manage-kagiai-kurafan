@@ -270,59 +270,75 @@ const handleMoveDown = async (returnItem: Return, index: number) => {
           )}
 
           <div className="space-y-4">
-        {returns.map((returnItem) => (
-          <div key={returnItem.id} className="bg-gray-50 p-4 rounded-lg">
-            <div className="flex justify-between items-start mb-2">
-              <div>
-                <h3 className="font-semibold text-gray-900">{returnItem.name}</h3>
-                {returnItem.price_range && (
-                  <p className="text-sm text-gray-600">{returnItem.price_range}</p>
-                )}
-              </div>
-              <div className="flex items-center space-x-2">
-                <span
-                  className={`px-2 py-1 text-xs font-medium rounded ${
-                    returnItem.status === '確定'
-                      ? 'bg-green-100 text-green-700'
-                      : 'bg-yellow-100 text-yellow-700'
-                  }`}
-                >
-                  {returnItem.status}
-                </span>
-                {!readOnly && (
-                  <>
-                    <button
-                      onClick={() => handleDuplicate(returnItem)}
-                      className="p-1 text-gray-500 hover:text-blue-600"
-                      title="複製"
-                    >
-                      <Copy className="w-4 h-4" />
-                    </button>
-                    <button
-                      onClick={() => handleEdit(returnItem)}
-                      className="p-1 text-gray-500 hover:text-primary-600"
-                      title="編集"
-                    >
-                      <Edit2 className="w-4 h-4" />
-                    </button>
-                    <button
-                      onClick={() => handleDelete(returnItem.id)}
-                      className="p-1 text-gray-500 hover:text-red-600"
-                      title="削除"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
-                  </>
-                )}
-              </div>
-            </div>
-            {returnItem.description && (
-              <p className="text-sm text-gray-700 whitespace-pre-wrap">
-                {returnItem.description}
-              </p>
-            )}
-          </div>
-        ))}
+        {returns.map((returnItem, index) => (
+  <div key={returnItem.id} className="bg-gray-50 p-4 rounded-lg">
+    <div className="flex justify-between items-start mb-2">
+      <div>
+        <h3 className="font-semibold text-gray-900">{returnItem.name}</h3>
+        {returnItem.price_range && (
+          <p className="text-sm text-gray-600">{returnItem.price_range}</p>
+        )}
+      </div>
+      <div className="flex items-center space-x-2">
+        <span
+          className={`px-2 py-1 text-xs font-medium rounded ${
+            returnItem.status === '確定'
+              ? 'bg-green-100 text-green-700'
+              : 'bg-yellow-100 text-yellow-700'
+          }`}
+        >
+          {returnItem.status}
+        </span>
+        {!readOnly && (
+          <>
+            <button
+              onClick={() => handleMoveUp(returnItem, index)}
+              disabled={index === 0}
+              className="p-1 text-gray-500 hover:text-primary-600 disabled:opacity-30 disabled:cursor-not-allowed"
+              title="上に移動"
+            >
+              <ChevronUp className="w-4 h-4" />
+            </button>
+            <button
+              onClick={() => handleMoveDown(returnItem, index)}
+              disabled={index === returns.length - 1}
+              className="p-1 text-gray-500 hover:text-primary-600 disabled:opacity-30 disabled:cursor-not-allowed"
+              title="下に移動"
+            >
+              <ChevronDown className="w-4 h-4" />
+            </button>
+            <button
+              onClick={() => handleDuplicate(returnItem)}
+              className="p-1 text-gray-500 hover:text-blue-600"
+              title="複製"
+            >
+              <Copy className="w-4 h-4" />
+            </button>
+            <button
+              onClick={() => handleEdit(returnItem)}
+              className="p-1 text-gray-500 hover:text-primary-600"
+              title="編集"
+            >
+              <Edit2 className="w-4 h-4" />
+            </button>
+            <button
+              onClick={() => handleDelete(returnItem.id)}
+              className="p-1 text-gray-500 hover:text-red-600"
+              title="削除"
+            >
+              <Trash2 className="w-4 h-4" />
+            </button>
+          </>
+        )}
+      </div>
+    </div>
+    {returnItem.description && (
+      <p className="text-sm text-gray-700 whitespace-pre-wrap">
+        {returnItem.description}
+      </p>
+    )}
+  </div>
+))}
           </div>
         </>
       )}
