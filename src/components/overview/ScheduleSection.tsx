@@ -240,21 +240,37 @@ const handleMoveDown = async (schedule: Schedule, index: number) => {
                     )}
                   </div>
                   {!readOnly && (
-                    <div className="flex space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <button
-                        onClick={() => handleEdit(schedule)}
-                        className="p-2 text-neutral-400 hover:text-primary-600 hover:bg-primary-50 rounded-lg transition-colors"
-                      >
-                        <Edit2 className="w-4 h-4" />
-                      </button>
-                      <button
-                        onClick={() => handleDelete(schedule.id)}
-                        className="p-2 text-neutral-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                    </div>
-                  )}
+  <div className="flex space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
+    <button
+      onClick={() => handleMoveUp(schedule, index)}
+      disabled={index === 0}
+      className="p-2 text-neutral-400 hover:text-primary-600 hover:bg-primary-50 rounded-lg transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+      title="上に移動"
+    >
+      <ChevronUp className="w-4 h-4" />
+    </button>
+    <button
+      onClick={() => handleMoveDown(schedule, index)}
+      disabled={index === schedules.length - 1}
+      className="p-2 text-neutral-400 hover:text-primary-600 hover:bg-primary-50 rounded-lg transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+      title="下に移動"
+    >
+      <ChevronDown className="w-4 h-4" />
+    </button>
+    <button
+      onClick={() => handleEdit(schedule)}
+      className="p-2 text-neutral-400 hover:text-primary-600 hover:bg-primary-50 rounded-lg transition-colors"
+    >
+      <Edit2 className="w-4 h-4" />
+    </button>
+    <button
+      onClick={() => handleDelete(schedule.id)}
+      className="p-2 text-neutral-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+    >
+      <Trash2 className="w-4 h-4" />
+    </button>
+  </div>
+)}
                 </div>
               </div>
             ))}
