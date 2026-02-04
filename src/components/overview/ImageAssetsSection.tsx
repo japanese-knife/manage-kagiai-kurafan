@@ -297,10 +297,6 @@ const handleMoveDown = async (asset: ImageAsset, index: number) => {
     </div>
   </div>
 ))}
-          </div>
-        ))}
-          
-        </>
       )}
     </section>
   );
