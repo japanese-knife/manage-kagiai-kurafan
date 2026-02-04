@@ -82,6 +82,42 @@ export default function DocumentsSection({ projectId, readOnly = false }: Docume
     }
   };
 
+  const handleMoveUp = async (doc: Document, index: number) => {
+  if (index === 0) return;
+
+  const prevDoc = documents[index - 1];
+  
+  await supabase
+    .from('documents')
+    .update({ order_index: prevDoc.order_index })
+    .eq('id', doc.id);
+    
+  await supabase
+    .from('documents')
+    .update({ order_index: doc.order_index })
+    .eq('id', prevDoc.id);
+    
+  loadDocuments();
+};
+
+const handleMoveDown = async (doc: Document, index: number) => {
+  if (index === documents.length - 1) return;
+
+  const nextDoc = documents[index + 1];
+  
+  await supabase
+    .from('documents')
+    .update({ order_index: nextDoc.order_index })
+    .eq('id', doc.id);
+    
+  await supabase
+    .from('documents')
+    .update({ order_index: doc.order_index })
+    .eq('id', nextDoc.id);
+    
+  loadDocuments();
+};
+  
   return (
     <section className="border-b border-gray-200 pb-8">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-4 gap-3">
