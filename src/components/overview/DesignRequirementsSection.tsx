@@ -87,6 +87,42 @@ export default function DesignRequirementsSection({ projectId, readOnly = false 
     }
   };
 
+  const handleMoveUp = async (item: DesignRequirement, index: number) => {
+  if (index === 0) return;
+
+  const prevItem = items[index - 1];
+  
+  await supabase
+    .from('design_requirements')
+    .update({ order_index: prevItem.order_index })
+    .eq('id', item.id);
+    
+  await supabase
+    .from('design_requirements')
+    .update({ order_index: item.order_index })
+    .eq('id', prevItem.id);
+    
+  loadItems();
+};
+
+const handleMoveDown = async (item: DesignRequirement, index: number) => {
+  if (index === items.length - 1) return;
+
+  const nextItem = items[index + 1];
+  
+  await supabase
+    .from('design_requirements')
+    .update({ order_index: nextItem.order_index })
+    .eq('id', item.id);
+    
+  await supabase
+    .from('design_requirements')
+    .update({ order_index: item.order_index })
+    .eq('id', nextItem.id);
+    
+  loadItems();
+};
+
   return (
     <section className="border-b border-gray-200 pb-8">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-4 gap-3">
