@@ -23,15 +23,15 @@ export default function ScheduleSection({ projectId, readOnly = false }: Schedul
   }, [projectId]);
 
   const loadSchedules = async () => {
-    const { data } = await supabase
-      .from('schedules')
-      .select('*')
-      .eq('project_id', projectId)
-      .order('created_at', { ascending: true })
-      .order('id', { ascending: true });
+  const { data } = await supabase
+    .from('schedules')
+    .select('*')
+    .eq('project_id', projectId)
+    .order('order_index', { ascending: true })
+    .order('id', { ascending: true });
 
-    setSchedules(data || []);
-  };
+  setSchedules(data || []);
+};
 
   const loadUpcomingTasks = async () => {
     const { data } = await supabase
