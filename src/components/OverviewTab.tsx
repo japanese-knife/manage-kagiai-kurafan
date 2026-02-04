@@ -16,14 +16,14 @@ interface OverviewTabProps {
 export default function OverviewTab({ projectId, readOnly = false, sharedView = false }: OverviewTabProps) {
   return (
     <div className="p-4 sm:p-6 md:p-8 space-y-10">
-      <ScheduleSection projectId={projectId} readOnly={readOnly} />
-      <DocumentsSection projectId={projectId} readOnly={readOnly} />
-      <MeetingsSection projectId={projectId} readOnly={readOnly} />
-      <ReturnsSection projectId={projectId} readOnly={readOnly} />
-      <ImageAssetsSection projectId={projectId} readOnly={sharedView ? false : readOnly} />
-      <TextContentRequirementsSection projectId={projectId} readOnly={readOnly} />
-      <DesignRequirementsSection projectId={projectId} readOnly={readOnly} />
-      <VideoRequirementsSection projectId={projectId} readOnly={readOnly} />
+      <ScheduleSection projectId={projectId} readOnly={false} />
+      <DocumentsSection projectId={projectId} readOnly={false} />
+      <MeetingsSection projectId={projectId} readOnly={false} />
+      <ReturnsSection projectId={projectId} readOnly={false} />
+      <ImageAssetsSection projectId={projectId} readOnly={false} />
+      <TextContentRequirementsSection projectId={projectId} readOnly={false} />
+      <DesignRequirementsSection projectId={projectId} readOnly={false} />
+      <VideoRequirementsSection projectId={projectId} readOnly={false} />
     </div>
   );
 }
