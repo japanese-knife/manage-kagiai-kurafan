@@ -36,30 +36,28 @@ export default function ImageAssetsSection({ projectId, readOnly = false }: Imag
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    try {
-      if (editingId) {
-        await supabase.from('image_assets').update(formData).eq('id', editingId);
-      } else {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user) return;
-
-        await supabase.from('image_assets').insert({
-          ...formData,
-          project_id: projectId,
-          user_id: user.id
-        });
-      }
-
-      setFormData({ name: '', purpose: '', url: '', status: '準備中' });
-      setIsAdding(false);
-      setEditingId(null);
-      loadAssets();
-    } catch (error) {
-      console.error('Error saving image asset:', error);
+  e.preventDefault();
+  try {
+    if (editingId) {
+      await supabase.from('image_assets').update(formData).eq('id', editingId);
+    } else {
+      const { data: { user } } = await supabase.auth.getUser();
+      const userId = user?.id || null; // ユーザーがいない場合はnull
+      await supabase.from('image_assets').insert({
+        ...formData,
+        project_id: projectId,
+        user_id: userId
+      });
     }
-  };
+    setFormData({ name: '', purpose: '', url: '', status: '準備中' });
+    setIsAdding(false);
+    setEditingId(null);
+    loadAssets();
+  } catch (error) {
+    console.error('Error saving image asset:', error);
+    alert('保存に失敗しました。もう一度お試しください。');
+  }
+};
 
   const handleEdit = (asset: ImageAsset) => {
     setFormData({
