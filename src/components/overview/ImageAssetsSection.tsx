@@ -235,54 +235,68 @@ const handleMoveDown = async (asset: ImageAsset, index: number) => {
           )}
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        {assets.map((asset) => (
-          <div key={asset.id} className="bg-gray-50 p-4 rounded-lg">
-            <div className="flex justify-between items-start mb-2">
-              <h3 className="font-semibold text-gray-900">{asset.name}</h3>
-              <span
-                className={`px-2 py-1 text-xs font-medium rounded ${
-                  asset.status === '完了'
-                    ? 'bg-green-100 text-green-700'
-                    : asset.status === '確認中'
-                    ? 'bg-primary-100 text-primary-700'
-                    : 'bg-gray-100 text-gray-700'
-                }`}
-              >
-                {asset.status}
-              </span>
-            </div>
-            {asset.purpose && (
-              <p className="text-sm text-gray-600 mb-2">{asset.purpose}</p>
-            )}
-            {asset.url && (
-              <a
-                href={asset.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-sm text-primary-600 hover:underline flex items-center mb-2"
-              >
-                <ExternalLink className="w-3 h-3 mr-1" />
-                画像を表示
-              </a>
-            )}
-            {!readOnly && (
-  <div className="flex space-x-2 mt-2">
-    <button
-      onClick={() => handleEdit(asset)}
-      className="p-1 text-gray-500 hover:text-primary-600"
-    >
-      <Edit2 className="w-4 h-4" />
-    </button>
-    <button
-      onClick={() => handleDelete(asset.id)}
-      className="p-1 text-gray-500 hover:text-red-600"
-    >
-      <Trash2 className="w-4 h-4" />
-    </button>
+        {assets.map((asset, index) => (
+  <div key={asset.id} className="bg-gray-50 p-4 rounded-lg">
+    <div className="flex justify-between items-start mb-2">
+      <h3 className="font-semibold text-gray-900">{asset.name}</h3>
+      <span
+        className={`px-2 py-1 text-xs font-medium rounded ${
+          asset.status === '完了'
+            ? 'bg-green-100 text-green-700'
+            : asset.status === '確認中'
+            ? 'bg-primary-100 text-primary-700'
+            : 'bg-gray-100 text-gray-700'
+        }`}
+      >
+        {asset.status}
+      </span>
+    </div>
+    {asset.purpose && (
+      <p className="text-sm text-gray-600 mb-2">{asset.purpose}</p>
+    )}
+    {asset.url && (
+      
+        href={asset.url}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="text-sm text-primary-600 hover:underline flex items-center mb-2"
+      >
+        <ExternalLink className="w-3 h-3 mr-1" />
+        画像を表示
+      </a>
+    )}
+    <div className="flex space-x-2 mt-2">
+      <button
+        onClick={() => handleMoveUp(asset, index)}
+        disabled={index === 0}
+        className="p-1 text-gray-500 hover:text-primary-600 disabled:opacity-30 disabled:cursor-not-allowed"
+        title="上に移動"
+      >
+        <ChevronUp className="w-4 h-4" />
+      </button>
+      <button
+        onClick={() => handleMoveDown(asset, index)}
+        disabled={index === assets.length - 1}
+        className="p-1 text-gray-500 hover:text-primary-600 disabled:opacity-30 disabled:cursor-not-allowed"
+        title="下に移動"
+      >
+        <ChevronDown className="w-4 h-4" />
+      </button>
+      <button
+        onClick={() => handleEdit(asset)}
+        className="p-1 text-gray-500 hover:text-primary-600"
+      >
+        <Edit2 className="w-4 h-4" />
+      </button>
+      <button
+        onClick={() => handleDelete(asset.id)}
+        className="p-1 text-gray-500 hover:text-red-600"
+      >
+        <Trash2 className="w-4 h-4" />
+      </button>
+    </div>
   </div>
-)}
-          </div>
-        ))}
+))}
           </div>
         </>
       )}
