@@ -213,44 +213,60 @@ const handleMoveDown = async (doc: Document, index: number) => {
           )}
 
           <div className="space-y-3">
-        {documents.map((doc) => (
-          <div
-            key={doc.id}
-            className="bg-gray-50 p-4 rounded-lg flex items-start justify-between"
-          >
-            <div className="flex-1">
-              <h3 className="font-semibold text-gray-900 mb-1">{doc.name}</h3>
-              {doc.url && (
-                <a
-                  href={doc.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-sm text-primary-600 hover:underline flex items-center mb-1"
-                >
-                  <ExternalLink className="w-3 h-3 mr-1" />
-                  リンクを開く
-                </a>
-              )}
-              {doc.memo && <p className="text-sm text-gray-600">{doc.memo}</p>}
-            </div>
-            {!readOnly && (
-              <div className="flex space-x-2">
-                <button
-                  onClick={() => handleEdit(doc)}
-                  className="p-1 text-gray-500 hover:text-primary-600"
-                >
-                  <Edit2 className="w-4 h-4" />
-                </button>
-                <button
-                  onClick={() => handleDelete(doc.id)}
-                  className="p-1 text-gray-500 hover:text-red-600"
-                >
-                  <Trash2 className="w-4 h-4" />
-                </button>
-              </div>
-            )}
-          </div>
-        ))}
+        {documents.map((doc, index) => (
+  <div
+    key={doc.id}
+    className="bg-gray-50 p-4 rounded-lg flex items-start justify-between"
+  >
+    <div className="flex-1">
+      <h3 className="font-semibold text-gray-900 mb-1">{doc.name}</h3>
+      {doc.url && (
+        
+          href={doc.url}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-sm text-primary-600 hover:underline flex items-center mb-1"
+        >
+          <ExternalLink className="w-3 h-3 mr-1" />
+          リンクを開く
+        </a>
+      )}
+      {doc.memo && <p className="text-sm text-gray-600">{doc.memo}</p>}
+    </div>
+    {!readOnly && (
+      <div className="flex space-x-2">
+        <button
+          onClick={() => handleMoveUp(doc, index)}
+          disabled={index === 0}
+          className="p-1 text-gray-500 hover:text-primary-600 disabled:opacity-30 disabled:cursor-not-allowed"
+          title="上に移動"
+        >
+          <ChevronUp className="w-4 h-4" />
+        </button>
+        <button
+          onClick={() => handleMoveDown(doc, index)}
+          disabled={index === documents.length - 1}
+          className="p-1 text-gray-500 hover:text-primary-600 disabled:opacity-30 disabled:cursor-not-allowed"
+          title="下に移動"
+        >
+          <ChevronDown className="w-4 h-4" />
+        </button>
+        <button
+          onClick={() => handleEdit(doc)}
+          className="p-1 text-gray-500 hover:text-primary-600"
+        >
+          <Edit2 className="w-4 h-4" />
+        </button>
+        <button
+          onClick={() => handleDelete(doc.id)}
+          className="p-1 text-gray-500 hover:text-red-600"
+        >
+          <Trash2 className="w-4 h-4" />
+        </button>
+      </div>
+    )}
+  </div>
+))}
           </div>
         </>
       )}
