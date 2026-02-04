@@ -20,6 +20,13 @@ export default function TextContentRequirementsSection({ projectId, readOnly = f
     loadItems();
   }, [projectId]);
 
+  // デバッグ用
+  useEffect(() => {
+    console.log('TextContentRequirementsSection - readOnly:', readOnly);
+    console.log('TextContentRequirementsSection - isExpanded:', isExpanded);
+    console.log('TextContentRequirementsSection - items:', items);
+  }, [readOnly, isExpanded, items]);
+  
   const loadItems = async () => {
     const { data } = await supabase
       .from('text_content_requirements')
