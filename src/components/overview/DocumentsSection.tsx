@@ -221,16 +221,16 @@ const handleMoveDown = async (doc: Document, index: number) => {
     <div className="flex-1">
       <h3 className="font-semibold text-gray-900 mb-1">{doc.name}</h3>
       {doc.url && (
-        
-          href={doc.url}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="text-sm text-primary-600 hover:underline flex items-center mb-1"
-        >
-          <ExternalLink className="w-3 h-3 mr-1" />
-          リンクを開く
-        </a>
-      )}
+  
+    href={doc.url}
+    target="_blank"
+    rel="noopener noreferrer"
+    className="text-sm text-primary-600 hover:underline flex items-center mb-1"
+  >
+    <ExternalLink className="w-3 h-3 mr-1" />
+    リンクを開く
+  </a>
+)}
       {doc.memo && <p className="text-sm text-gray-600">{doc.memo}</p>}
     </div>
     {!readOnly && (
