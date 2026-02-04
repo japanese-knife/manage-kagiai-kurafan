@@ -234,52 +234,68 @@ const handleMoveDown = async (meeting: Meeting, index: number) => {
           )}
 
           <div className="space-y-4">
-        {meetings.map((meeting) => (
-          <div key={meeting.id} className="bg-gray-50 p-4 rounded-lg">
-            <div className="flex justify-between items-start mb-3">
-              <div>
-                <div className="text-sm font-semibold text-primary-600 mb-1">
-                  {new Date(meeting.date).toLocaleDateString('ja-JP', {
-                    year: 'numeric',
-                    month: 'long',
-                    day: 'numeric',
-                  })}
-                </div>
-                {meeting.participants && (
-                  <div className="text-sm text-gray-600">参加者: {meeting.participants}</div>
-                )}
-              </div>
-              {!readOnly && (
-                <div className="flex space-x-2">
-                  <button
-                    onClick={() => handleEdit(meeting)}
-                    className="p-1 text-gray-500 hover:text-primary-600"
-                  >
-                    <Edit2 className="w-4 h-4" />
-                  </button>
-                  <button
-                    onClick={() => handleDelete(meeting.id)}
-                    className="p-1 text-gray-500 hover:text-red-600"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </button>
-                </div>
-              )}
-            </div>
-            {meeting.summary && (
-              <div className="mb-2">
-                <h4 className="text-sm font-medium text-gray-700 mb-1">要点</h4>
-                <p className="text-sm text-gray-700 whitespace-pre-wrap">{meeting.summary}</p>
-              </div>
-            )}
-            {meeting.decisions && (
-              <div>
-                <h4 className="text-sm font-medium text-gray-700 mb-1">決定事項</h4>
-                <p className="text-sm text-gray-700 whitespace-pre-wrap">{meeting.decisions}</p>
-              </div>
-            )}
-          </div>
-        ))}
+        {meetings.map((meeting, index) => (
+  <div key={meeting.id} className="bg-gray-50 p-4 rounded-lg">
+    <div className="flex justify-between items-start mb-3">
+      <div>
+        <div className="text-sm font-semibold text-primary-600 mb-1">
+          {new Date(meeting.date).toLocaleDateString('ja-JP', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric',
+          })}
+        </div>
+        {meeting.participants && (
+          <div className="text-sm text-gray-600">参加者: {meeting.participants}</div>
+        )}
+      </div>
+      {!readOnly && (
+        <div className="flex space-x-2">
+          <button
+            onClick={() => handleMoveUp(meeting, index)}
+            disabled={index === 0}
+            className="p-1 text-gray-500 hover:text-primary-600 disabled:opacity-30 disabled:cursor-not-allowed"
+            title="上に移動"
+          >
+            <ChevronUp className="w-4 h-4" />
+          </button>
+          <button
+            onClick={() => handleMoveDown(meeting, index)}
+            disabled={index === meetings.length - 1}
+            className="p-1 text-gray-500 hover:text-primary-600 disabled:opacity-30 disabled:cursor-not-allowed"
+            title="下に移動"
+          >
+            <ChevronDown className="w-4 h-4" />
+          </button>
+          <button
+            onClick={() => handleEdit(meeting)}
+            className="p-1 text-gray-500 hover:text-primary-600"
+          >
+            <Edit2 className="w-4 h-4" />
+          </button>
+          <button
+            onClick={() => handleDelete(meeting.id)}
+            className="p-1 text-gray-500 hover:text-red-600"
+          >
+            <Trash2 className="w-4 h-4" />
+          </button>
+        </div>
+      )}
+    </div>
+    {meeting.summary && (
+      <div className="mb-2">
+        <h4 className="text-sm font-medium text-gray-700 mb-1">要点</h4>
+        <p className="text-sm text-gray-700 whitespace-pre-wrap">{meeting.summary}</p>
+      </div>
+    )}
+    {meeting.decisions && (
+      <div>
+        <h4 className="text-sm font-medium text-gray-700 mb-1">決定事項</h4>
+        <p className="text-sm text-gray-700 whitespace-pre-wrap">{meeting.decisions}</p>
+      </div>
+    )}
+  </div>
+))}
           </div>
         </>
       )}
