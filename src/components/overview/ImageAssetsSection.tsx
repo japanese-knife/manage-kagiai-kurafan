@@ -255,7 +255,7 @@ const handleMoveDown = async (asset: ImageAsset, index: number) => {
       <p className="text-sm text-gray-600 mb-2">{asset.purpose}</p>
     )}
     {asset.url && (
-      
+      <a
         href={asset.url}
         target="_blank"
         rel="noopener noreferrer"
