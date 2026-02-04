@@ -26,15 +26,15 @@ export default function MeetingsSection({ projectId, readOnly = false }: Meeting
   }, [projectId]);
 
   const loadMeetings = async () => {
-    const { data } = await supabase
-      .from('meetings')
-      .select('*')
-      .eq('project_id', projectId)
-      .order('date', { ascending: true })
-      .order('id', { ascending: true });
+  const { data } = await supabase
+    .from('meetings')
+    .select('*')
+    .eq('project_id', projectId)
+    .order('order_index', { ascending: true })
+    .order('id', { ascending: true });
 
-    setMeetings(data || []);
-  };
+  setMeetings(data || []);
+};
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
