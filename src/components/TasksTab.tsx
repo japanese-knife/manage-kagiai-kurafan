@@ -115,17 +115,17 @@ export default function TasksTab({ projectId, readOnly = false }: TasksTabProps)
 </button>
       </div>
 
-      {isAdding && !readOnly && (
-        <TaskForm
-          projectId={projectId}
-          parentId={parentId}
-          onSave={handleTaskSaved}
-          onCancel={() => {
-            setIsAdding(false);
-            setParentId(null);
-          }}
-        />
-      )}
+      {isAdding && (
+  <TaskForm
+    projectId={projectId}
+    parentId={parentId}
+    onSave={handleTaskSaved}
+    onCancel={() => {
+      setIsAdding(false);
+      setParentId(null);
+    }}
+  />
+)}
 
       <div className="space-y-2">
         {tasks.map((task) => (
