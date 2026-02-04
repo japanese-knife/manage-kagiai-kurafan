@@ -5,9 +5,10 @@ import { ChevronLeft, ChevronRight, X } from 'lucide-react';
 
 interface CalendarTabProps {
   projectId: string;
+  readOnly?: boolean;
 }
 
-export default function CalendarTab({ projectId }: CalendarTabProps) {
+export default function CalendarTab({ projectId, readOnly = false }: CalendarTabProps) {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
