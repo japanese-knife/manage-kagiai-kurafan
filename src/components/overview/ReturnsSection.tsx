@@ -86,24 +86,36 @@ export default function ReturnsSection({ projectId, readOnly = false }: ReturnsS
   };
 
   const handleDuplicate = async (returnItem: Return) => {
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
+  try {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
 
-      await supabase.from('returns').insert({
-        name: `${returnItem.name} (コピー)`,
-        price_range: returnItem.price_range,
-        description: returnItem.description,
-        status: returnItem.status,
-        project_id: projectId,
-        user_id: user.id
-      });
+    // 最大の order_index を取得
+    const { data: maxOrder } = await supabase
+      .from('returns')
+      .select('order_index')
+      .eq('project_id', projectId)
+      .order('order_index', { ascending: false })
+      .limit(1)
+      .maybeSingle();
 
-      loadReturns();
-    } catch (error) {
-      console.error('Error duplicating return:', error);
-    }
-  };
+    const nextOrder = maxOrder ? maxOrder.order_index + 1 : 0;
+
+    await supabase.from('returns').insert({
+      name: `${returnItem.name} (コピー)`,
+      price_range: returnItem.price_range,
+      description: returnItem.description,
+      status: returnItem.status,
+      project_id: projectId,
+      user_id: user.id,
+      order_index: nextOrder
+    });
+
+    loadReturns();
+  } catch (error) {
+    console.error('Error duplicating return:', error);
+  }
+};
 
   const handleDelete = async (id: string) => {
     if (confirm('削除してもよろしいですか?')) {
