@@ -41,14 +41,27 @@ export default function ImageAssetsSection({ projectId, readOnly = false }: Imag
     if (editingId) {
       await supabase.from('image_assets').update(formData).eq('id', editingId);
     } else {
-      const { data: { user } } = await supabase.auth.getUser();
-      const userId = user?.id || null; // ユーザーがいない場合はnull
-      await supabase.from('image_assets').insert({
-        ...formData,
-        project_id: projectId,
-        user_id: userId
-      });
-    }
+  const { data: { user } } = await supabase.auth.getUser();
+  const userId = user?.id || null;
+
+  // 最大の order_index を取得
+  const { data: maxOrder } = await supabase
+    .from('image_assets')
+    .select('order_index')
+    .eq('project_id', projectId)
+    .order('order_index', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  const nextOrder = maxOrder ? maxOrder.order_index + 1 : 0;
+
+  await supabase.from('image_assets').insert({
+    ...formData,
+    project_id: projectId,
+    user_id: userId,
+    order_index: nextOrder
+  });
+}
     setFormData({ name: '', purpose: '', url: '', status: '準備中' });
     setIsAdding(false);
     setEditingId(null);
