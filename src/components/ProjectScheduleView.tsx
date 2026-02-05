@@ -885,24 +885,24 @@ await loadSchedules();
         setSchedules(updatedSchedules);
         
         // バッチ更新（バックグラウンドで実行）
-        for (let i = 0; i < updates.length; i++) {
-          const updateData = updates[i];
-          console.log(`💾 矩形[${i + 1}/${updates.length}] Upsert実行:`, updateData);
-          
-          const { data, error } = await supabase
-            .from(tableName)
-            .upsert(updateData, {
-              onConflict: 'project_id,date'
-            });
-          
-          if (error) {
-            console.error(`❌ 矩形[${i + 1}/${updates.length}] Upsertエラー:`, error);
-            await loadSchedules();
-            throw error;
-          }
-          
-          console.log(`✅ 矩形[${i + 1}/${updates.length}] Upsert成功:`, data);
-        }
+        // バッチ更新を一括実行
+console.log(`💾 矩形一括Upsert開始: ${updates.length}件`);
+const { data: upsertData, error: upsertError } = await supabase
+  .from(tableName)
+  .upsert(updates, {
+    onConflict: 'project_id,date'
+  });
+
+if (upsertError) {
+  console.error('❌ 矩形一括Upsertエラー:', upsertError);
+  await loadSchedules();
+  throw upsertError;
+}
+
+console.log(`✅ 矩形一括Upsert成功: ${updates.length}件`, upsertData);
+
+// 保存後にデータを再読み込みして同期
+await loadSchedules();
         
         console.log('✅ 矩形ペースト完了');
         
