@@ -3,6 +3,7 @@ import { User } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabase';
 import { Project, BrandType } from '../types';
 import { Calendar, Copy, Download } from 'lucide-react';
+
 interface ProjectScheduleViewProps {
   user: User;
   activeBrandTab: BrandType | 'all';
@@ -10,6 +11,7 @@ interface ProjectScheduleViewProps {
   onSelectProject: (project: Project) => void;
   onOpenCreatorBrands?: (project: Project) => void;
 }
+
 interface ScheduleCell {
   projectId: string;
   date: string;
@@ -17,10 +19,12 @@ interface ScheduleCell {
   backgroundColor: string;
   textColor: string;
 }
+
 interface ProjectWithBrandInfo extends Project {
   creatorName?: string;
   brandName?: string;
 }
+
 export default function ProjectScheduleView({ user, activeBrandTab, viewType, onSelectProject, onOpenCreatorBrands }: ProjectScheduleViewProps) {
   const [projects, setProjects] = useState<ProjectWithBrandInfo[]>([]);
   const [schedules, setSchedules] = useState<Map<string, ScheduleCell>>(new Map());
@@ -36,22 +40,25 @@ const [selectionStart, setSelectionStart] = useState<{ projectId: string; date: 
   const inputRef = useRef<HTMLInputElement>(null);
   const hasScrolledToToday = useRef(false);
   const [columnWidth, setColumnWidth] = useState<'narrow' | 'wide'>('narrow');
+
   // 日付生成
   useEffect(() => {
     generateDates();
   }, [viewType, activeBrandTab]);
+
   // プロジェクト読み込み
-useEffect(() => {
-  if (dates.length > 0) {
-    loadProjects();
-  }
-}, [dates.length, activeBrandTab]);
-// スケジュール読み込み - プロジェクトが変更されたら必ず再読み込み
-useEffect(() => {
-  if (projects.length > 0) {
-    loadSchedules();
-  }
-}, [projects]);
+  useEffect(() => {
+    if (dates.length > 0) {
+      loadProjects();
+    }
+  }, [dates.length, activeBrandTab]);
+
+  // スケジュール読み込み
+  useEffect(() => {
+    if (projects.length > 0) {
+      loadSchedules();
+    }
+  }, [projects.length]);
   
   useEffect(() => {
   // 日次ビューで初回読み込み時のみ当日の列を中央に配置
@@ -95,14 +102,16 @@ useEffect(() => {
     }
   }
 }, [dates.length, viewType, activeBrandTab]);
+
   useEffect(() => {
     hasScrolledToToday.current = false;
   }, [viewType]);
+
   const generateDates = () => {
     if (viewType === 'monthly') {
       const today = new Date();
       const datesArray: Date[] = [];
-      // BRAND-BASEの場合は年単位(1年=12ヶ月)、それ以外は月単位(12ヶ月)
+      // BRAND-BASEの場合は年単位（1年＝12ヶ月）、それ以外は月単位（12ヶ月）
       const monthCount = activeBrandTab === 'BRAND-BASE' ? 12 : 12;
       for (let i = 0; i < monthCount; i++) {
         const date = new Date(today.getFullYear(), today.getMonth() + i, 1);
@@ -120,6 +129,7 @@ useEffect(() => {
       setDates(datesArray);
     }
   };
+
   const getColumnWidth = () => {
   switch (columnWidth) {
     case 'narrow':
@@ -139,27 +149,26 @@ useEffect(() => {
     
     if (activeBrandTab !== 'all') {
       query = query.eq('brand_type', activeBrandTab);
+    } else {
+      // 全体表示の場合、海外クラファン.comの完了プロジェクトを除外
+      query = query.or('brand_type.neq.海外クラファン.com,and(brand_type.eq.海外クラファン.com,status.neq.完了)');
     }
     
     const { data, error } = await query.order('created_at', { ascending: true });
     if (error) throw error;
     
-    // 海外クラファン.comの完了プロジェクトを除外(activeBrandTab === 'all'の場合のみ)
-    let filteredData = data;
-    if (activeBrandTab === 'all' && data) {
-      filteredData = data.filter(project => {
-        // 海外クラファン.comで完了の場合は除外
-        if (project.brand_type === '海外クラファン.com' && project.status === '完了') {
-          return false;
-        }
-        return true;
-      });
-    }
+    // 海外クラファン.comの完了プロジェクトを除外
+    const filteredData = data?.filter(project => {
+      if (project.brand_type === '海外クラファン.com' && project.status === '完了') {
+        return false;
+      }
+      return true;
+    });
     
     // BRAND-BASEの場合、クリエイターとブランド情報を取得
-    if (filteredData && activeBrandTab === 'BRAND-BASE') {
+    if (data && activeBrandTab === 'BRAND-BASE') {
       const projectsWithInfo: ProjectWithBrandInfo[] = await Promise.all(
-        filteredData.map(async (project) => {
+        data.map(async (project) => {
           // brand_projectsからブランド情報を取得
           const { data: brandProjectData } = await supabase
             .from('brand_projects')
@@ -205,7 +214,7 @@ useEffect(() => {
       );
       
       setProjects(projectsWithInfo);
-    } else if (activeBrandTab === 'all' && filteredData) {
+    } else if (activeBrandTab === 'all' && data) {
       // 全体ガントチャートの場合、当日のスケジュールをチェック
       const today = new Date().toISOString().split('T')[0];
       const tableName = viewType === 'monthly' ? 'annual_schedules' : 'project_schedules';
@@ -220,35 +229,36 @@ useEffect(() => {
         (todaySchedules || []).map(s => s.project_id)
       );
       
-      const sortedData = filteredData.sort((a, b) => {
-        // まず当日に色がついているかで判定
-        const aHasTodayColor = projectsWithTodayColor.has(a.id);
-        const bHasTodayColor = projectsWithTodayColor.has(b.id);
-        
-        if (aHasTodayColor && !bHasTodayColor) return -1;
-        if (!aHasTodayColor && bHasTodayColor) return 1;
-        
-        // 色付きセル同士の場合は、新しい順(降順)
-        if (aHasTodayColor && bHasTodayColor) {
-          return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
-        }
-        
-        // 次にブランドタイプで判定
-        if (a.brand_type !== b.brand_type) {
-          return a.brand_type === '海外クラファン.com' ? -1 : 1;
-        }
-        
-        // 最後に作成日時で判定(色なしの場合も新しい順)
-        return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
-      });
+      const sortedData = data.sort((a, b) => {
+  // まず当日に色がついているかで判定
+  const aHasTodayColor = projectsWithTodayColor.has(a.id);
+  const bHasTodayColor = projectsWithTodayColor.has(b.id);
+  
+  if (aHasTodayColor && !bHasTodayColor) return -1;
+  if (!aHasTodayColor && bHasTodayColor) return 1;
+  
+  // 色付きセル同士の場合は、新しい順（降順）
+  if (aHasTodayColor && bHasTodayColor) {
+    return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+  }
+  
+  // 次にブランドタイプで判定
+  if (a.brand_type !== b.brand_type) {
+    return a.brand_type === '海外クラファン.com' ? -1 : 1;
+  }
+  
+  // 最後に作成日時で判定（色なしの場合も新しい順）
+  return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+});
       setProjects(sortedData);
     } else {
-      setProjects(filteredData || []);
+      setProjects(data || []);
     }
   } catch (error) {
     console.error('プロジェクト読み込みエラー:', error);
   }
 };
+
   const loadSchedules = async () => {
   try {
     const projectIds = projects.map(p => p.id);
@@ -258,7 +268,9 @@ useEffect(() => {
       .from(tableName)
       .select('*')
       .in('project_id', projectIds);
+
     if (error) throw error;
+
     const scheduleMap = new Map<string, ScheduleCell>();
     (data || []).forEach((schedule) => {
       const key = `${schedule.project_id}-${schedule.date}`;
@@ -272,6 +284,7 @@ useEffect(() => {
         textColor: schedule.text_color || autoTextColor,
       });
     });
+
     setSchedules(scheduleMap);
   } catch (error) {
     console.error('スケジュール読み込みエラー:', error);
@@ -281,6 +294,7 @@ useEffect(() => {
   const getCellKey = (projectId: string, date: Date): string => {
     return `${projectId}-${date.toISOString().split('T')[0]}`;
   };
+
   const getTextColorForBackground = (bgColor: string): string => {
     const hex = bgColor.replace('#', '');
     const r = parseInt(hex.substr(0, 2), 16);
@@ -289,18 +303,22 @@ useEffect(() => {
     const brightness = (r * 299 + g * 587 + b * 114) / 1000;
     return brightness > 155 ? '#000000' : '#ffffff';
   };
+
   const isToday = (date: Date): boolean => {
   const today = new Date();
   return date.getFullYear() === today.getFullYear() &&
          date.getMonth() === today.getMonth() &&
          date.getDate() === today.getDate();
 };
+
 const isCurrentMonth = (date: Date): boolean => {
   const today = new Date();
   return date.getFullYear() === today.getFullYear() &&
          date.getMonth() === today.getMonth();
 };
+
   
+
   const handleCellClick = (projectId: string, date: Date, e?: React.MouseEvent) => {
     const dateStr = date.toISOString().split('T')[0];
     const cellKey = `${projectId}-${dateStr}`;
@@ -309,7 +327,7 @@ const isCurrentMonth = (date: Date): boolean => {
       // Shift + クリックで範囲選択
       handleRangeSelection(projectId, dateStr);
     } else if (e?.ctrlKey || e?.metaKey) {
-      // Ctrl/Cmd + クリックで複数選択(トグル)
+      // Ctrl/Cmd + クリックで複数選択（トグル）
       const newSelectedCells = new Set(selectedCells);
       if (newSelectedCells.has(cellKey)) {
         newSelectedCells.delete(cellKey);
@@ -332,6 +350,7 @@ const isCurrentMonth = (date: Date): boolean => {
       setSelectedCells(new Set([cellKey]));
     }
   };
+
   const handleCellMouseDown = (projectId: string, date: Date, e: React.MouseEvent) => {
     // 編集中やカラーピッカー表示中はドラッグ選択しない
     if (editingCell || showColorPicker) return;
@@ -343,19 +362,22 @@ const isCurrentMonth = (date: Date): boolean => {
       setIsSelecting(true);
       setSelectionStart({ projectId, date: dateStr });
       setSelectedCell({ projectId, date: dateStr });
-      setSelectedCells(new Set(`${projectId}-${dateStr}`]));
+      setSelectedCells(new Set([`${projectId}-${dateStr}`]));
     }
   };
+
   const handleCellMouseEnter = (projectId: string, date: Date) => {
     if (!isSelecting || !selectionStart) return;
     
     const dateStr = date.toISOString().split('T')[0];
     handleRangeSelection(projectId, dateStr, selectionStart);
   };
+
   const handleMouseUp = () => {
     setIsSelecting(false);
     setSelectionStart(null);
   };
+
   useEffect(() => {
     // グローバルなマウスアップイベントを監視
     document.addEventListener('mouseup', handleMouseUp);
@@ -392,6 +414,7 @@ const isCurrentMonth = (date: Date): boolean => {
     
     setSelectedCells(newSelectedCells);
   };
+
   const handleCellDoubleClick = (projectId: string, date: Date) => {
     const dateStr = date.toISOString().split('T')[0];
     const key = getCellKey(projectId, date);
@@ -400,11 +423,14 @@ const isCurrentMonth = (date: Date): boolean => {
     setEditingCell({ projectId, date: dateStr });
     setEditValue(cell?.content || '');
   };
+
   const handleCellBlur = async () => {
     if (!editingCell) return;
+
     const key = `${editingCell.projectId}-${editingCell.date}`;
     const existingCell = schedules.get(key);
     const tableName = viewType === 'monthly' ? 'annual_schedules' : 'project_schedules';
+
     try {
       if (editValue.trim() === '') {
         if (existingCell) {
@@ -430,11 +456,13 @@ const isCurrentMonth = (date: Date): boolean => {
           text_color: txtColor,
           user_id: user.id,
         };
+
         const { error } = await supabase
           .from(tableName)
           .upsert(updateData, {
             onConflict: 'project_id,date'
           });
+
         if (error) throw error;
         
         const updatedSchedules = new Map(schedules);
@@ -451,9 +479,11 @@ const isCurrentMonth = (date: Date): boolean => {
       console.error('スケジュール保存エラー:', error);
       alert('スケジュールの保存に失敗しました');
     }
+
     setEditingCell(null);
     setEditValue('');
   };
+
   const handleKeyDown = (e: React.KeyboardEvent, projectId: string, dateIndex: number) => {
     if (editingCell) {
       if (e.key === 'Enter') {
@@ -464,27 +494,32 @@ const isCurrentMonth = (date: Date): boolean => {
       }
       return;
     }
+
     if ((e.ctrlKey || e.metaKey) && e.key === 'c') {
       e.preventDefault();
       handleCopy();
       return;
     }
+
     if ((e.ctrlKey || e.metaKey) && e.key === 'v') {
       e.preventDefault();
       handleKeyboardPaste();
       return;
     }
+
     if (e.key === 'Escape' && !editingCell) {
       e.preventDefault();
       setSelectedCells(new Set());
       setSelectedCell(null);
       return;
     }
+
     if (!selectedCell) {
       const dateStr = dates[dateIndex].toISOString().split('T')[0];
       setSelectedCell({ projectId, date: dateStr });
       return;
     }
+
     const currentProjectIndex = projects.findIndex(p => p.id === selectedCell.projectId);
     const currentDateIndex = dates.findIndex(d => d.toISOString().split('T')[0] === selectedCell.date);
     
@@ -563,8 +598,10 @@ const isCurrentMonth = (date: Date): boolean => {
         break;
     }
   };
+
   const handleCopy = async () => {
     if (selectedCells.size === 0) return;
+
     try {
       // 選択されたセルを行列順にソート
       const sortedCells = Array.from(selectedCells).sort((a, b) => {
@@ -598,6 +635,7 @@ const isCurrentMonth = (date: Date): boolean => {
         
         return aDateIndex - bDateIndex;
       });
+
       const cellsData = sortedCells.map(key => {
         const cell = schedules.get(key);
         const [projectId, dateStr] = key.split('-').reduce((acc, part, idx, arr) => {
@@ -634,7 +672,7 @@ const isCurrentMonth = (date: Date): boolean => {
         isMultiple: selectedCells.size > 1
       });
       
-      // TSV形式でクリップボードにコピー(Excel互換)
+      // TSV形式でクリップボードにコピー（Excel互換）
       let tsvContent = '';
       const projectIds = Array.from(new Set(cellsData.map(c => c.projectId)));
       const dateStrs = Array.from(new Set(cellsData.map(c => c.dateStr))).sort();
@@ -667,6 +705,7 @@ const isCurrentMonth = (date: Date): boolean => {
       alert('コピーに失敗しました');
     }
   };
+
   const handleKeyboardPaste = async () => {
     console.log('handleKeyboardPaste called');
     console.log('selectedCells:', selectedCells);
@@ -681,7 +720,9 @@ const isCurrentMonth = (date: Date): boolean => {
       console.log('No copied data');
       return;
     }
+
     const tableName = viewType === 'monthly' ? 'annual_schedules' : 'project_schedules';
+
     try {
       // 1つのセルをコピーして複数セルにペースト
       if (copiedCellData.cellsData && copiedCellData.cellsData.length === 1) {
@@ -731,7 +772,7 @@ const isCurrentMonth = (date: Date): boolean => {
         
         // 視覚的フィードバック
         selectedCells.forEach(cellKey => {
-          const cell = document.querySelector`[data-cell-id="${cellKey}"]`);
+          const cell = document.querySelector(`[data-cell-id="${cellKey}"]`);
           if (cell) {
             cell.classList.add('ring-2', 'ring-green-400');
             setTimeout(() => {
@@ -742,7 +783,8 @@ const isCurrentMonth = (date: Date): boolean => {
         
         return;
       }
-      // 複数セルのコピー&ペースト(矩形領域)
+
+      // 複数セルのコピー＆ペースト（矩形領域）
       if (copiedCellData.structure && selectedCell) {
         console.log('Multiple cells paste (rectangular area)');
         const sourceProjectIds = Array.from(copiedCellData.structure.keys());
@@ -797,7 +839,7 @@ const isCurrentMonth = (date: Date): boolean => {
         
         // 視覚的フィードバック
         if (selectedCell) {
-          const targetCell = document.querySelector`[data-cell-id="${selectedCell.projectId}-${selectedCell.date}"]`);
+          const targetCell = document.querySelector(`[data-cell-id="${selectedCell.projectId}-${selectedCell.date}"]`);
           if (targetCell) {
             targetCell.classList.add('ring-2', 'ring-green-400');
             setTimeout(() => {
@@ -817,9 +859,10 @@ const isCurrentMonth = (date: Date): boolean => {
     
     const dateStr = date.toISOString().split('T')[0];
     const tableName = viewType === 'monthly' ? 'annual_schedules' : 'project_schedules';
+
     try {
       if (copiedCellData && copiedCellData.structure) {
-        // 構造化されたデータのペースト(矩形領域)
+        // 構造化されたデータのペースト（矩形領域）
         const sourceProjectIds = Array.from(copiedCellData.structure.keys());
         const sourceDates = Array.from(new Set(
           Array.from(copiedCellData.structure.values())
@@ -915,10 +958,11 @@ const isCurrentMonth = (date: Date): boolean => {
             });
         }
       }
+
       await loadSchedules();
       
       // 視覚的フィードバック
-      const targetCell = document.querySelector`[data-cell-id="${projectId}-${dateStr}"]`);
+      const targetCell = document.querySelector(`[data-cell-id="${projectId}-${dateStr}"]`);
       if (targetCell) {
         targetCell.classList.add('bg-green-100');
         setTimeout(() => {
@@ -930,6 +974,7 @@ const isCurrentMonth = (date: Date): boolean => {
       alert('ペーストに失敗しました');
     }
   };
+
   const handleColorChange = async (projectId: string, date: Date, color: string, textColor: string) => {
     const dateStr = date.toISOString().split('T')[0];
     const clickedCellKey = `${projectId}-${dateStr}`;
@@ -937,7 +982,9 @@ const isCurrentMonth = (date: Date): boolean => {
     const targetCells = selectedCells.size > 0 && selectedCells.has(clickedCellKey) 
       ? Array.from(selectedCells) 
       : [clickedCellKey];
+
     const tableName = viewType === 'monthly' ? 'annual_schedules' : 'project_schedules';
+
     try {
       const updatedSchedules = new Map(schedules);
       
@@ -956,11 +1003,13 @@ const isCurrentMonth = (date: Date): boolean => {
           text_color: textColor,
           user_id: user.id,
         };
+
         const { error } = await supabase
           .from(tableName)
           .upsert(updateData, {
             onConflict: 'project_id,date'
           });
+
         if (error) {
           console.error('Supabaseエラー詳細:', error);
           throw error;
@@ -980,7 +1029,7 @@ const isCurrentMonth = (date: Date): boolean => {
       
       // 視覚的フィードバック
       targetCells.forEach(cellKey => {
-        const cell = document.querySelector`[data-cell-id="${cellKey}"]`);
+        const cell = document.querySelector(`[data-cell-id="${cellKey}"]`);
         if (cell) {
           cell.classList.add('ring-2', 'ring-green-400');
           setTimeout(() => {
@@ -990,9 +1039,10 @@ const isCurrentMonth = (date: Date): boolean => {
       });
     } catch (error) {
       console.error('色変更エラー:', error);
-      alert`色の変更に失敗しました: ${error instanceof Error ? error.message : '不明なエラー'}`);
+      alert(`色の変更に失敗しました: ${error instanceof Error ? error.message : '不明なエラー'}`);
     }
   };
+
   const predefinedColors = [
     { name: '白', color: '#ffffff', textColor: '#000000' },
     { name: '淡黄', color: '#fef3c7', textColor: '#000000' },
@@ -1023,14 +1073,17 @@ const isCurrentMonth = (date: Date): boolean => {
     { name: '濃桃', color: '#ec4899', textColor: '#ffffff' },
     { name: 'ダーク', color: '#6b7280', textColor: '#ffffff' },
   ];
+
   const getWeekday = (date: Date): string => {
     const weekdays = ['日', '月', '火', '水', '木', '金', '土'];
     return weekdays[date.getDay()];
   };
+
   const isWeekend = (date: Date): boolean => {
     const day = date.getDay();
     return day === 0 || day === 6;
   };
+
   const exportToCSV = () => {
     let csv = '事業者名,商品';
     dates.forEach(date => {
@@ -1041,6 +1094,7 @@ const isCurrentMonth = (date: Date): boolean => {
       }
     });
     csv += '\n';
+
     projects.forEach(project => {
       csv += `${project.name},`;
       dates.forEach(date => {
@@ -1051,6 +1105,7 @@ const isCurrentMonth = (date: Date): boolean => {
       });
       csv += '\n';
     });
+
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement('a');
     link.href = URL.createObjectURL(blob);
@@ -1059,7 +1114,9 @@ const isCurrentMonth = (date: Date): boolean => {
     link.download = `schedule_${brandName}_${viewTypeName}_${new Date().toISOString().split('T')[0]}.csv`;
     link.click();
   };
+
   
+
   // ブランドごとにプロジェクトをグループ化
   const projectsByBrand = activeBrandTab === 'all' 
     ? {
@@ -1067,6 +1124,7 @@ const isCurrentMonth = (date: Date): boolean => {
         'BRAND-BASE': projects.filter(p => p.brand_type === 'BRAND-BASE')
       }
     : { [activeBrandTab]: projects };
+
  // ヘッダー部分を共通化する関数
   const renderDateHeaders = (brandName?: string) => {
   const headerLabel = brandName === 'BRAND-BASE' || activeBrandTab === 'BRAND-BASE' 
@@ -1108,16 +1166,16 @@ const isCurrentMonth = (date: Date): boolean => {
 >
   {viewType === 'monthly' ? (
     <>
-      <div className=`text-xs ${isCurrentMonth(date) ? 'font-bold text-yellow-700' : 'text-neutral-600'}`}>
+      <div className={`text-xs ${isCurrentMonth(date) ? 'font-bold text-yellow-700' : 'text-neutral-600'}`}>
         {date.getFullYear()}
       </div>
-      <div className=`text-xs ${isCurrentMonth(date) ? 'font-bold text-yellow-700' : 'text-neutral-600'}`}>
+      <div className={`text-xs ${isCurrentMonth(date) ? 'font-bold text-yellow-700' : 'text-neutral-600'}`}>
         {date.getMonth() + 1}月
       </div>
     </>
   ) : (
     <>
-      <div className=`text-xs ${isToday(date) ? 'font-bold text-yellow-700' : 'text-neutral-600'}`}>
+      <div className={`text-xs ${isToday(date) ? 'font-bold text-yellow-700' : 'text-neutral-600'}`}>
         {date.getMonth() + 1}/{date.getDate()}
       </div>
       <div className={`text-xs ${
@@ -1136,6 +1194,7 @@ const isCurrentMonth = (date: Date): boolean => {
       </tr>
     );
   };
+
   const renderProjectRows = (brandProjects: ProjectWithBrandInfo[]) => {
   return (
     <>
@@ -1174,6 +1233,7 @@ const isCurrentMonth = (date: Date): boolean => {
     </>
   )}
 </td>
+
 <td className={`sticky ${
   activeBrandTab === 'BRAND-BASE'
     ? viewType === 'monthly'
@@ -1204,10 +1264,11 @@ const isCurrentMonth = (date: Date): boolean => {
             const isSelected = selectedCells.has(cellKey);
             const isPrimarySelected = selectedCell?.projectId === project.id && selectedCell?.date === dateStr;
             const isEditing = editingCell?.projectId === project.id && editingCell?.date === dateStr;
+
             return (
               <td
   key={dateIndex}
-  data-cell-id=`${project.id}-${dateStr}`}
+  data-cell-id={`${project.id}-${dateStr}`}
   className={`p-0 cursor-cell relative select-none ${
     isPrimarySelected
       ? 'border-4 border-primary-600 shadow-lg' 
@@ -1320,6 +1381,7 @@ const isCurrentMonth = (date: Date): boolean => {
     </>
   );
 };
+
   return (
     <div className="bg-white rounded-2xl border border-neutral-200/50 shadow-lg overflow-hidden">
       <div className="p-4 border-b border-neutral-200 flex items-center justify-between">
@@ -1356,6 +1418,7 @@ const isCurrentMonth = (date: Date): boolean => {
     </button>
   </div>
 </div>
+
       {activeBrandTab === 'all' ? (
         <div className="flex flex-col">
           {Object.entries(projectsByBrand).map(([brandName, brandProjects], brandIndex) => (
@@ -1390,6 +1453,7 @@ const isCurrentMonth = (date: Date): boolean => {
           </table>
         </div>
       )}
+
       <div className="p-3 border-t border-neutral-200 bg-neutral-50 text-xs text-neutral-600">
   <div className="flex flex-wrap gap-x-4 gap-y-1">
     <span className="hidden sm:inline">• ダブルクリックで編集</span>
