@@ -53,6 +53,13 @@ useEffect(() => {
   }
 }, [dates.length, activeBrandTab]);
 
+useEffect(() => {
+  if (editingCell && inputRef.current) {
+    inputRef.current.focus();
+    inputRef.current.select();
+  }
+}, [editingCell]);
+  
 // スケジュール読み込み - プロジェクトが変更されたら必ず再読み込み
 useEffect(() => {
   if (projects.length > 0) {
