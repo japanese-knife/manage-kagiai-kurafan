@@ -783,46 +783,29 @@ const isCurrentMonth = (date: Date): boolean => {
         console.log('🔄 setSchedules実行後 - 新サイズ:', updatedSchedules.size);
         
         // バッチ更新（バックグラウンドで実行）
-        for (let i = 0; i < updates.length; i++) {
-          const updateData = updates[i];
-          console.log(`💾 [${i + 1}/${updates.length}] Upsert実行:`, {
-            table: tableName,
-            data: updateData
-          });
-          
-          const { data, error } = await supabase
-            .from(tableName)
-            .upsert(updateData, {
-              onConflict: 'project_id,date'
-            });
-          
-          if (error) {
-            console.error(`❌ [${i + 1}/${updates.length}] Upsertエラー:`, error);
-            console.error('エラーコード:', error.code);
-            console.error('エラーメッセージ:', error.message);
-            console.error('エラー詳細:', error.details);
-            console.error('エラーヒント:', error.hint);
-            // エラーの場合は再読み込みして正しい状態に戻す
-            await loadSchedules();
-            throw error;
-          }
-          
-          console.log(`✅ [${i + 1}/${updates.length}] Upsert成功:`, data);
-          
-          // 実際に保存されたか確認
-          const { data: verifyData, error: verifyError } = await supabase
-            .from(tableName)
-            .select('*')
-            .eq('project_id', updateData.project_id)
-            .eq('date', updateData.date)
-            .single();
-          
-          if (verifyError) {
-            console.error(`⚠️ [${i + 1}/${updates.length}] 検証エラー:`, verifyError);
-          } else {
-            console.log(`🔍 [${i + 1}/${updates.length}] 保存確認:`, verifyData);
-          }
-        }
+        // バッチ更新を並列実行(より高速で確実)
+console.log(`💾 一括Upsert開始: ${updates.length}件`);
+const { data: upsertData, error: upsertError } = await supabase
+  .from(tableName)
+  .upsert(updates, {
+    onConflict: 'project_id,date'
+  });
+
+if (upsertError) {
+  console.error('❌ 一括Upsertエラー:', upsertError);
+  console.error('エラーコード:', upsertError.code);
+  console.error('エラーメッセージ:', upsertError.message);
+  console.error('エラー詳細:', upsertError.details);
+  console.error('エラーヒント:', upsertError.hint);
+  // エラーの場合は再読み込みして正しい状態に戻す
+  await loadSchedules();
+  throw upsertError;
+}
+
+console.log(`✅ 一括Upsert成功: ${updates.length}件`, upsertData);
+
+// 保存後にデータを再読み込みして同期
+await loadSchedules();
         
         console.log('✅ ペースト完了');
         
