@@ -243,6 +243,38 @@ const [selectionStart, setSelectionStart] = useState<{ projectId: string; date: 
   }
 };
 
+  const loadSchedules = async () => {
+  try {
+    const projectIds = projects.map(p => p.id);
+    // viewTypeに応じて異なるテーブルから取得
+    const tableName = viewType === 'monthly' ? 'annual_schedules' : 'project_schedules';
+    const { data, error } = await supabase
+      .from(tableName)
+      .select('*')
+      .in('project_id', projectIds);
+
+    if (error) throw error;
+
+    const scheduleMap = new Map<string, ScheduleCell>();
+    (data || []).forEach((schedule) => {
+      const key = `${schedule.project_id}-${schedule.date}`;
+      const bgColor = schedule.background_color || '#ffffff';
+      const autoTextColor = getTextColorForBackground(bgColor);
+      scheduleMap.set(key, {
+        projectId: schedule.project_id,
+        date: schedule.date,
+        content: schedule.content || '',
+        backgroundColor: bgColor,
+        textColor: schedule.text_color || autoTextColor,
+      });
+    });
+
+    setSchedules(scheduleMap);
+  } catch (error) {
+    console.error('スケジュール読み込みエラー:', error);
+  }
+};
+  
   const getCellKey = (projectId: string, date: Date): string => {
     return `${projectId}-${date.toISOString().split('T')[0]}`;
   };
