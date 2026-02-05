@@ -151,19 +151,48 @@ const [selectionStart, setSelectionStart] = useState<{ projectId: string; date: 
       query = query.eq('brand_type', activeBrandTab);
     }
     
-    const { data, error } = await query.order('created_at', { ascending: true }); // falseからtrueに変更
+    const { data, error } = await query.order('created_at', { ascending: true });
     if (error) throw error;
     
     // BRAND-BASEの場合、クリエイターとブランド情報を取得
     if (data && activeBrandTab === 'BRAND-BASE') {
-      // ... (省略)
+      const projectsWithInfo: ProjectWithBrandInfo[] = await Promise.all(
+        data.map(async (project) => {
+          // ... (省略)
+        })
+      );
+      
       setProjects(projectsWithInfo);
     } else if (activeBrandTab === 'all' && data) {
+      // 全体ガントチャートの場合、当日のスケジュールをチェック
+      const today = new Date().toISOString().split('T')[0];
+      const tableName = viewType === 'monthly' ? 'annual_schedules' : 'project_schedules';
+      
+      const { data: todaySchedules } = await supabase
+        .from(tableName)
+        .select('project_id, background_color')
+        .eq('date', today)
+        .neq('background_color', '#ffffff');
+      
+      const projectsWithTodayColor = new Set(
+        (todaySchedules || []).map(s => s.project_id)
+      );
+      
       const sortedData = data.sort((a, b) => {
+        // まず当日に色がついているかで判定
+        const aHasTodayColor = projectsWithTodayColor.has(a.id);
+        const bHasTodayColor = projectsWithTodayColor.has(b.id);
+        
+        if (aHasTodayColor && !bHasTodayColor) return -1;
+        if (!aHasTodayColor && bHasTodayColor) return 1;
+        
+        // 次にブランドタイプで判定
         if (a.brand_type !== b.brand_type) {
           return a.brand_type === '海外クラファン.com' ? -1 : 1;
         }
-        return new Date(a.created_at).getTime() - new Date(b.created_at).getTime(); // bとaを入れ替え
+        
+        // 最後に作成日時で判定
+        return new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
       });
       setProjects(sortedData);
     } else {
@@ -173,38 +202,6 @@ const [selectionStart, setSelectionStart] = useState<{ projectId: string; date: 
     console.error('プロジェクト読み込みエラー:', error);
   }
 };
-
-  const loadSchedules = async () => {
-    try {
-      const projectIds = projects.map(p => p.id);
-      // viewTypeに応じて異なるテーブルから取得
-      const tableName = viewType === 'monthly' ? 'annual_schedules' : 'project_schedules';
-      const { data, error } = await supabase
-        .from(tableName)
-        .select('*')
-        .in('project_id', projectIds);
-
-      if (error) throw error;
-
-      const scheduleMap = new Map<string, ScheduleCell>();
-      (data || []).forEach((schedule) => {
-        const key = `${schedule.project_id}-${schedule.date}`;
-        const bgColor = schedule.background_color || '#ffffff';
-        const autoTextColor = getTextColorForBackground(bgColor);
-        scheduleMap.set(key, {
-          projectId: schedule.project_id,
-          date: schedule.date,
-          content: schedule.content || '',
-          backgroundColor: bgColor,
-          textColor: schedule.text_color || autoTextColor,
-        });
-      });
-
-      setSchedules(scheduleMap);
-    } catch (error) {
-      console.error('スケジュール読み込みエラー:', error);
-    }
-  };
 
   const getCellKey = (projectId: string, date: Date): string => {
     return `${projectId}-${date.toISOString().split('T')[0]}`;
