@@ -154,6 +154,14 @@ const [selectionStart, setSelectionStart] = useState<{ projectId: string; date: 
     const { data, error } = await query.order('created_at', { ascending: true });
     if (error) throw error;
     
+    // 海外クラファン.comの完了プロジェクトを除外
+    const filteredData = data?.filter(project => {
+      if (project.brand_type === '海外クラファン.com' && project.status === '完了') {
+        return false;
+      }
+      return true;
+    });
+    
     // BRAND-BASEの場合、クリエイターとブランド情報を取得
     if (data && activeBrandTab === 'BRAND-BASE') {
       const projectsWithInfo: ProjectWithBrandInfo[] = await Promise.all(
