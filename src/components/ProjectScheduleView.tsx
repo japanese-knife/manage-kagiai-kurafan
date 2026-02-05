@@ -259,35 +259,83 @@ const [selectionStart, setSelectionStart] = useState<{ projectId: string; date: 
   }
 };
 
-  const generateDates = () => {
-  if (viewType === 'monthly') {
-    const today = new Date();
-    const datesArray: Date[] = [];
-    const monthCount = activeBrandTab === 'BRAND-BASE' ? 12 : 12;
-    for (let i = 0; i < monthCount; i++) {
-      const date = new Date(today.getFullYear(), today.getMonth() + i, 1);
-      datesArray.push(date);
-    }
-    console.log('📆 月次ビュー dates生成:', datesArray.length, '件');
-    setDates(datesArray);
-  } else {
-    const today = new Date();
-    const datesArray: Date[] = [];
-    for (let i = -30; i <= 60; i++) {
-      const date = new Date(today);
-      date.setDate(today.getDate() + i);
-      datesArray.push(date);
-    }
-    console.log('📆 日次ビュー dates生成:', datesArray.length, '件');
+  const loadSchedules = async () => {
+  try {
+    const projectIds = projects.map(p => p.id);
+    const tableName = viewType === 'monthly' ? 'annual_schedules' : 'project_schedules';
     
-    // 1/28〜2/3が含まれているか確認
-    const targetDates = datesArray.filter(d => {
-      const dateStr = d.toISOString().split('T')[0];
-      return dateStr >= '2026-01-28' && dateStr <= '2026-02-03';
+    console.log('📥 スケジュール読み込み開始:', { 
+      tableName, 
+      projectCount: projectIds.length,
+      projectIds: projectIds.slice(0, 5) // 最初の5件のみ表示
     });
-    console.log('📆 【重要】dates内の1/28〜2/3:', targetDates.length, '件');
-    if (targetDates.length > 0) {
-      console.log('📆 日付サンプル:', targetDates.slice(0, 3).
+    
+    const { data, error } = await supabase
+      .from(tableName)
+      .select('*')
+      .in('project_id', projectIds);
+
+    if (error) {
+      console.error('📥 スケジュール読み込みエラー:', error);
+      throw error;
+    }
+
+    console.log('📥 取得したスケジュールデータ:', data?.length, '件');
+    
+    // 1/28〜2/3のデータを特定
+    const targetPeriodData = data?.filter(s => {
+      const date = s.date; // YYYY-MM-DD形式の文字列
+      return date >= '2026-01-28' && date <= '2026-02-03';
+    });
+    console.log('📅 【重要】1/28〜2/3のデータ:', targetPeriodData?.length, '件');
+    if (targetPeriodData && targetPeriodData.length > 0) {
+      console.log('📅 データサンプル:', targetPeriodData.slice(0, 3));
+    } else {
+      console.warn('⚠️ 1/28〜2/3のデータが取得できていません！');
+    }
+
+    const scheduleMap = new Map<string, ScheduleCell>();
+    (data || []).forEach((schedule) => {
+      const key = `${schedule.project_id}-${schedule.date}`;
+      const bgColor = schedule.background_color || '#ffffff';
+      const autoTextColor = getTextColorForBackground(bgColor);
+      
+      scheduleMap.set(key, {
+        projectId: schedule.project_id,
+        date: schedule.date,
+        content: schedule.content || '',
+        backgroundColor: bgColor,
+        textColor: schedule.text_color || autoTextColor,
+      });
+      
+      // 1/28〜2/3のデータをログ出力
+      if (schedule.date >= '2026-01-28' && schedule.date <= '2026-02-03') {
+        console.log('📅 Map追加:', { 
+          key, 
+          date: schedule.date,
+          content: schedule.content,
+          bgColor 
+        });
+      }
+    });
+
+    console.log('📥 scheduleMap作成完了:', scheduleMap.size, '件');
+    
+    // 1/28〜2/3のキーが含まれているか確認
+    const targetKeys = Array.from(scheduleMap.keys()).filter(key => {
+      const date = key.split('-').slice(-3).join('-');
+      return date >= '2026-01-28' && date <= '2026-02-03';
+    });
+    console.log('📅 【重要】Map内の1/28〜2/3キー数:', targetKeys.length);
+    if (targetKeys.length > 0) {
+      console.log('📅 キーサンプル:', targetKeys.slice(0, 3));
+    }
+    
+    setSchedules(scheduleMap);
+  } catch (error) {
+    console.error('スケジュール読み込みエラー:', error);
+  }
+};
   
   const getCellKey = (projectId: string, date: Date): string => {
     return `${projectId}-${date.toISOString().split('T')[0]}`;
