@@ -1131,23 +1131,29 @@ console.log(`✅ 全バッチ保存完了: ${updates.length}件`);
       setShowColorPicker(null);
       
       // データベースに保存
-      for (const updateData of updates) {
-        console.log('色変更Upsert実行:', updateData);
-        const { data, error } = await supabase
-          .from(tableName)
-          .upsert(updateData, {
-            onConflict: 'project_id,date'
-          });
+      // データベースに保存 - 一括処理に変更
+console.log(`🎨 色変更Upsert開始: ${updates.length}件`);
+const { data: upsertData, error: upsertError } = await supabase
+  .from(tableName)
+  .upsert(updates, {
+    onConflict: 'project_id,date'
+  })
+  .select();
 
-        if (error) {
-          console.error('Supabaseエラー詳細:', error);
-          console.error('エラー詳細:', JSON.stringify(error, null, 2));
-          // エラーの場合は再読み込みして正しい状態に戻す
-          await loadSchedules();
-          throw error;
-        }
-        console.log('色変更Upsert成功:', data);
-      }
+if (upsertError) {
+  console.error('❌ 色変更Upsertエラー:', upsertError);
+  console.error('エラーコード:', upsertError.code);
+  console.error('エラーメッセージ:', upsertError.message);
+  console.error('エラー詳細:', JSON.stringify(upsertError, null, 2));
+  console.error('失敗したデータ:', updates);
+  // エラーの場合は再読み込みして正しい状態に戻す
+  await loadSchedules();
+  alert(`色の変更に失敗しました: ${upsertError.message}`);
+  return;
+}
+
+console.log('✅ 色変更Upsert成功:', upsertData);
+console.log(`✅ ${updates.length}件の色変更完了`);
       
       // 視覚的フィードバック
       targetCells.forEach(cellKey => {
