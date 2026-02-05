@@ -264,18 +264,28 @@ const [selectionStart, setSelectionStart] = useState<{ projectId: string; date: 
     const projectIds = projects.map(p => p.id);
     // viewTypeに応じて異なるテーブルから取得
     const tableName = viewType === 'monthly' ? 'annual_schedules' : 'project_schedules';
+    
+    console.log('📥 スケジュール読み込み開始:', { tableName, projectCount: projectIds.length });
+    
     const { data, error } = await supabase
       .from(tableName)
       .select('*')
       .in('project_id', projectIds);
 
-    if (error) throw error;
+    if (error) {
+      console.error('📥 スケジュール読み込みエラー:', error);
+      throw error;
+    }
+
+    console.log('📥 取得したスケジュールデータ:', data?.length, '件');
+    console.log('📥 データサンプル:', data?.slice(0, 3));
 
     const scheduleMap = new Map<string, ScheduleCell>();
     (data || []).forEach((schedule) => {
       const key = `${schedule.project_id}-${schedule.date}`;
       const bgColor = schedule.background_color || '#ffffff';
       const autoTextColor = getTextColorForBackground(bgColor);
+      
       scheduleMap.set(key, {
         projectId: schedule.project_id,
         date: schedule.date,
@@ -283,8 +293,14 @@ const [selectionStart, setSelectionStart] = useState<{ projectId: string; date: 
         backgroundColor: bgColor,
         textColor: schedule.text_color || autoTextColor,
       });
+      
+      // 色付きセルのログ
+      if (bgColor !== '#ffffff') {
+        console.log('🎨 色付きセル:', { key, bgColor, content: schedule.content });
+      }
     });
 
+    console.log('📥 scheduleMap作成完了:', scheduleMap.size, '件');
     setSchedules(scheduleMap);
   } catch (error) {
     console.error('スケジュール読み込みエラー:', error);
