@@ -749,25 +749,23 @@ console.log('✅ セル保存成功:', upsertData);
       const updates: any[] = [];
       
       selectedCells.forEach(cellKey => {
-        const parts = cellKey.split('-');
-        const targetDateStr = parts.slice(-3).join('-');
-        const targetProjectId = parts.slice(0, -3).join('-');
-        
-        // 既存のセルデータを取得して、コンテンツを保持
-        const existingCell = schedules.get(cellKey);
-        
-        const updateData = {
-          project_id: targetProjectId,
-          date: targetDateStr,
-          content: existingCell?.content || sourceCellData.content || '',
-          background_color: sourceCellData.backgroundColor || '#ffffff',
-          text_color: sourceCellData.textColor || '#000000',
-          user_id: user.id,
-        };
-        
-        console.log('📋 作成した更新データ:', updateData);
-        updates.push(updateData);
-      });
+  const parts = cellKey.split('-');
+  const targetDateStr = parts.slice(-3).join('-');
+  const targetProjectId = parts.slice(0, -3).join('-');
+  
+  // コピー元のデータで完全に上書き（既存のコンテンツは無視）
+  const updateData = {
+    project_id: targetProjectId,
+    date: targetDateStr,
+    content: sourceCellData.content || '',
+    background_color: sourceCellData.backgroundColor || '#ffffff',
+    text_color: sourceCellData.textColor || '#000000',
+    user_id: user.id,
+  };
+  
+  console.log('📋 作成した更新データ:', updateData);
+  updates.push(updateData);
+});
       
       console.log('📋 全更新データ (件数):', updates.length);
       console.log('📋 サンプルデータ:', updates[0]);
