@@ -765,22 +765,36 @@ const isCurrentMonth = (date: Date): boolean => {
       console.log('📋 サンプルデータ:', updates[0]);
       
       // データベースに保存 - .select()を追加して結果を取得
-      console.log(`💾 一括Upsert開始: ${updates.length}件`);
-      const { data: upsertData, error: upsertError } = await supabase
-        .from(tableName)
-        .upsert(updates, {
-          onConflict: 'project_id,date'
-        })
-        .select();
+      // データベースに保存 - バッチサイズで分割して保存
+console.log(`💾 一括Upsert開始: ${updates.length}件`);
+const batchSize = 100; // Supabaseの推奨バッチサイズ
+for (let i = 0; i < updates.length; i += batchSize) {
+  const batch = updates.slice(i, i + batchSize);
+  console.log(`💾 バッチ ${Math.floor(i / batchSize) + 1}/${Math.ceil(updates.length / batchSize)} 保存中...`);
+  
+  const { data: upsertData, error: upsertError } = await supabase
+    .from(tableName)
+    .upsert(batch, {
+      onConflict: 'project_id,date'
+    })
+    .select();
 
-      if (upsertError) {
-        console.error('❌ 一括Upsertエラー:', upsertError);
-        console.error('エラーコード:', upsertError.code);
-        console.error('エラーメッセージ:', upsertError.message);
-        console.error('エラー詳細:', JSON.stringify(upsertError, null, 2));
-        alert(`ペーストに失敗しました: ${upsertError.message}`);
-        return;
-      }
+  if (upsertError) {
+    console.error('❌ 一括Upsertエラー:', upsertError);
+    console.error('エラーコード:', upsertError.code);
+    console.error('エラーメッセージ:', upsertError.message);
+    console.error('エラー詳細:', JSON.stringify(upsertError, null, 2));
+    console.error('失敗したバッチ:', batch);
+    alert(`ペーストに失敗しました: ${upsertError.message}`);
+    // エラーが発生した場合、正しい状態に戻す
+    await loadSchedules();
+    return;
+  }
+  
+  console.log(`✅ バッチ ${Math.floor(i / batchSize) + 1} 保存成功:`, upsertData);
+}
+
+console.log(`✅ 全バッチ保存完了: ${updates.length}件`);
 
       console.log(`✅ 一括Upsert成功: ${updates.length}件`);
       console.log('✅ 保存されたデータ:', upsertData);
