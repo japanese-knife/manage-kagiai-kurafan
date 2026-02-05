@@ -151,16 +151,6 @@ const [selectionStart, setSelectionStart] = useState<{ projectId: string; date: 
       query = query.eq('brand_type', activeBrandTab);
     }
     
-    const { data, error } = await query.order('createconst loadProjects = async () => {
-  try {
-    let query = supabase
-      .from('projects')
-      .select('*');
-    
-    if (activeBrandTab !== 'all') {
-      query = query.eq('brand_type', activeBrandTab);
-    }
-    
     const { data, error } = await query.order('created_at', { ascending: true });
     if (error) throw error;
     
@@ -173,9 +163,9 @@ const [selectionStart, setSelectionStart] = useState<{ projectId: string; date: 
     });
     
     // BRAND-BASEの場合、クリエイターとブランド情報を取得
-    if (filteredData && activeBrandTab === 'BRAND-BASE') {
+    if (data && activeBrandTab === 'BRAND-BASE') {
       const projectsWithInfo: ProjectWithBrandInfo[] = await Promise.all(
-        filteredData.map(async (project) => {
+        data.map(async (project) => {
           // brand_projectsからブランド情報を取得
           const { data: brandProjectData } = await supabase
             .from('brand_projects')
@@ -221,7 +211,7 @@ const [selectionStart, setSelectionStart] = useState<{ projectId: string; date: 
       );
       
       setProjects(projectsWithInfo);
-    } else if (activeBrandTab === 'all' && filteredData) {
+    } else if (activeBrandTab === 'all' && data) {
       // 全体ガントチャートの場合、当日のスケジュールをチェック
       const today = new Date().toISOString().split('T')[0];
       const tableName = viewType === 'monthly' ? 'annual_schedules' : 'project_schedules';
@@ -236,30 +226,30 @@ const [selectionStart, setSelectionStart] = useState<{ projectId: string; date: 
         (todaySchedules || []).map(s => s.project_id)
       );
       
-      const sortedData = filteredData.sort((a, b) => {
-        // まず当日に色がついているかで判定
-        const aHasTodayColor = projectsWithTodayColor.has(a.id);
-        const bHasTodayColor = projectsWithTodayColor.has(b.id);
-        
-        if (aHasTodayColor && !bHasTodayColor) return -1;
-        if (!aHasTodayColor && bHasTodayColor) return 1;
-        
-        // 色付きセル同士の場合は、新しい順（降順）
-        if (aHasTodayColor && bHasTodayColor) {
-          return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
-        }
-        
-        // 次にブランドタイプで判定
-        if (a.brand_type !== b.brand_type) {
-          return a.brand_type === '海外クラファン.com' ? -1 : 1;
-        }
-        
-        // 最後に作成日時で判定（色なしの場合も新しい順）
-        return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
-      });
+      const sortedData = data.sort((a, b) => {
+  // まず当日に色がついているかで判定
+  const aHasTodayColor = projectsWithTodayColor.has(a.id);
+  const bHasTodayColor = projectsWithTodayColor.has(b.id);
+  
+  if (aHasTodayColor && !bHasTodayColor) return -1;
+  if (!aHasTodayColor && bHasTodayColor) return 1;
+  
+  // 色付きセル同士の場合は、新しい順（降順）
+  if (aHasTodayColor && bHasTodayColor) {
+    return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+  }
+  
+  // 次にブランドタイプで判定
+  if (a.brand_type !== b.brand_type) {
+    return a.brand_type === '海外クラファン.com' ? -1 : 1;
+  }
+  
+  // 最後に作成日時で判定（色なしの場合も新しい順）
+  return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+});
       setProjects(sortedData);
     } else {
-      setProjects(filteredData || []);
+      setProjects(data || []);
     }
   } catch (error) {
     console.error('プロジェクト読み込みエラー:', error);
