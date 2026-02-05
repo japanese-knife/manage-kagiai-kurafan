@@ -219,21 +219,26 @@ const [selectionStart, setSelectionStart] = useState<{ projectId: string; date: 
       );
       
       const sortedData = data.sort((a, b) => {
-        // まず当日に色がついているかで判定
-        const aHasTodayColor = projectsWithTodayColor.has(a.id);
-        const bHasTodayColor = projectsWithTodayColor.has(b.id);
-        
-        if (aHasTodayColor && !bHasTodayColor) return -1;
-        if (!aHasTodayColor && bHasTodayColor) return 1;
-        
-        // 次にブランドタイプで判定
-        if (a.brand_type !== b.brand_type) {
-          return a.brand_type === '海外クラファン.com' ? -1 : 1;
-        }
-        
-        // 最後に作成日時で判定
-        return new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
-      });
+  // まず当日に色がついているかで判定
+  const aHasTodayColor = projectsWithTodayColor.has(a.id);
+  const bHasTodayColor = projectsWithTodayColor.has(b.id);
+  
+  if (aHasTodayColor && !bHasTodayColor) return -1;
+  if (!aHasTodayColor && bHasTodayColor) return 1;
+  
+  // 色付きセル同士の場合は、新しい順（降順）
+  if (aHasTodayColor && bHasTodayColor) {
+    return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+  }
+  
+  // 次にブランドタイプで判定
+  if (a.brand_type !== b.brand_type) {
+    return a.brand_type === '海外クラファン.com' ? -1 : 1;
+  }
+  
+  // 最後に作成日時で判定（色なしの場合も新しい順）
+  return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+});
       setProjects(sortedData);
     } else {
       setProjects(data || []);
