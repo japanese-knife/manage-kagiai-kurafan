@@ -259,53 +259,35 @@ const [selectionStart, setSelectionStart] = useState<{ projectId: string; date: 
   }
 };
 
-  const loadSchedules = async () => {
-  try {
-    const projectIds = projects.map(p => p.id);
-    // viewTypeに応じて異なるテーブルから取得
-    const tableName = viewType === 'monthly' ? 'annual_schedules' : 'project_schedules';
-    
-    console.log('📥 スケジュール読み込み開始:', { tableName, projectCount: projectIds.length });
-    
-    const { data, error } = await supabase
-      .from(tableName)
-      .select('*')
-      .in('project_id', projectIds);
-
-    if (error) {
-      console.error('📥 スケジュール読み込みエラー:', error);
-      throw error;
+  const generateDates = () => {
+  if (viewType === 'monthly') {
+    const today = new Date();
+    const datesArray: Date[] = [];
+    const monthCount = activeBrandTab === 'BRAND-BASE' ? 12 : 12;
+    for (let i = 0; i < monthCount; i++) {
+      const date = new Date(today.getFullYear(), today.getMonth() + i, 1);
+      datesArray.push(date);
     }
-
-    console.log('📥 取得したスケジュールデータ:', data?.length, '件');
-    console.log('📥 データサンプル:', data?.slice(0, 3));
-
-    const scheduleMap = new Map<string, ScheduleCell>();
-    (data || []).forEach((schedule) => {
-      const key = `${schedule.project_id}-${schedule.date}`;
-      const bgColor = schedule.background_color || '#ffffff';
-      const autoTextColor = getTextColorForBackground(bgColor);
-      
-      scheduleMap.set(key, {
-        projectId: schedule.project_id,
-        date: schedule.date,
-        content: schedule.content || '',
-        backgroundColor: bgColor,
-        textColor: schedule.text_color || autoTextColor,
-      });
-      
-      // 色付きセルのログ
-      if (bgColor !== '#ffffff') {
-        console.log('🎨 色付きセル:', { key, bgColor, content: schedule.content });
-      }
+    console.log('📆 月次ビュー dates生成:', datesArray.length, '件');
+    setDates(datesArray);
+  } else {
+    const today = new Date();
+    const datesArray: Date[] = [];
+    for (let i = -30; i <= 60; i++) {
+      const date = new Date(today);
+      date.setDate(today.getDate() + i);
+      datesArray.push(date);
+    }
+    console.log('📆 日次ビュー dates生成:', datesArray.length, '件');
+    
+    // 1/28〜2/3が含まれているか確認
+    const targetDates = datesArray.filter(d => {
+      const dateStr = d.toISOString().split('T')[0];
+      return dateStr >= '2026-01-28' && dateStr <= '2026-02-03';
     });
-
-    console.log('📥 scheduleMap作成完了:', scheduleMap.size, '件');
-    setSchedules(scheduleMap);
-  } catch (error) {
-    console.error('スケジュール読み込みエラー:', error);
-  }
-};
+    console.log('📆 【重要】dates内の1/28〜2/3:', targetDates.length, '件');
+    if (targetDates.length > 0) {
+      console.log('📆 日付サンプル:', targetDates.slice(0, 3).
   
   const getCellKey = (projectId: string, date: Date): string => {
     return `${projectId}-${date.toISOString().split('T')[0]}`;
