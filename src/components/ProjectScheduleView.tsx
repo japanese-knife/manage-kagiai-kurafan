@@ -158,7 +158,47 @@ const [selectionStart, setSelectionStart] = useState<{ projectId: string; date: 
     if (data && activeBrandTab === 'BRAND-BASE') {
       const projectsWithInfo: ProjectWithBrandInfo[] = await Promise.all(
         data.map(async (project) => {
-          // ... (省略)
+          // brand_projectsからブランド情報を取得
+          const { data: brandProjectData } = await supabase
+            .from('brand_projects')
+            .select('brand_id')
+            .eq('project_id', project.id)
+            .single();
+          
+          if (brandProjectData) {
+            // brandsテーブルからブランド名を取得
+            const { data: brandData } = await supabase
+              .from('brands')
+              .select('name, id')
+              .eq('id', brandProjectData.brand_id)
+              .single();
+            
+            if (brandData) {
+              // creator_brandsからクリエイター情報を取得
+              const { data: creatorBrandData } = await supabase
+                .from('creator_brands')
+                .select('creator_id')
+                .eq('brand_id', brandData.id)
+                .single();
+              
+              if (creatorBrandData) {
+                // creatorsテーブルからクリエイター名を取得
+                const { data: creatorData } = await supabase
+                  .from('creators')
+                  .select('name')
+                  .eq('id', creatorBrandData.creator_id)
+                  .single();
+                
+                return {
+                  ...project,
+                  creatorName: creatorData?.name,
+                  brandName: brandData.name
+                };
+              }
+            }
+          }
+          
+          return project;
         })
       );
       
