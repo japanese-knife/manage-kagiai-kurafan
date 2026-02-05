@@ -1067,13 +1067,23 @@ console.log(`✅ 全バッチ保存完了: ${updates.length}件`);
         });
         
         // バッチ更新
-        for (const updateData of updates) {
-          await supabase
-            .from(tableName)
-            .upsert(updateData, {
-              onConflict: 'project_id,date'
-            });
-        }
+        // バッチ更新 - 一括処理に変更
+console.log(`📋 ペースト保存開始: ${updates.length}件`);
+const { data: upsertData, error: upsertError } = await supabase
+  .from(tableName)
+  .upsert(updates, {
+    onConflict: 'project_id,date'
+  })
+  .select();
+
+if (upsertError) {
+  console.error('❌ ペースト保存エラー:', upsertError);
+  console.error('エラー詳細:', JSON.stringify(upsertError, null, 2));
+  alert(`ペーストに失敗しました: ${upsertError.message}`);
+  return;
+}
+
+console.log('✅ ペースト保存成功:', upsertData);
       }
 
       await loadSchedules();
