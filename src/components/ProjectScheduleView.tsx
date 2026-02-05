@@ -724,18 +724,20 @@ const isCurrentMonth = (date: Date): boolean => {
 
   const handleKeyboardPaste = async () => {
     if (selectedCells.size === 0 || !copiedCellData) {
-      console.log('ペースト条件不足');
+      console.log('❌ ペースト条件不足');
       return;
     }
 
     const tableName = viewType === 'monthly' ? 'annual_schedules' : 'project_schedules';
-    console.log('ペースト開始:', { tableName, selectedCells: selectedCells.size, copiedCellData });
+    console.log('🚀 ペースト開始:', { tableName, selectedCells: selectedCells.size });
 
     try {
       // 1つのセルをコピーして複数セルにペースト
       if (copiedCellData.cellsData && copiedCellData.cellsData.length === 1) {
-        console.log('単一セルを複数セルにペースト');
+        console.log('📋 単一セルを複数セルにペースト');
         const sourceCellData = copiedCellData.cellsData[0];
+        console.log('📋 コピー元データ:', sourceCellData);
+        
         const updates: any[] = [];
         
         selectedCells.forEach(cellKey => {
@@ -745,76 +747,102 @@ const isCurrentMonth = (date: Date): boolean => {
           
           // 既存のセルデータを取得して、コンテンツを保持
           const existingCell = schedules.get(cellKey);
+          console.log('📋 既存セル:', { cellKey, existingCell });
           
-          updates.push({
+          const updateData = {
             project_id: targetProjectId,
             date: targetDateStr,
-            content: existingCell?.content || sourceCellData.content, // 既存のコンテンツを優先
+            content: existingCell?.content || sourceCellData.content,
             background_color: sourceCellData.backgroundColor,
             text_color: sourceCellData.textColor,
             user_id: user.id,
-          });
+          };
+          
+          console.log('📋 作成した更新データ:', updateData);
+          updates.push(updateData);
         });
         
-        console.log('更新データ:', updates);
+        console.log('📋 全更新データ:', updates);
         
         // 先に状態を更新
-        // 先に状態を更新
-const updatedSchedules = new Map(schedules);
-updates.forEach(update => {
-  const key = `${update.project_id}-${update.date}`;
-  updatedSchedules.set(key, {
-    projectId: update.project_id,
-    date: update.date,
-    content: update.content,
-    backgroundColor: update.background_color,
-    textColor: update.text_color,
-  });
-  console.log('🔄 状態更新:', { key, color: update.background_color });
-});
-setSchedules(updatedSchedules);
-
-// バッチ更新（バックグラウンドで実行）
-// 複数セルのコピー＆ペースト（矩形領域）の最後の部分
-// バッチ更新（バックグラウンドで実行）
-for (const updateData of updates) {
-  console.log('💾 矩形ペーストUpsert実行:', updateData);
-  const { data, error } = await supabase
-    .from(tableName)
-    .upsert(updateData, {
-      onConflict: 'project_id,date'
-    });
-  
-  if (error) {
-    console.error('💾 矩形ペーストUpsertエラー:', error);
-    console.error('エラー詳細:', JSON.stringify(error, null, 2));
-    // エラーの場合は再読み込みして正しい状態に戻す
-    await loadSchedules();
-    throw error;
-  }
-  console.log('💾 矩形ペーストUpsert成功');
-}
-
-// loadSchedules()は呼ばない！
-console.log('✅ 矩形ペースト完了 - 状態更新済み、DB保存済み');
-
-// 視覚的フィードバック
-updates.forEach(update => {
-  const cellKey = `${update.project_id}-${update.date}`;
-  const cell = document.querySelector(`[data-cell-id="${cellKey}"]`);
-  if (cell) {
-    cell.classList.add('ring-2', 'ring-green-400');
-    setTimeout(() => {
-      cell.classList.remove('ring-2', 'ring-green-400');
-    }, 500);
-  }
-});
+        const updatedSchedules = new Map(schedules);
+        updates.forEach(update => {
+          const key = `${update.project_id}-${update.date}`;
+          updatedSchedules.set(key, {
+            projectId: update.project_id,
+            date: update.date,
+            content: update.content,
+            backgroundColor: update.background_color,
+            textColor: update.text_color,
+          });
+          console.log('🔄 Map更新:', { key, backgroundColor: update.background_color });
+        });
+        
+        console.log('🔄 setSchedules実行前 - サイズ:', schedules.size);
+        setSchedules(updatedSchedules);
+        console.log('🔄 setSchedules実行後 - 新サイズ:', updatedSchedules.size);
+        
+        // バッチ更新（バックグラウンドで実行）
+        for (let i = 0; i < updates.length; i++) {
+          const updateData = updates[i];
+          console.log(`💾 [${i + 1}/${updates.length}] Upsert実行:`, {
+            table: tableName,
+            data: updateData
+          });
+          
+          const { data, error } = await supabase
+            .from(tableName)
+            .upsert(updateData, {
+              onConflict: 'project_id,date'
+            });
+          
+          if (error) {
+            console.error(`❌ [${i + 1}/${updates.length}] Upsertエラー:`, error);
+            console.error('エラーコード:', error.code);
+            console.error('エラーメッセージ:', error.message);
+            console.error('エラー詳細:', error.details);
+            console.error('エラーヒント:', error.hint);
+            // エラーの場合は再読み込みして正しい状態に戻す
+            await loadSchedules();
+            throw error;
+          }
+          
+          console.log(`✅ [${i + 1}/${updates.length}] Upsert成功:`, data);
+          
+          // 実際に保存されたか確認
+          const { data: verifyData, error: verifyError } = await supabase
+            .from(tableName)
+            .select('*')
+            .eq('project_id', updateData.project_id)
+            .eq('date', updateData.date)
+            .single();
+          
+          if (verifyError) {
+            console.error(`⚠️ [${i + 1}/${updates.length}] 検証エラー:`, verifyError);
+          } else {
+            console.log(`🔍 [${i + 1}/${updates.length}] 保存確認:`, verifyData);
+          }
+        }
+        
+        console.log('✅ ペースト完了');
+        
+        // 視覚的フィードバック
+        selectedCells.forEach(cellKey => {
+          const cell = document.querySelector(`[data-cell-id="${cellKey}"]`);
+          if (cell) {
+            cell.classList.add('ring-2', 'ring-green-400');
+            setTimeout(() => {
+              cell.classList.remove('ring-2', 'ring-green-400');
+            }, 500);
+          }
+        });
         
         return;
       }
 
       // 複数セルのコピー＆ペースト（矩形領域）
       if (copiedCellData.structure && selectedCell) {
+        console.log('📋 矩形領域ペースト');
         const sourceProjectIds = Array.from(copiedCellData.structure.keys());
         const sourceDates = Array.from(new Set(
           Array.from(copiedCellData.structure.values())
@@ -824,7 +852,10 @@ updates.forEach(update => {
         const startProjectIndex = projects.findIndex(p => p.id === selectedCell.projectId);
         const startDateIndex = dates.findIndex(d => d.toISOString().split('T')[0] === selectedCell.date);
         
-        if (startProjectIndex === -1 || startDateIndex === -1) return;
+        if (startProjectIndex === -1 || startDateIndex === -1) {
+          console.log('❌ 開始位置が見つかりません');
+          return;
+        }
         
         const updates: any[] = [];
         sourceProjectIds.forEach((sourceProjectId, pOffset) => {
@@ -854,6 +885,8 @@ updates.forEach(update => {
           });
         });
         
+        console.log('📋 矩形更新データ:', updates);
+        
         // 先に状態を更新
         const updatedSchedules = new Map(schedules);
         updates.forEach(update => {
@@ -869,41 +902,41 @@ updates.forEach(update => {
         setSchedules(updatedSchedules);
         
         // バッチ更新（バックグラウンドで実行）
-        // バッチ更新（バックグラウンドで実行）
-for (const updateData of updates) {
-  console.log('💾 ペーストUpsert実行:', updateData);
-  const { data, error } = await supabase
-    .from(tableName)
-    .upsert(updateData, {
-      onConflict: 'project_id,date'
-    });
-  
-  if (error) {
-    console.error('💾 ペーストUpsertエラー:', error);
-    console.error('エラー詳細:', JSON.stringify(error, null, 2));
-    // エラーの場合は再読み込みして正しい状態に戻す
-    await loadSchedules();
-    throw error;
-  }
-  console.log('💾 ペーストUpsert成功 - データ保存完了');
-}
-
-// loadSchedules()は呼ばない！既に状態は更新済み
-console.log('✅ ペースト完了 - 状態更新済み、DB保存済み');
-
-// 視覚的フィードバック
-selectedCells.forEach(cellKey => {
-  const cell = document.querySelector(`[data-cell-id="${cellKey}"]`);
-  if (cell) {
-    cell.classList.add('ring-2', 'ring-green-400');
-    setTimeout(() => {
-      cell.classList.remove('ring-2', 'ring-green-400');
-    }, 500);
-  }
-});
+        for (let i = 0; i < updates.length; i++) {
+          const updateData = updates[i];
+          console.log(`💾 矩形[${i + 1}/${updates.length}] Upsert実行:`, updateData);
+          
+          const { data, error } = await supabase
+            .from(tableName)
+            .upsert(updateData, {
+              onConflict: 'project_id,date'
+            });
+          
+          if (error) {
+            console.error(`❌ 矩形[${i + 1}/${updates.length}] Upsertエラー:`, error);
+            await loadSchedules();
+            throw error;
+          }
+          
+          console.log(`✅ 矩形[${i + 1}/${updates.length}] Upsert成功:`, data);
+        }
+        
+        console.log('✅ 矩形ペースト完了');
+        
+        // 視覚的フィードバック
+        updates.forEach(update => {
+          const cellKey = `${update.project_id}-${update.date}`;
+          const cell = document.querySelector(`[data-cell-id="${cellKey}"]`);
+          if (cell) {
+            cell.classList.add('ring-2', 'ring-green-400');
+            setTimeout(() => {
+              cell.classList.remove('ring-2', 'ring-green-400');
+            }, 500);
+          }
+        });
       }
     } catch (error) {
-      console.error('ペーストエラー:', error);
+      console.error('❌ ペーストエラー:', error);
       alert(`ペーストに失敗しました: ${error instanceof Error ? error.message : '不明なエラー'}`);
     }
   };
