@@ -707,17 +707,7 @@ const isCurrentMonth = (date: Date): boolean => {
   };
 
   const handleKeyboardPaste = async () => {
-    console.log('handleKeyboardPaste called');
-    console.log('selectedCells:', selectedCells);
-    console.log('copiedCellData:', copiedCellData);
-    
-    if (selectedCells.size === 0) {
-      console.log('No cells selected');
-      return;
-    }
-    
-    if (!copiedCellData) {
-      console.log('No copied data');
+    if (selectedCells.size === 0 || !copiedCellData) {
       return;
     }
 
@@ -726,18 +716,13 @@ const isCurrentMonth = (date: Date): boolean => {
     try {
       // 1つのセルをコピーして複数セルにペースト
       if (copiedCellData.cellsData && copiedCellData.cellsData.length === 1) {
-        console.log('Single cell paste to multiple cells');
         const sourceCellData = copiedCellData.cellsData[0];
-        console.log('Source cell data:', sourceCellData);
-        
         const updates: any[] = [];
         
         selectedCells.forEach(cellKey => {
           const parts = cellKey.split('-');
           const targetDateStr = parts.slice(-3).join('-');
           const targetProjectId = parts.slice(0, -3).join('-');
-          
-          console.log('Processing cellKey:', cellKey, 'projectId:', targetProjectId, 'date:', targetDateStr);
           
           updates.push({
             project_id: targetProjectId,
@@ -749,25 +734,17 @@ const isCurrentMonth = (date: Date): boolean => {
           });
         });
         
-        console.log('Updates to perform:', updates);
-        
         // バッチ更新
         for (const updateData of updates) {
-          console.log('Upserting:', updateData);
-          const { data, error } = await supabase
+          const { error } = await supabase
             .from(tableName)
             .upsert(updateData, {
               onConflict: 'project_id,date'
             });
           
-          if (error) {
-            console.error('Upsert error:', error);
-          } else {
-            console.log('Upsert success:', data);
-          }
+          if (error) throw error;
         }
         
-        console.log('Reloading schedules...');
         await loadSchedules();
         
         // 視覚的フィードバック
@@ -786,7 +763,6 @@ const isCurrentMonth = (date: Date): boolean => {
 
       // 複数セルのコピー＆ペースト（矩形領域）
       if (copiedCellData.structure && selectedCell) {
-        console.log('Multiple cells paste (rectangular area)');
         const sourceProjectIds = Array.from(copiedCellData.structure.keys());
         const sourceDates = Array.from(new Set(
           Array.from(copiedCellData.structure.values())
@@ -828,25 +804,28 @@ const isCurrentMonth = (date: Date): boolean => {
         
         // バッチ更新
         for (const updateData of updates) {
-          await supabase
+          const { error } = await supabase
             .from(tableName)
             .upsert(updateData, {
               onConflict: 'project_id,date'
             });
+          
+          if (error) throw error;
         }
         
         await loadSchedules();
         
         // 視覚的フィードバック
-        if (selectedCell) {
-          const targetCell = document.querySelector(`[data-cell-id="${selectedCell.projectId}-${selectedCell.date}"]`);
-          if (targetCell) {
-            targetCell.classList.add('ring-2', 'ring-green-400');
+        updates.forEach(update => {
+          const cellKey = `${update.project_id}-${update.date}`;
+          const cell = document.querySelector(`[data-cell-id="${cellKey}"]`);
+          if (cell) {
+            cell.classList.add('ring-2', 'ring-green-400');
             setTimeout(() => {
-              targetCell.classList.remove('ring-2', 'ring-green-400');
+              cell.classList.remove('ring-2', 'ring-green-400');
             }, 500);
           }
-        }
+        });
       }
     } catch (error) {
       console.error('ペーストエラー:', error);
