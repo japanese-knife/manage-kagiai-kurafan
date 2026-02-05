@@ -708,17 +708,14 @@ const isCurrentMonth = (date: Date): boolean => {
 
   const handleKeyboardPaste = async () => {
     if (selectedCells.size === 0 || !copiedCellData) {
-      console.log('ペースト条件不足:', { selectedCells: selectedCells.size, copiedCellData });
       return;
     }
 
     const tableName = viewType === 'monthly' ? 'annual_schedules' : 'project_schedules';
-    console.log('ペースト開始:', { tableName, selectedCells: selectedCells.size });
 
     try {
       // 1つのセルをコピーして複数セルにペースト
       if (copiedCellData.cellsData && copiedCellData.cellsData.length === 1) {
-        console.log('単一セルを複数セルにペースト');
         const sourceCellData = copiedCellData.cellsData[0];
         const updates: any[] = [];
         
@@ -737,12 +734,23 @@ const isCurrentMonth = (date: Date): boolean => {
           });
         });
         
-        console.log('更新データ:', updates);
+        // 先に状態を更新
+        const updatedSchedules = new Map(schedules);
+        updates.forEach(update => {
+          const key = `${update.project_id}-${update.date}`;
+          updatedSchedules.set(key, {
+            projectId: update.project_id,
+            date: update.date,
+            content: update.content,
+            backgroundColor: update.background_color,
+            textColor: update.text_color,
+          });
+        });
+        setSchedules(updatedSchedules);
         
-        // バッチ更新
+        // バッチ更新（バックグラウンドで実行）
         for (const updateData of updates) {
-          console.log('Upsert実行:', updateData);
-          const { data, error } = await supabase
+          const { error } = await supabase
             .from(tableName)
             .upsert(updateData, {
               onConflict: 'project_id,date'
@@ -750,15 +758,11 @@ const isCurrentMonth = (date: Date): boolean => {
           
           if (error) {
             console.error('Upsertエラー:', error);
-            console.error('エラー詳細:', JSON.stringify(error, null, 2));
+            // エラーの場合は再読み込みして正しい状態に戻す
+            await loadSchedules();
             throw error;
           }
-          console.log('Upsert成功:', data);
         }
-        
-        console.log('スケジュール再読み込み開始');
-        await loadSchedules();
-        console.log('スケジュール再読み込み完了');
         
         // 視覚的フィードバック
         selectedCells.forEach(cellKey => {
@@ -776,7 +780,6 @@ const isCurrentMonth = (date: Date): boolean => {
 
       // 複数セルのコピー＆ペースト（矩形領域）
       if (copiedCellData.structure && selectedCell) {
-        console.log('矩形領域ペースト');
         const sourceProjectIds = Array.from(copiedCellData.structure.keys());
         const sourceDates = Array.from(new Set(
           Array.from(copiedCellData.structure.values())
@@ -786,10 +789,7 @@ const isCurrentMonth = (date: Date): boolean => {
         const startProjectIndex = projects.findIndex(p => p.id === selectedCell.projectId);
         const startDateIndex = dates.findIndex(d => d.toISOString().split('T')[0] === selectedCell.date);
         
-        if (startProjectIndex === -1 || startDateIndex === -1) {
-          console.log('開始位置が見つかりません');
-          return;
-        }
+        if (startProjectIndex === -1 || startDateIndex === -1) return;
         
         const updates: any[] = [];
         sourceProjectIds.forEach((sourceProjectId, pOffset) => {
@@ -819,12 +819,23 @@ const isCurrentMonth = (date: Date): boolean => {
           });
         });
         
-        console.log('更新データ:', updates);
+        // 先に状態を更新
+        const updatedSchedules = new Map(schedules);
+        updates.forEach(update => {
+          const key = `${update.project_id}-${update.date}`;
+          updatedSchedules.set(key, {
+            projectId: update.project_id,
+            date: update.date,
+            content: update.content,
+            backgroundColor: update.background_color,
+            textColor: update.text_color,
+          });
+        });
+        setSchedules(updatedSchedules);
         
-        // バッチ更新
+        // バッチ更新（バックグラウンドで実行）
         for (const updateData of updates) {
-          console.log('Upsert実行:', updateData);
-          const { data, error } = await supabase
+          const { error } = await supabase
             .from(tableName)
             .upsert(updateData, {
               onConflict: 'project_id,date'
@@ -832,15 +843,11 @@ const isCurrentMonth = (date: Date): boolean => {
           
           if (error) {
             console.error('Upsertエラー:', error);
-            console.error('エラー詳細:', JSON.stringify(error, null, 2));
+            // エラーの場合は再読み込みして正しい状態に戻す
+            await loadSchedules();
             throw error;
           }
-          console.log('Upsert成功:', data);
         }
-        
-        console.log('スケジュール再読み込み開始');
-        await loadSchedules();
-        console.log('スケジュール再読み込み完了');
         
         // 視覚的フィードバック
         updates.forEach(update => {
@@ -856,7 +863,6 @@ const isCurrentMonth = (date: Date): boolean => {
       }
     } catch (error) {
       console.error('ペーストエラー:', error);
-      console.error('エラースタック:', error instanceof Error ? error.stack : 'スタックなし');
       alert(`ペーストに失敗しました: ${error instanceof Error ? error.message : '不明なエラー'}`);
     }
   };
