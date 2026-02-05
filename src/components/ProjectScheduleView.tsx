@@ -151,64 +151,19 @@ const [selectionStart, setSelectionStart] = useState<{ projectId: string; date: 
       query = query.eq('brand_type', activeBrandTab);
     }
     
-    const { data, error } = await query.order('created_at', { ascending: false });
+    const { data, error } = await query.order('created_at', { ascending: true }); // falseからtrueに変更
     if (error) throw error;
     
     // BRAND-BASEの場合、クリエイターとブランド情報を取得
     if (data && activeBrandTab === 'BRAND-BASE') {
-      const projectsWithInfo: ProjectWithBrandInfo[] = await Promise.all(
-        data.map(async (project) => {
-          // brand_projectsからブランド情報を取得
-          const { data: brandProjectData } = await supabase
-            .from('brand_projects')
-            .select('brand_id')
-            .eq('project_id', project.id)
-            .single();
-          
-          if (brandProjectData) {
-            // brandsテーブルからブランド名を取得
-            const { data: brandData } = await supabase
-              .from('brands')
-              .select('name, id')
-              .eq('id', brandProjectData.brand_id)
-              .single();
-            
-            if (brandData) {
-              // creator_brandsからクリエイター情報を取得
-              const { data: creatorBrandData } = await supabase
-                .from('creator_brands')
-                .select('creator_id')
-                .eq('brand_id', brandData.id)
-                .single();
-              
-              if (creatorBrandData) {
-                // creatorsテーブルからクリエイター名を取得
-                const { data: creatorData } = await supabase
-                  .from('creators')
-                  .select('name')
-                  .eq('id', creatorBrandData.creator_id)
-                  .single();
-                
-                return {
-                  ...project,
-                  creatorName: creatorData?.name,
-                  brandName: brandData.name
-                };
-              }
-            }
-          }
-          
-          return project;
-        })
-      );
-      
+      // ... (省略)
       setProjects(projectsWithInfo);
     } else if (activeBrandTab === 'all' && data) {
       const sortedData = data.sort((a, b) => {
         if (a.brand_type !== b.brand_type) {
           return a.brand_type === '海外クラファン.com' ? -1 : 1;
         }
-        return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+        return new Date(a.created_at).getTime() - new Date(b.created_at).getTime(); // bとaを入れ替え
       });
       setProjects(sortedData);
     } else {
