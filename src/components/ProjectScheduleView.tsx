@@ -149,26 +149,27 @@ useEffect(() => {
     
     if (activeBrandTab !== 'all') {
       query = query.eq('brand_type', activeBrandTab);
-    } else {
-      // 全体表示の場合、海外クラファン.comの完了プロジェクトを除外
-      query = query.or('brand_type.neq.海外クラファン.com,and(brand_type.eq.海外クラファン.com,status.neq.完了)');
     }
     
     const { data, error } = await query.order('created_at', { ascending: true });
     if (error) throw error;
     
-    // 海外クラファン.comの完了プロジェクトを除外
-    const filteredData = data?.filter(project => {
-      if (project.brand_type === '海外クラファン.com' && project.status === '完了') {
-        return false;
-      }
-      return true;
-    });
+    // 海外クラファン.comの完了プロジェクトを除外（activeBrandTab === 'all'の場合のみ）
+    let filteredData = data;
+    if (activeBrandTab === 'all' && data) {
+      filteredData = data.filter(project => {
+        // 海外クラファン.comで完了の場合は除外
+        if (project.brand_type === '海外クラファン.com' && project.status === '完了') {
+          return false;
+        }
+        return true;
+      });
+    }
     
     // BRAND-BASEの場合、クリエイターとブランド情報を取得
-    if (data && activeBrandTab === 'BRAND-BASE') {
+    if (filteredData && activeBrandTab === 'BRAND-BASE') {
       const projectsWithInfo: ProjectWithBrandInfo[] = await Promise.all(
-        data.map(async (project) => {
+        filteredData.map(async (project) => {
           // brand_projectsからブランド情報を取得
           const { data: brandProjectData } = await supabase
             .from('brand_projects')
@@ -214,7 +215,7 @@ useEffect(() => {
       );
       
       setProjects(projectsWithInfo);
-    } else if (activeBrandTab === 'all' && data) {
+    } else if (activeBrandTab === 'all' && filteredData) {
       // 全体ガントチャートの場合、当日のスケジュールをチェック
       const today = new Date().toISOString().split('T')[0];
       const tableName = viewType === 'monthly' ? 'annual_schedules' : 'project_schedules';
@@ -229,30 +230,30 @@ useEffect(() => {
         (todaySchedules || []).map(s => s.project_id)
       );
       
-      const sortedData = data.sort((a, b) => {
-  // まず当日に色がついているかで判定
-  const aHasTodayColor = projectsWithTodayColor.has(a.id);
-  const bHasTodayColor = projectsWithTodayColor.has(b.id);
-  
-  if (aHasTodayColor && !bHasTodayColor) return -1;
-  if (!aHasTodayColor && bHasTodayColor) return 1;
-  
-  // 色付きセル同士の場合は、新しい順（降順）
-  if (aHasTodayColor && bHasTodayColor) {
-    return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
-  }
-  
-  // 次にブランドタイプで判定
-  if (a.brand_type !== b.brand_type) {
-    return a.brand_type === '海外クラファン.com' ? -1 : 1;
-  }
-  
-  // 最後に作成日時で判定（色なしの場合も新しい順）
-  return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
-});
+      const sortedData = filteredData.sort((a, b) => {
+        // まず当日に色がついているかで判定
+        const aHasTodayColor = projectsWithTodayColor.has(a.id);
+        const bHasTodayColor = projectsWithTodayColor.has(b.id);
+        
+        if (aHasTodayColor && !bHasTodayColor) return -1;
+        if (!aHasTodayColor && bHasTodayColor) return 1;
+        
+        // 色付きセル同士の場合は、新しい順（降順）
+        if (aHasTodayColor && bHasTodayColor) {
+          return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+        }
+        
+        // 次にブランドタイプで判定
+        if (a.brand_type !== b.brand_type) {
+          return a.brand_type === '海外クラファン.com' ? -1 : 1;
+        }
+        
+        // 最後に作成日時で判定（色なしの場合も新しい順）
+        return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+      });
       setProjects(sortedData);
     } else {
-      setProjects(data || []);
+      setProjects(filteredData || []);
     }
   } catch (error) {
     console.error('プロジェクト読み込みエラー:', error);
