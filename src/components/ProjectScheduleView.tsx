@@ -149,9 +149,6 @@ const [selectionStart, setSelectionStart] = useState<{ projectId: string; date: 
     
     if (activeBrandTab !== 'all') {
       query = query.eq('brand_type', activeBrandTab);
-    } else {
-      // 全体表示の場合、海外クラファン.comの完了プロジェクトを除外
-      query = query.or('brand_type.neq.海外クラファン.com,and(brand_type.eq.海外クラファン.com,status.neq.完了)');
     }
     
     const { data, error } = await query.order('created_at', { ascending: true });
