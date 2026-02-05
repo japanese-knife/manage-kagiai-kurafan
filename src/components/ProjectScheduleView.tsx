@@ -759,34 +759,43 @@ const isCurrentMonth = (date: Date): boolean => {
         console.log('更新データ:', updates);
         
         // 先に状態を更新
-        const updatedSchedules = new Map(schedules);
-        updates.forEach(update => {
-          const key = `${update.project_id}-${update.date}`;
-          updatedSchedules.set(key, {
-            projectId: update.project_id,
-            date: update.date,
-            content: update.content,
-            backgroundColor: update.background_color,
-            textColor: update.text_color,
-          });
-        });
-        setSchedules(updatedSchedules);
-        
-        // バッチ更新（バックグラウンドで実行）
-        for (const updateData of updates) {
-          const { error } = await supabase
-            .from(tableName)
-            .upsert(updateData, {
-              onConflict: 'project_id,date'
-            });
-          
-          if (error) {
-            console.error('Upsertエラー:', error);
-            // エラーの場合は再読み込みして正しい状態に戻す
-            await loadSchedules();
-            throw error;
-          }
-        }
+        // 先に状態を更新
+const updatedSchedules = new Map(schedules);
+updates.forEach(update => {
+  const key = `${update.project_id}-${update.date}`;
+  updatedSchedules.set(key, {
+    projectId: update.project_id,
+    date: update.date,
+    content: update.content,
+    backgroundColor: update.background_color,
+    textColor: update.text_color,
+  });
+  console.log('🔄 状態更新:', { key, color: update.background_color });
+});
+setSchedules(updatedSchedules);
+
+// バッチ更新（バックグラウンドで実行）
+for (const updateData of updates) {
+  console.log('💾 ペーストUpsert実行:', updateData);
+  const { data, error } = await supabase
+    .from(tableName)
+    .upsert(updateData, {
+      onConflict: 'project_id,date'
+    });
+  
+  if (error) {
+    console.error('💾 ペーストUpsertエラー:', error);
+    console.error('エラー詳細:', JSON.stringify(error, null, 2));
+    // エラーの場合は再読み込みして正しい状態に戻す
+    await loadSchedules();
+    throw error;
+  }
+  console.log('💾 ペーストUpsert成功:', data);
+}
+
+console.log('✅ ペースト完了 - スケジュール確認用に再読み込み');
+// 確認のため再読み込み
+await loadSchedules();
         
         // 視覚的フィードバック
         selectedCells.forEach(cellKey => {
