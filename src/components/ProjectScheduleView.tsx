@@ -1330,11 +1330,14 @@ const isCurrentMonth = (date: Date): boolean => {
                     />
                   ) : (
                     <div 
-                      className="px-2 py-1 min-h-[32px] flex items-center justify-center text-center"
-                      style={{ color: cell?.textColor || '#000000' }}
-                    >
-                      {cell?.content || ''}
-                    </div>
+  className="px-2 py-1 min-h-[32px] flex items-center justify-center text-center overflow-hidden"
+  style={{ color: cell?.textColor || '#000000' }}
+  title={cell?.content || ''}
+>
+  <span className="truncate w-full block">
+    {cell?.content || ''}
+  </span>
+</div>
                   )}
                 </div>
                 
