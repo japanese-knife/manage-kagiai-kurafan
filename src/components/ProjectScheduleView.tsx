@@ -867,32 +867,38 @@ await loadSchedules();
         setSchedules(updatedSchedules);
         
         // バッチ更新（バックグラウンドで実行）
-        for (const updateData of updates) {
-          const { error } = await supabase
-            .from(tableName)
-            .upsert(updateData, {
-              onConflict: 'project_id,date'
-            });
-          
-          if (error) {
-            console.error('Upsertエラー:', error);
-            // エラーの場合は再読み込みして正しい状態に戻す
-            await loadSchedules();
-            throw error;
-          }
-        }
-        
-        // 視覚的フィードバック
-        updates.forEach(update => {
-          const cellKey = `${update.project_id}-${update.date}`;
-          const cell = document.querySelector(`[data-cell-id="${cellKey}"]`);
-          if (cell) {
-            cell.classList.add('ring-2', 'ring-green-400');
-            setTimeout(() => {
-              cell.classList.remove('ring-2', 'ring-green-400');
-            }, 500);
-          }
-        });
+        // バッチ更新（バックグラウンドで実行）
+for (const updateData of updates) {
+  console.log('💾 ペーストUpsert実行:', updateData);
+  const { data, error } = await supabase
+    .from(tableName)
+    .upsert(updateData, {
+      onConflict: 'project_id,date'
+    });
+  
+  if (error) {
+    console.error('💾 ペーストUpsertエラー:', error);
+    console.error('エラー詳細:', JSON.stringify(error, null, 2));
+    // エラーの場合は再読み込みして正しい状態に戻す
+    await loadSchedules();
+    throw error;
+  }
+  console.log('💾 ペーストUpsert成功 - データ保存完了');
+}
+
+// loadSchedules()は呼ばない！既に状態は更新済み
+console.log('✅ ペースト完了 - 状態更新済み、DB保存済み');
+
+// 視覚的フィードバック
+selectedCells.forEach(cellKey => {
+  const cell = document.querySelector(`[data-cell-id="${cellKey}"]`);
+  if (cell) {
+    cell.classList.add('ring-2', 'ring-green-400');
+    setTimeout(() => {
+      cell.classList.remove('ring-2', 'ring-green-400');
+    }, 500);
+  }
+});
       }
     } catch (error) {
       console.error('ペーストエラー:', error);
