@@ -1000,7 +1000,9 @@ const isCurrentMonth = (date: Date): boolean => {
 
     try {
       const updatedSchedules = new Map(schedules);
+      const updates: any[] = [];
       
+      // 更新データを準備
       for (const cellKey of targetCells) {
         const parts = cellKey.split('-');
         const targetDateStr = parts.slice(-3).join('-');
@@ -1016,17 +1018,8 @@ const isCurrentMonth = (date: Date): boolean => {
           text_color: textColor,
           user_id: user.id,
         };
-
-        const { error } = await supabase
-          .from(tableName)
-          .upsert(updateData, {
-            onConflict: 'project_id,date'
-          });
-
-        if (error) {
-          console.error('Supabaseエラー詳細:', error);
-          throw error;
-        }
+        
+        updates.push(updateData);
         
         updatedSchedules.set(cellKey, {
           projectId: targetProjectId,
@@ -1037,8 +1030,28 @@ const isCurrentMonth = (date: Date): boolean => {
         });
       }
       
+      // 先に状態を更新
       setSchedules(updatedSchedules);
       setShowColorPicker(null);
+      
+      // データベースに保存
+      for (const updateData of updates) {
+        console.log('色変更Upsert実行:', updateData);
+        const { data, error } = await supabase
+          .from(tableName)
+          .upsert(updateData, {
+            onConflict: 'project_id,date'
+          });
+
+        if (error) {
+          console.error('Supabaseエラー詳細:', error);
+          console.error('エラー詳細:', JSON.stringify(error, null, 2));
+          // エラーの場合は再読み込みして正しい状態に戻す
+          await loadSchedules();
+          throw error;
+        }
+        console.log('色変更Upsert成功:', data);
+      }
       
       // 視覚的フィードバック
       targetCells.forEach(cellKey => {
