@@ -761,15 +761,17 @@ const isCurrentMonth = (date: Date): boolean => {
         updates.push(updateData);
       });
       
-      console.log('📋 全更新データ:', updates);
+      console.log('📋 全更新データ (件数):', updates.length);
+      console.log('📋 サンプルデータ:', updates[0]);
       
-      // データベースに保存（状態更新より先に実行）
+      // データベースに保存 - .select()を追加して結果を取得
       console.log(`💾 一括Upsert開始: ${updates.length}件`);
       const { data: upsertData, error: upsertError } = await supabase
         .from(tableName)
         .upsert(updates, {
           onConflict: 'project_id,date'
-        });
+        })
+        .select();
 
       if (upsertError) {
         console.error('❌ 一括Upsertエラー:', upsertError);
@@ -780,7 +782,8 @@ const isCurrentMonth = (date: Date): boolean => {
         return;
       }
 
-      console.log(`✅ 一括Upsert成功: ${updates.length}件`, upsertData);
+      console.log(`✅ 一括Upsert成功: ${updates.length}件`);
+      console.log('✅ 保存されたデータ:', upsertData);
 
       // DB保存成功後に状態を更新
       const updatedSchedules = new Map(schedules);
@@ -797,6 +800,23 @@ const isCurrentMonth = (date: Date): boolean => {
       });
       
       setSchedules(updatedSchedules);
+      console.log('✅ 状態更新完了');
+      
+      // 念のため、保存されたデータを再度確認
+      console.log('🔍 保存確認開始...');
+      const { data: verifyData, error: verifyError } = await supabase
+        .from(tableName)
+        .select('*')
+        .eq('project_id', updates[0].project_id)
+        .in('date', updates.map(u => u.date));
+      
+      if (verifyError) {
+        console.error('⚠️ 保存確認エラー:', verifyError);
+      } else {
+        console.log('🔍 保存確認結果:', verifyData);
+        console.log(`🔍 保存確認: ${verifyData?.length || 0}件 / ${updates.length}件`);
+      }
+      
       console.log('✅ ペースト完了');
       
       // 視覚的フィードバック
@@ -858,15 +878,17 @@ const isCurrentMonth = (date: Date): boolean => {
         });
       });
       
-      console.log('📋 矩形更新データ:', updates);
+      console.log('📋 矩形更新データ (件数):', updates.length);
+      console.log('📋 サンプルデータ:', updates[0]);
       
-      // データベースに保存（状態更新より先に実行）
+      // データベースに保存 - .select()を追加
       console.log(`💾 矩形一括Upsert開始: ${updates.length}件`);
       const { data: upsertData, error: upsertError } = await supabase
         .from(tableName)
         .upsert(updates, {
           onConflict: 'project_id,date'
-        });
+        })
+        .select();
 
       if (upsertError) {
         console.error('❌ 矩形一括Upsertエラー:', upsertError);
@@ -875,7 +897,8 @@ const isCurrentMonth = (date: Date): boolean => {
         return;
       }
 
-      console.log(`✅ 矩形一括Upsert成功: ${updates.length}件`, upsertData);
+      console.log(`✅ 矩形一括Upsert成功: ${updates.length}件`);
+      console.log('✅ 保存されたデータ:', upsertData);
 
       // DB保存成功後に状態を更新
       const updatedSchedules = new Map(schedules);
@@ -890,6 +913,21 @@ const isCurrentMonth = (date: Date): boolean => {
         });
       });
       setSchedules(updatedSchedules);
+      
+      // 保存確認
+      console.log('🔍 保存確認開始...');
+      const { data: verifyData, error: verifyError } = await supabase
+        .from(tableName)
+        .select('*')
+        .in('project_id', updates.map(u => u.project_id))
+        .in('date', updates.map(u => u.date));
+      
+      if (verifyError) {
+        console.error('⚠️ 保存確認エラー:', verifyError);
+      } else {
+        console.log('🔍 保存確認結果:', verifyData);
+        console.log(`🔍 保存確認: ${verifyData?.length || 0}件 / ${updates.length}件`);
+      }
       
       console.log('✅ 矩形ペースト完了');
       
