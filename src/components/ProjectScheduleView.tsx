@@ -1312,22 +1312,23 @@ const isCurrentMonth = (date: Date): boolean => {
                 <div className="relative z-10">
                   {isEditing ? (
                     <input
-                      ref={inputRef}
-                      type="text"
-                      value={editValue}
-                      onChange={(e) => setEditValue(e.target.value)}
-                      onBlur={handleCellBlur}
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter') {
-                          handleCellBlur();
-                        } else if (e.key === 'Escape') {
-                          setEditingCell(null);
-                          setEditValue('');
-                        }
-                      }}
-                      className="w-full h-full px-2 py-1 border-0 focus:outline-none text-center bg-transparent"
-                      style={{ color: cell?.textColor || '#000000' }}
-                    />
+  ref={inputRef}
+  type="text"
+  value={editValue}
+  onChange={(e) => setEditValue(e.target.value)}
+  onBlur={handleCellBlur}
+  onKeyDown={(e) => {
+    if (e.key === 'Enter') {
+      handleCellBlur();
+    } else if (e.key === 'Escape') {
+      setEditingCell(null);
+      setEditValue('');
+    }
+  }}
+  className="w-full h-full px-2 py-1 border-0 focus:outline-none text-center bg-transparent overflow-hidden"
+  style={{ color: cell?.textColor || '#000000' }}
+  autoFocus
+/>
                   ) : (
                     <div 
   className="px-2 py-1 min-h-[32px] flex items-center justify-center text-center overflow-hidden"
