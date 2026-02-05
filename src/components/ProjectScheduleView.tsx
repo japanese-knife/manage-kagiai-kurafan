@@ -441,72 +441,59 @@ const isCurrentMonth = (date: Date): boolean => {
   };
 
   const handleCellBlur = async () => {
-    if (!editingCell) return;
+  if (!editingCell) return;
 
-    const key = `${editingCell.projectId}-${editingCell.date}`;
-    const existingCell = schedules.get(key);
-    const tableName = viewType === 'monthly' ? 'annual_schedules' : 'project_schedules';
+  const key = `${editingCell.projectId}-${editingCell.date}`;
+  const existingCell = schedules.get(key);
+  const tableName = viewType === 'monthly' ? 'annual_schedules' : 'project_schedules';
 
-    try {
-      if (editValue.trim() === '') {
-        if (existingCell) {
-          await supabase
-            .from(tableName)
-            .delete()
-            .eq('project_id', editingCell.projectId)
-            .eq('date', editingCell.date);
-          
-          const updatedSchedules = new Map(schedules);
-          updatedSchedules.delete(key);
-          setSchedules(updatedSchedules);
-        }
-      } else {
-        const bgColor = existingCell?.backgroundColor || '#ffffff';
-        const txtColor = existingCell?.textColor || getTextColorForBackground(bgColor);
-        
-        const updateData: any = {
-          project_id: editingCell.projectId,
-          date: editingCell.date,
-          content: editValue,
-          background_color: bgColor,
-          text_color: txtColor,
-          user_id: user.id,
-        };
+  try {
+    // 削除前の修正: 空白の場合も白背景として保存（物理削除しない）
+    const bgColor = existingCell?.backgroundColor || '#ffffff';
+    const txtColor = existingCell?.textColor || getTextColorForBackground(bgColor);
+    
+    const updateData: any = {
+      project_id: editingCell.projectId,
+      date: editingCell.date,
+      content: editValue.trim(), // 空白でも保存
+      background_color: bgColor,
+      text_color: txtColor,
+      user_id: user.id,
+    };
 
-        console.log('💾 セル保存開始:', updateData);
-const { data: upsertData, error } = await supabase
-  .from(tableName)
-  .upsert(updateData, {
-    onConflict: 'project_id,date'
-  })
-  .select();
+    console.log('💾 セル保存開始:', updateData);
+    const { data: upsertData, error } = await supabase
+      .from(tableName)
+      .upsert(updateData, {
+        onConflict: 'project_id,date'
+      })
+      .select();
 
-if (error) {
-  console.error('❌ セル保存エラー:', error);
-  console.error('エラー詳細:', JSON.stringify(error, null, 2));
-  throw error;
-}
-
-console.log('✅ セル保存成功:', upsertData);
-        
-        const updatedSchedules = new Map(schedules);
-        updatedSchedules.set(key, {
-          projectId: editingCell.projectId,
-          date: editingCell.date,
-          content: editValue,
-          backgroundColor: bgColor,
-          textColor: txtColor,
-        });
-        setSchedules(updatedSchedules);
-      }
-    } catch (error) {
-      console.error('スケジュール保存エラー:', error);
-      alert('スケジュールの保存に失敗しました');
+    if (error) {
+      console.error('❌ セル保存エラー:', error);
+      console.error('エラー詳細:', JSON.stringify(error, null, 2));
+      throw error;
     }
 
-    setEditingCell(null);
-    setEditValue('');
-  };
+    console.log('✅ セル保存成功:', upsertData);
+    
+    const updatedSchedules = new Map(schedules);
+    updatedSchedules.set(key, {
+      projectId: editingCell.projectId,
+      date: editingCell.date,
+      content: editValue.trim(),
+      backgroundColor: bgColor,
+      textColor: txtColor,
+    });
+    setSchedules(updatedSchedules);
+  } catch (error) {
+    console.error('スケジュール保存エラー:', error);
+    alert('スケジュールの保存に失敗しました');
+  }
+
+  setEditingCell(null);
+  setEditValue('');
+};
 
   const handleKeyDown = (e: React.KeyboardEvent, projectId: string, dateIndex: number) => {
     if (editingCell) {
