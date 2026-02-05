@@ -708,14 +708,17 @@ const isCurrentMonth = (date: Date): boolean => {
 
   const handleKeyboardPaste = async () => {
     if (selectedCells.size === 0 || !copiedCellData) {
+      console.log('ペースト条件不足');
       return;
     }
 
     const tableName = viewType === 'monthly' ? 'annual_schedules' : 'project_schedules';
+    console.log('ペースト開始:', { tableName, selectedCells: selectedCells.size, copiedCellData });
 
     try {
       // 1つのセルをコピーして複数セルにペースト
       if (copiedCellData.cellsData && copiedCellData.cellsData.length === 1) {
+        console.log('単一セルを複数セルにペースト');
         const sourceCellData = copiedCellData.cellsData[0];
         const updates: any[] = [];
         
@@ -724,15 +727,20 @@ const isCurrentMonth = (date: Date): boolean => {
           const targetDateStr = parts.slice(-3).join('-');
           const targetProjectId = parts.slice(0, -3).join('-');
           
+          // 既存のセルデータを取得して、コンテンツを保持
+          const existingCell = schedules.get(cellKey);
+          
           updates.push({
             project_id: targetProjectId,
             date: targetDateStr,
-            content: sourceCellData.content,
+            content: existingCell?.content || sourceCellData.content, // 既存のコンテンツを優先
             background_color: sourceCellData.backgroundColor,
             text_color: sourceCellData.textColor,
             user_id: user.id,
           });
         });
+        
+        console.log('更新データ:', updates);
         
         // 先に状態を更新
         const updatedSchedules = new Map(schedules);
