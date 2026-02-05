@@ -473,13 +473,21 @@ const isCurrentMonth = (date: Date): boolean => {
           user_id: user.id,
         };
 
-        const { error } = await supabase
-          .from(tableName)
-          .upsert(updateData, {
-            onConflict: 'project_id,date'
-          });
+        console.log('💾 セル保存開始:', updateData);
+const { data: upsertData, error } = await supabase
+  .from(tableName)
+  .upsert(updateData, {
+    onConflict: 'project_id,date'
+  })
+  .select();
 
-        if (error) throw error;
+if (error) {
+  console.error('❌ セル保存エラー:', error);
+  console.error('エラー詳細:', JSON.stringify(error, null, 2));
+  throw error;
+}
+
+console.log('✅ セル保存成功:', upsertData);
         
         const updatedSchedules = new Map(schedules);
         updatedSchedules.set(key, {
