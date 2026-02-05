@@ -47,18 +47,18 @@ const [selectionStart, setSelectionStart] = useState<{ projectId: string; date: 
   }, [viewType, activeBrandTab]);
 
   // プロジェクト読み込み
-  useEffect(() => {
-    if (dates.length > 0) {
-      loadProjects();
-    }
-  }, [dates.length, activeBrandTab]);
+useEffect(() => {
+  if (dates.length > 0) {
+    loadProjects();
+  }
+}, [dates.length, activeBrandTab]);
 
-  // スケジュール読み込み
-  useEffect(() => {
-    if (projects.length > 0) {
-      loadSchedules();
-    }
-  }, [projects.length]);
+// スケジュール読み込み - プロジェクトが変更されたら必ず再読み込み
+useEffect(() => {
+  if (projects.length > 0) {
+    loadSchedules();
+  }
+}, [projects]);
   
   useEffect(() => {
   // 日次ビューで初回読み込み時のみ当日の列を中央に配置
