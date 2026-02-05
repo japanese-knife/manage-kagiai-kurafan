@@ -133,11 +133,11 @@ useEffect(() => {
   const getColumnWidth = () => {
   switch (columnWidth) {
     case 'narrow':
-      return 'min-w-[24px] w-[24px]';
+      return 'min-w-[60px] w-[60px]'; // 24pxから60pxに変更
     case 'wide':
-      return 'min-w-[80px] w-[80px]';
+      return 'min-w-[120px] w-[120px]'; // 80pxから120pxに変更
     default:
-      return 'min-w-[24px] w-[24px]';
+      return 'min-w-[60px] w-[60px]';
   }
 };
   
