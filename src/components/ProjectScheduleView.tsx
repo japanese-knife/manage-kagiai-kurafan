@@ -263,23 +263,14 @@ const [selectionStart, setSelectionStart] = useState<{ projectId: string; date: 
   const loadSchedules = async () => {
   try {
     const projectIds = projects.map(p => p.id);
-    if (projectIds.length === 0 || dates.length === 0) return;
+    if (projectIds.length === 0) return;
 
     const tableName = viewType === 'monthly' ? 'annual_schedules' : 'project_schedules';
-
-    const startDateObj = new Date(dates[0]);
-    startDateObj.setDate(startDateObj.getDate() - 2);
-    const endDateObj = new Date(dates[dates.length - 1]);
-    endDateObj.setDate(endDateObj.getDate() + 2);
-    const startDate = startDateObj.toISOString().split('T')[0];
-    const endDate = endDateObj.toISOString().split('T')[0];
 
     const { data, error } = await supabase
       .from(tableName)
       .select('*')
-      .in('project_id', projectIds)
-      .gte('date', startDate)
-      .lte('date', endDate);
+      .in('project_id', projectIds);
 
     if (error) throw error;
 
