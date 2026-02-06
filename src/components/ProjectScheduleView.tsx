@@ -1199,6 +1199,12 @@ if (upsertError) {
 
 console.log('✅ 色変更Upsert成功:', upsertData);
 console.log(`✅ ${updates.length}件の色変更完了`);
+
+// DBから再読み込みして確実に反映
+await loadSchedules();
+      
+// 視覚的フィードバック
+targetCells.forEach(cellKey => {
       
       // 視覚的フィードバック
       targetCells.forEach(cellKey => {
