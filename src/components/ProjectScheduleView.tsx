@@ -1178,36 +1178,34 @@ console.log('✅ ペースト保存成功:', upsertData);
       });
     }
     
-    // 先に状態を更新
-    setSchedules(updatedSchedules);
-    setShowColorPicker(null);
-    
-    // データベースに保存 - 一括処理
-    console.log(`🎨 色変更Upsert開始: ${updates.length}件`);
-    const { data: upsertData, error: upsertError } = await supabase
-      .from(tableName)
-      .upsert(updates, {
-        onConflict: 'project_id,date'
-      })
-      .select();
+    // カラーピッカーを先に閉じる
+setShowColorPicker(null);
 
-    if (upsertError) {
-      console.error('❌ 色変更Upsertエラー:', upsertError);
-      console.error('エラーコード:', upsertError.code);
-      console.error('エラーメッセージ:', upsertError.message);
-      console.error('エラー詳細:', JSON.stringify(upsertError, null, 2));
-      console.error('失敗したデータ:', updates);
-      // エラーの場合は再読み込みして正しい状態に戻す
-      await loadSchedules();
-      alert(`色の変更に失敗しました: ${upsertError.message}`);
-      return;
-    }
+// データベースに保存 - 一括処理
+console.log(`🎨 色変更Upsert開始: ${updates.length}件`);
+const { data: upsertData, error: upsertError } = await supabase
+  .from(tableName)
+  .upsert(updates, {
+    onConflict: 'project_id,date'
+  })
+  .select();
 
-    console.log('✅ 色変更Upsert成功:', upsertData);
-    console.log(`✅ ${updates.length}件の色変更完了`);
-    
-    // DBから再読み込みして確実に反映
-    await loadSchedules();
+if (upsertError) {
+  console.error('❌ 色変更Upsertエラー:', upsertError);
+  console.error('エラーコード:', upsertError.code);
+  console.error('エラーメッセージ:', upsertError.message);
+  console.error('エラー詳細:', JSON.stringify(upsertError, null, 2));
+  console.error('失敗したデータ:', updates);
+  alert(`色の変更に失敗しました: ${upsertError.message}`);
+  return;
+}
+
+console.log('✅ 色変更Upsert成功:', upsertData);
+console.log(`✅ ${updates.length}件の色変更完了`);
+
+// DB保存完了後、少し待ってから再読み込み（Supabaseの書き込み反映を待つ）
+await new Promise(resolve => setTimeout(resolve, 100));
+await loadSchedules();
     
     // 視覚的フィードバック
     targetCells.forEach(cellKey => {
