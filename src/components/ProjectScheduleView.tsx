@@ -504,20 +504,10 @@ const isCurrentMonth = (date: Date): boolean => {
     }
 
     console.log('✅ セル保存成功:', upsertData);
-    
-    // DB保存成功後、即座に状態を更新
-    const updatedSchedules = new Map(schedules);
-    updatedSchedules.set(key, {
-      projectId: editingCell.projectId,
-      date: editingCell.date,
-      content: editValue.trim(),
-      backgroundColor: bgColor,
-      textColor: txtColor,
-    });
-    setSchedules(updatedSchedules);
-    
-    // さらに確実にするため、DBから再読み込み
-    await loadSchedules();
+
+// DB保存完了後、少し待ってから再読み込み
+await new Promise(resolve => setTimeout(resolve, 100));
+await loadSchedules();
     
   } catch (error) {
     console.error('スケジュール保存エラー:', error);
