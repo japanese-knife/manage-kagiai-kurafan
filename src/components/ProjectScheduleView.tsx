@@ -971,12 +971,13 @@ selectedCells.forEach(cellKey => {
       }
       
       console.log('✅ 矩形ペースト完了');
-      
-      // DBから再読み込みして確実に反映
-      await loadSchedules();
-      
-      // 視覚的フィードバック
-      rectUpdates.forEach(update => {
+
+// DB保存完了後、少し待ってから再読み込み
+await new Promise(resolve => setTimeout(resolve, 100));
+await loadSchedules();
+
+// 視覚的フィードバック
+rectUpdates.forEach(update => {
         const cellKey = `${update.project_id}-${update.date}`;
         const cell = document.querySelector(`[data-cell-id="${cellKey}"]`);
         if (cell) {
