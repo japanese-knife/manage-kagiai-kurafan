@@ -981,6 +981,9 @@ const isCurrentMonth = (date: Date): boolean => {
       
       console.log('✅ 矩形ペースト完了');
       
+      // DBから再読み込みして確実に反映
+      await loadSchedules();
+      
       // 視覚的フィードバック
       rectUpdates.forEach(update => {
         const cellKey = `${update.project_id}-${update.date}`;
