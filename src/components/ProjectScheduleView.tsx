@@ -1113,6 +1113,7 @@ if (upsertError) {
 console.log('✅ ペースト保存成功:', upsertData);
       }
 
+      // この部分は既に正しく実装されています
       await loadSchedules();
       
       // 視覚的フィードバック
