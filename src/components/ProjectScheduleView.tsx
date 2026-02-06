@@ -40,6 +40,7 @@ const [selectionStart, setSelectionStart] = useState<{ projectId: string; date: 
   const inputRef = useRef<HTMLInputElement>(null);
   const hasScrolledToToday = useRef(false);
   const [columnWidth, setColumnWidth] = useState<'narrow' | 'wide'>('narrow');
+  const isPastingRef = useRef(false);
 
   // 日付生成
   useEffect(() => {
@@ -262,57 +263,32 @@ const [selectionStart, setSelectionStart] = useState<{ projectId: string; date: 
   const loadSchedules = async () => {
   try {
     const projectIds = projects.map(p => p.id);
+    if (projectIds.length === 0 || dates.length === 0) return;
+
     const tableName = viewType === 'monthly' ? 'annual_schedules' : 'project_schedules';
-    
-    console.log('📥 スケジュール読み込み開始:', { 
-      tableName, 
-      projectCount: projectIds.length,
-      projectIds: projectIds.slice(0, 5),
-      dateRange: dates.length > 0 ? {
-        start: dates[0].toISOString().split('T')[0],
-        end: dates[dates.length - 1].toISOString().split('T')[0]
-      } : null
-    });
-    
-    // ★★★ ここが重要: 日付範囲でフィルタリングしていないか確認 ★★★
+
+    const startDateObj = new Date(dates[0]);
+    startDateObj.setDate(startDateObj.getDate() - 2);
+    const endDateObj = new Date(dates[dates.length - 1]);
+    endDateObj.setDate(endDateObj.getDate() + 2);
+    const startDate = startDateObj.toISOString().split('T')[0];
+    const endDate = endDateObj.toISOString().split('T')[0];
+
     const { data, error } = await supabase
       .from(tableName)
       .select('*')
-      .in('project_id', projectIds);
-      // .gte('date', someStartDate) ← このような日付フィルタがあると問題
-      // .lte('date', someEndDate) ← このような日付フィルタがあると問題
+      .in('project_id', projectIds)
+      .gte('date', startDate)
+      .lte('date', endDate);
 
-    if (error) {
-      console.error('📥 スケジュール読み込みエラー:', error);
-      throw error;
-    }
-
-    console.log('📥 取得したスケジュールデータ:', data?.length, '件');
-    
-    // 当日〜5日前のデータを特定
-    const today = new Date();
-    const fiveDaysAgo = new Date(today);
-    fiveDaysAgo.setDate(today.getDate() - 5);
-    const todayStr = today.toISOString().split('T')[0];
-    const fiveDaysAgoStr = fiveDaysAgo.toISOString().split('T')[0];
-    
-    const recentData = data?.filter(s => {
-      const date = s.date;
-      return date >= fiveDaysAgoStr && date <= todayStr;
-    });
-    console.log(`📅 【重要】当日〜5日前のデータ (${fiveDaysAgoStr} ~ ${todayStr}):`, recentData?.length, '件');
-    if (recentData && recentData.length > 0) {
-      console.log('📅 データサンプル:', recentData.slice(0, 5));
-    } else {
-      console.warn('⚠️ 当日〜5日前のデータが取得できていません！');
-    }
+    if (error) throw error;
 
     const scheduleMap = new Map<string, ScheduleCell>();
     (data || []).forEach((schedule) => {
       const key = `${schedule.project_id}-${schedule.date}`;
       const bgColor = schedule.background_color || '#ffffff';
       const autoTextColor = getTextColorForBackground(bgColor);
-      
+
       scheduleMap.set(key, {
         projectId: schedule.project_id,
         date: schedule.date,
@@ -320,32 +296,8 @@ const [selectionStart, setSelectionStart] = useState<{ projectId: string; date: 
         backgroundColor: bgColor,
         textColor: schedule.text_color || autoTextColor,
       });
-      
-      // 当日〜5日前のデータをログ出力
-      if (schedule.date >= fiveDaysAgoStr && schedule.date <= todayStr) {
-        console.log('📅 Map追加:', { 
-          key, 
-          date: schedule.date,
-          content: schedule.content,
-          bgColor 
-        });
-      }
     });
 
-    console.log('📥 scheduleMap作成完了:', scheduleMap.size, '件');
-    
-    // 当日〜5日前のキーが含まれているか確認
-    const recentKeys = Array.from(scheduleMap.keys()).filter(key => {
-      const date = key.split('-').slice(-3).join('-');
-      return date >= fiveDaysAgoStr && date <= todayStr;
-    });
-    console.log(`📅 【重要】Map内の当日〜5日前キー数 (${fiveDaysAgoStr} ~ ${todayStr}):`, recentKeys.length);
-    if (recentKeys.length > 0) {
-      console.log('📅 キーサンプル:', recentKeys.slice(0, 5));
-    } else {
-      console.warn('⚠️ Map内に当日〜5日前のキーがありません！データベースに存在しない可能性があります。');
-    }
-    
     setSchedules(scheduleMap);
   } catch (error) {
     console.error('スケジュール読み込みエラー:', error);
@@ -495,7 +447,7 @@ const isCurrentMonth = (date: Date): boolean => {
   try {
     const bgColor = existingCell?.backgroundColor || '#ffffff';
     const txtColor = existingCell?.textColor || getTextColorForBackground(bgColor);
-    
+
     const updateData: any = {
       project_id: editingCell.projectId,
       date: editingCell.date,
@@ -505,25 +457,25 @@ const isCurrentMonth = (date: Date): boolean => {
       user_id: user.id,
     };
 
-    console.log('💾 セル保存開始:', updateData);
-    const { data: upsertData, error } = await supabase
+    const { error } = await supabase
       .from(tableName)
       .upsert(updateData, {
         onConflict: 'project_id,date'
       })
       .select();
 
-    if (error) {
-      console.error('❌ セル保存エラー:', error);
-      throw error;
-    }
+    if (error) throw error;
 
-    console.log('✅ セル保存成功:', upsertData);
+    const updatedSchedules = new Map(schedules);
+    updatedSchedules.set(key, {
+      projectId: editingCell.projectId,
+      date: editingCell.date,
+      content: editValue.trim(),
+      backgroundColor: bgColor,
+      textColor: txtColor,
+    });
+    setSchedules(updatedSchedules);
 
-// DB保存完了後、少し待ってから再読み込み
-await new Promise(resolve => setTimeout(resolve, 100));
-await loadSchedules();
-    
   } catch (error) {
     console.error('スケジュール保存エラー:', error);
     alert('スケジュールの保存に失敗しました');
@@ -756,82 +708,32 @@ await loadSchedules();
   };
 
   const handleKeyboardPaste = async () => {
-  if (selectedCells.size === 0 || !copiedCellData) {
-    console.log('❌ ペースト条件不足');
-    return;
-  }
+  if (selectedCells.size === 0 || !copiedCellData) return;
+  if (isPastingRef.current) return;
+  isPastingRef.current = true;
 
   const tableName = viewType === 'monthly' ? 'annual_schedules' : 'project_schedules';
-  console.log('🚀 ペースト開始:', { tableName, selectedCells: selectedCells.size, userId: user.id });
 
   try {
-    // 1つのセルをコピーして複数セルにペースト
     if (copiedCellData.cellsData && copiedCellData.cellsData.length === 1) {
-      console.log('📋 単一セルを複数セルにペースト');
       const sourceCellData = copiedCellData.cellsData[0];
-      console.log('📋 コピー元データ:', sourceCellData);
-      
       const updates: any[] = [];
-      
+
       selectedCells.forEach(cellKey => {
-  const parts = cellKey.split('-');
-  const targetDateStr = parts.slice(-3).join('-');
-  const targetProjectId = parts.slice(0, -3).join('-');
-  
-  // コピー元のデータで完全に上書き（既存のコンテンツは無視）
-  const updateData = {
-    project_id: targetProjectId,
-    date: targetDateStr,
-    content: sourceCellData.content || '',
-    background_color: sourceCellData.backgroundColor || '#ffffff',
-    text_color: sourceCellData.textColor || '#000000',
-    user_id: user.id,
-  };
-  
-  console.log('📋 作成した更新データ:', updateData);
-  updates.push(updateData);
-});
-      
-      console.log('📋 全更新データ (件数):', updates.length);
-      console.log('📋 サンプルデータ:', updates[0]);
-      
-      // データベースに保存 - バッチサイズで分割して保存
-      console.log(`💾 一括Upsert開始: ${updates.length}件`);
-      const batchSize = 100;
-      let allUpsertData: any[] = [];
-      
-      for (let i = 0; i < updates.length; i += batchSize) {
-        const batch = updates.slice(i, i + batchSize);
-        console.log(`💾 バッチ ${Math.floor(i / batchSize) + 1}/${Math.ceil(updates.length / batchSize)} 保存中...`);
-        
-        const { data: batchUpsertData, error: batchUpsertError } = await supabase
-          .from(tableName)
-          .upsert(batch, {
-            onConflict: 'project_id,date'
-          })
-          .select();
+        const parts = cellKey.split('-');
+        const targetDateStr = parts.slice(-3).join('-');
+        const targetProjectId = parts.slice(0, -3).join('-');
 
-        if (batchUpsertError) {
-          console.error('❌ 一括Upsertエラー:', batchUpsertError);
-          console.error('エラーコード:', batchUpsertError.code);
-          console.error('エラーメッセージ:', batchUpsertError.message);
-          console.error('エラー詳細:', JSON.stringify(batchUpsertError, null, 2));
-          console.error('失敗したバッチ:', batch);
-          alert(`ペーストに失敗しました: ${batchUpsertError.message}`);
-          await loadSchedules();
-          return;
-        }
-        
-        console.log(`✅ バッチ ${Math.floor(i / batchSize) + 1} 保存成功:`, batchUpsertData);
-        if (batchUpsertData) {
-          allUpsertData = allUpsertData.concat(batchUpsertData);
-        }
-      }
+        updates.push({
+          project_id: targetProjectId,
+          date: targetDateStr,
+          content: sourceCellData.content || '',
+          background_color: sourceCellData.backgroundColor || '#ffffff',
+          text_color: sourceCellData.textColor || '#000000',
+          user_id: user.id,
+        });
+      });
 
-      console.log(`✅ 全バッチ保存完了: ${updates.length}件`);
-      console.log('✅ 保存されたデータ:', allUpsertData);
-
-      // DB保存成功後に状態を更新
       const updatedSchedules = new Map(schedules);
       updates.forEach(update => {
         const key = `${update.project_id}-${update.date}`;
@@ -842,38 +744,27 @@ await loadSchedules();
           backgroundColor: update.background_color,
           textColor: update.text_color,
         });
-        console.log('🔄 Map更新:', { key, backgroundColor: update.background_color });
       });
-      
       setSchedules(updatedSchedules);
-      console.log('✅ 状態更新完了');
-      
-      // 念のため、保存されたデータを再度確認
-      console.log('🔍 保存確認開始...');
-      const projectIds = Array.from(new Set(updates.map(u => u.project_id)));
-      const dates = updates.map(u => u.date);
-      
-      const { data: verifyData, error: verifyError } = await supabase
-        .from(tableName)
-        .select('*')
-        .in('project_id', projectIds)
-        .in('date', dates);
-      
-      if (verifyError) {
-        console.error('⚠️ 保存確認エラー:', verifyError);
-      } else {
-        console.log('🔍 保存確認結果:', verifyData);
-        console.log(`🔍 保存確認: ${verifyData?.length || 0}件 / ${updates.length}件`);
+
+      const batchSize = 100;
+      for (let i = 0; i < updates.length; i += batchSize) {
+        const batch = updates.slice(i, i + batchSize);
+        const { error: batchUpsertError } = await supabase
+          .from(tableName)
+          .upsert(batch, { onConflict: 'project_id,date' })
+          .select();
+
+        if (batchUpsertError) {
+          console.error('ペースト保存エラー:', batchUpsertError);
+          alert(`ペーストに失敗しました: ${batchUpsertError.message}`);
+          await loadSchedules();
+          isPastingRef.current = false;
+          return;
+        }
       }
-      
-      console.log('✅ ペースト完了');
 
-// DB保存完了後、少し待ってから再読み込み
-await new Promise(resolve => setTimeout(resolve, 100));
-await loadSchedules();
-
-// 視覚的フィードバック
-selectedCells.forEach(cellKey => {
+      selectedCells.forEach(cellKey => {
         const cell = document.querySelector(`[data-cell-id="${cellKey}"]`);
         if (cell) {
           cell.classList.add('ring-2', 'ring-green-400');
@@ -882,42 +773,41 @@ selectedCells.forEach(cellKey => {
           }, 500);
         }
       });
-      
-      return; // ここで関数を終了
+
+      isPastingRef.current = false;
+      return;
     }
 
-    // 複数セルのコピー&ペースト(矩形領域)
     if (copiedCellData.structure && selectedCell) {
-      console.log('📋 矩形領域ペースト');
       const sourceProjectIds = Array.from(copiedCellData.structure.keys());
       const sourceDates = Array.from(new Set(
         Array.from(copiedCellData.structure.values())
-          .flatMap(dateMap => Array.from(dateMap.keys()))
+          .flatMap((dateMap: Map<string, any>) => Array.from(dateMap.keys()))
       )).sort();
-      
+
       const startProjectIndex = projects.findIndex(p => p.id === selectedCell.projectId);
       const startDateIndex = dates.findIndex(d => d.toISOString().split('T')[0] === selectedCell.date);
-      
+
       if (startProjectIndex === -1 || startDateIndex === -1) {
-        console.log('❌ 開始位置が見つかりません');
+        isPastingRef.current = false;
         return;
       }
-      
+
       const rectUpdates: any[] = [];
       sourceProjectIds.forEach((sourceProjectId, pOffset) => {
         const targetProjectIndex = startProjectIndex + pOffset;
         if (targetProjectIndex >= projects.length) return;
-        
+
         const targetProjectId = projects[targetProjectIndex].id;
         const sourceDateMap = copiedCellData.structure.get(sourceProjectId);
-        
-        sourceDates.forEach((sourceDate, dOffset) => {
+
+        sourceDates.forEach((sourceDate: string, dOffset: number) => {
           const targetDateIndex = startDateIndex + dOffset;
           if (targetDateIndex >= dates.length) return;
-          
+
           const targetDate = dates[targetDateIndex].toISOString().split('T')[0];
           const sourceCell = sourceDateMap?.get(sourceDate);
-          
+
           if (sourceCell) {
             rectUpdates.push({
               project_id: targetProjectId,
@@ -930,30 +820,7 @@ selectedCells.forEach(cellKey => {
           }
         });
       });
-      
-      console.log('📋 矩形更新データ (件数):', rectUpdates.length);
-      console.log('📋 サンプルデータ:', rectUpdates[0]);
-      
-      // データベースに保存
-      console.log(`💾 矩形一括Upsert開始: ${rectUpdates.length}件`);
-      const { data: rectUpsertData, error: rectUpsertError } = await supabase
-        .from(tableName)
-        .upsert(rectUpdates, {
-          onConflict: 'project_id,date'
-        })
-        .select();
 
-      if (rectUpsertError) {
-        console.error('❌ 矩形一括Upsertエラー:', rectUpsertError);
-        console.error('エラー詳細:', JSON.stringify(rectUpsertError, null, 2));
-        alert(`ペーストに失敗しました: ${rectUpsertError.message}`);
-        return;
-      }
-
-      console.log(`✅ 矩形一括Upsert成功: ${rectUpdates.length}件`);
-      console.log('✅ 保存されたデータ:', rectUpsertData);
-
-      // DB保存成功後に状態を更新
       const updatedSchedules = new Map(schedules);
       rectUpdates.forEach(update => {
         const key = `${update.project_id}-${update.date}`;
@@ -966,33 +833,21 @@ selectedCells.forEach(cellKey => {
         });
       });
       setSchedules(updatedSchedules);
-      
-      // 保存確認
-      console.log('🔍 保存確認開始...');
-      const projectIds = Array.from(new Set(rectUpdates.map(u => u.project_id)));
-      const dates = rectUpdates.map(u => u.date);
-      
-      const { data: verifyData, error: verifyError } = await supabase
+
+      const { error: rectUpsertError } = await supabase
         .from(tableName)
-        .select('*')
-        .in('project_id', projectIds)
-        .in('date', dates);
-      
-      if (verifyError) {
-        console.error('⚠️ 保存確認エラー:', verifyError);
-      } else {
-        console.log('🔍 保存確認結果:', verifyData);
-        console.log(`🔍 保存確認: ${verifyData?.length || 0}件 / ${rectUpdates.length}件`);
+        .upsert(rectUpdates, { onConflict: 'project_id,date' })
+        .select();
+
+      if (rectUpsertError) {
+        console.error('ペースト保存エラー:', rectUpsertError);
+        alert(`ペーストに失敗しました: ${rectUpsertError.message}`);
+        await loadSchedules();
+        isPastingRef.current = false;
+        return;
       }
-      
-      console.log('✅ 矩形ペースト完了');
 
-// DB保存完了後、少し待ってから再読み込み
-await new Promise(resolve => setTimeout(resolve, 100));
-await loadSchedules();
-
-// 視覚的フィードバック
-rectUpdates.forEach(update => {
+      rectUpdates.forEach(update => {
         const cellKey = `${update.project_id}-${update.date}`;
         const cell = document.querySelector(`[data-cell-id="${cellKey}"]`);
         if (cell) {
@@ -1002,146 +857,102 @@ rectUpdates.forEach(update => {
           }, 500);
         }
       });
-      
+
+      isPastingRef.current = false;
       return;
     }
   } catch (error) {
-    console.error('❌ ペーストエラー:', error);
+    console.error('ペーストエラー:', error);
     alert(`ペーストに失敗しました: ${error instanceof Error ? error.message : '不明なエラー'}`);
   }
+  isPastingRef.current = false;
 };
   
   const handlePaste = async (e: React.ClipboardEvent, projectId: string, date: Date) => {
     e.preventDefault();
-    
+    if (isPastingRef.current) return;
+
+    if (copiedCellData && copiedCellData.structure) return;
+
+    isPastingRef.current = true;
     const dateStr = date.toISOString().split('T')[0];
     const tableName = viewType === 'monthly' ? 'annual_schedules' : 'project_schedules';
 
     try {
-      if (copiedCellData && copiedCellData.structure) {
-        // 構造化されたデータのペースト（矩形領域）
-        const sourceProjectIds = Array.from(copiedCellData.structure.keys());
-        const sourceDates = Array.from(new Set(
-          Array.from(copiedCellData.structure.values())
-            .flatMap(dateMap => Array.from(dateMap.keys()))
-        )).sort();
-        
-        const startProjectIndex = projects.findIndex(p => p.id === projectId);
-        const startDateIndex = dates.findIndex(d => d.toISOString().split('T')[0] === dateStr);
-        
-        if (startProjectIndex === -1 || startDateIndex === -1) return;
-        
-        // コピー元の構造を維持してペースト
-        const updates: any[] = [];
-        sourceProjectIds.forEach((sourceProjectId, pOffset) => {
-          const targetProjectIndex = startProjectIndex + pOffset;
-          if (targetProjectIndex >= projects.length) return;
-          
-          const targetProjectId = projects[targetProjectIndex].id;
-          const sourceDateMap = copiedCellData.structure.get(sourceProjectId);
-          
-          sourceDates.forEach((sourceDate, dOffset) => {
-            const targetDateIndex = startDateIndex + dOffset;
-            if (targetDateIndex >= dates.length) return;
-            
-            const targetDate = dates[targetDateIndex].toISOString().split('T')[0];
-            const sourceCell = sourceDateMap?.get(sourceDate);
-            
-            if (sourceCell) {
-              updates.push({
-                project_id: targetProjectId,
-                date: targetDate,
-                content: sourceCell.content,
-                background_color: sourceCell.backgroundColor,
-                text_color: sourceCell.textColor,
-                user_id: user.id,
-              });
-            }
-          });
-        });
-        
-        // バッチ更新
-        for (const updateData of updates) {
-          await supabase
-            .from(tableName)
-            .upsert(updateData, {
-              onConflict: 'project_id,date'
-            });
-        }
-      } else {
-        // プレーンテキストのペースト
-        const clipboardText = e.clipboardData.getData('text');
-        const lines = clipboardText.split('\n').filter(line => line.trim());
-        
-        const startProjectIndex = projects.findIndex(p => p.id === projectId);
-        const startDateIndex = dates.findIndex(d => d.toISOString().split('T')[0] === dateStr);
-        
-        if (startProjectIndex === -1 || startDateIndex === -1) return;
-        
-        const updates: any[] = [];
-        lines.forEach((line, rowOffset) => {
-          const cells = line.split('\t');
-          const targetProjectIndex = startProjectIndex + rowOffset;
-          
-          if (targetProjectIndex >= projects.length) return;
-          
-          const targetProjectId = projects[targetProjectIndex].id;
-          
-          cells.forEach((content, colOffset) => {
-            const targetDateIndex = startDateIndex + colOffset;
-            if (targetDateIndex >= dates.length) return;
-            
-            const targetDate = dates[targetDateIndex].toISOString().split('T')[0];
-            const backgroundColor = '#ffffff';
-            const textColor = getTextColorForBackground(backgroundColor);
-            
-            updates.push({
-              project_id: targetProjectId,
-              date: targetDate,
-              content: content.trim(),
-              background_color: backgroundColor,
-              text_color: textColor,
-              user_id: user.id,
-            });
-          });
-        });
-        
-        // バッチ更新
-        // バッチ更新 - 一括処理に変更
-console.log(`📋 ペースト保存開始: ${updates.length}件`);
-const { data: upsertData, error: upsertError } = await supabase
-  .from(tableName)
-  .upsert(updates, {
-    onConflict: 'project_id,date'
-  })
-  .select();
-
-if (upsertError) {
-  console.error('❌ ペースト保存エラー:', upsertError);
-  console.error('エラー詳細:', JSON.stringify(upsertError, null, 2));
-  alert(`ペーストに失敗しました: ${upsertError.message}`);
-  return;
-}
-
-console.log('✅ ペースト保存成功:', upsertData);
+      const clipboardText = e.clipboardData.getData('text');
+      if (!clipboardText.trim()) {
+        isPastingRef.current = false;
+        return;
       }
 
-      // DB保存完了後、少し待ってから再読み込み
-      await new Promise(resolve => setTimeout(resolve, 100));
-      await loadSchedules();
-      
-      // 視覚的フィードバック
-      const targetCell = document.querySelector(`[data-cell-id="${projectId}-${dateStr}"]`);
-      if (targetCell) {
-        targetCell.classList.add('bg-green-100');
-        setTimeout(() => {
-          targetCell.classList.remove('bg-green-100');
-        }, 300);
+      const lines = clipboardText.split('\n').filter(line => line.trim());
+      const startProjectIndex = projects.findIndex(p => p.id === projectId);
+      const startDateIndex = dates.findIndex(d => d.toISOString().split('T')[0] === dateStr);
+
+      if (startProjectIndex === -1 || startDateIndex === -1) {
+        isPastingRef.current = false;
+        return;
+      }
+
+      const updates: any[] = [];
+      lines.forEach((line, rowOffset) => {
+        const cells = line.split('\t');
+        const targetProjectIndex = startProjectIndex + rowOffset;
+        if (targetProjectIndex >= projects.length) return;
+
+        const targetProjectId = projects[targetProjectIndex].id;
+        cells.forEach((content, colOffset) => {
+          const targetDateIndex = startDateIndex + colOffset;
+          if (targetDateIndex >= dates.length) return;
+
+          const targetDate = dates[targetDateIndex].toISOString().split('T')[0];
+          const backgroundColor = '#ffffff';
+          const textColor = getTextColorForBackground(backgroundColor);
+
+          updates.push({
+            project_id: targetProjectId,
+            date: targetDate,
+            content: content.trim(),
+            background_color: backgroundColor,
+            text_color: textColor,
+            user_id: user.id,
+          });
+        });
+      });
+
+      if (updates.length === 0) {
+        isPastingRef.current = false;
+        return;
+      }
+
+      const updatedSchedules = new Map(schedules);
+      updates.forEach(update => {
+        const key = `${update.project_id}-${update.date}`;
+        updatedSchedules.set(key, {
+          projectId: update.project_id,
+          date: update.date,
+          content: update.content,
+          backgroundColor: update.background_color,
+          textColor: update.text_color,
+        });
+      });
+      setSchedules(updatedSchedules);
+
+      const { error: upsertError } = await supabase
+        .from(tableName)
+        .upsert(updates, { onConflict: 'project_id,date' })
+        .select();
+
+      if (upsertError) {
+        console.error('ペースト保存エラー:', upsertError);
+        alert(`ペーストに失敗しました: ${upsertError.message}`);
+        await loadSchedules();
       }
     } catch (error) {
       console.error('ペーストエラー:', error);
       alert('ペーストに失敗しました');
     }
+    isPastingRef.current = false;
   };
 
   const handleColorChange = async (projectId: string, date: Date, color: string, textColor: string) => {
@@ -1186,34 +997,20 @@ console.log('✅ ペースト保存成功:', upsertData);
       });
     }
     
-    // カラーピッカーを先に閉じる
-setShowColorPicker(null);
+    setShowColorPicker(null);
+    setSchedules(updatedSchedules);
 
-// データベースに保存 - 一括処理
-console.log(`🎨 色変更Upsert開始: ${updates.length}件`);
-const { data: upsertData, error: upsertError } = await supabase
-  .from(tableName)
-  .upsert(updates, {
-    onConflict: 'project_id,date'
-  })
-  .select();
+    const { error: upsertError } = await supabase
+      .from(tableName)
+      .upsert(updates, { onConflict: 'project_id,date' })
+      .select();
 
-if (upsertError) {
-  console.error('❌ 色変更Upsertエラー:', upsertError);
-  console.error('エラーコード:', upsertError.code);
-  console.error('エラーメッセージ:', upsertError.message);
-  console.error('エラー詳細:', JSON.stringify(upsertError, null, 2));
-  console.error('失敗したデータ:', updates);
-  alert(`色の変更に失敗しました: ${upsertError.message}`);
-  return;
-}
-
-console.log('✅ 色変更Upsert成功:', upsertData);
-console.log(`✅ ${updates.length}件の色変更完了`);
-
-// DB保存完了後、少し待ってから再読み込み（Supabaseの書き込み反映を待つ）
-await new Promise(resolve => setTimeout(resolve, 100));
-await loadSchedules();
+    if (upsertError) {
+      console.error('色変更保存エラー:', upsertError);
+      alert(`色の変更に失敗しました: ${upsertError.message}`);
+      await loadSchedules();
+      return;
+    }
     
     // 視覚的フィードバック
     targetCells.forEach(cellKey => {

@@ -34,30 +34,21 @@ export default function GanttChartTab({ user, onSelectProject }: GanttChartTabPr
   };
 
   const handleOpenCreatorBrands = async (project: Project) => {
-  console.log('handleOpenCreatorBrands called with project:', project);
-  
   try {
-    // プロジェクトからブランドIDを取得
-    const { data: brandProjectData, error: brandProjectError } = await supabase
+    const { data: brandProjectData } = await supabase
       .from('brand_projects')
       .select('brand_id')
       .eq('project_id', project.id)
-      .single();
-
-    console.log('brandProjectData:', brandProjectData, 'error:', brandProjectError);
+      .maybeSingle();
 
     if (brandProjectData) {
-      // ブランドIDからクリエイターIDを取得
-      const { data: creatorBrandData, error: creatorBrandError } = await supabase
+      const { data: creatorBrandData } = await supabase
         .from('creator_brands')
         .select('creator_id')
         .eq('brand_id', brandProjectData.brand_id)
-        .single();
-
-      console.log('creatorBrandData:', creatorBrandData, 'error:', creatorBrandError);
+        .maybeSingle();
 
       if (creatorBrandData) {
-        console.log('Setting selectedCreatorId to:', creatorBrandData.creator_id);
         setSelectedCreatorId(creatorBrandData.creator_id);
         setShowBrandBase(true);
       } else {
