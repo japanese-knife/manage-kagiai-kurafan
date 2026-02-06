@@ -852,12 +852,13 @@ await loadSchedules();
       }
       
       console.log('✅ ペースト完了');
-      
-      // DBから再読み込みして確実に反映
-      await loadSchedules();
-      
-      // 視覚的フィードバック
-      selectedCells.forEach(cellKey => {
+
+// DB保存完了後、少し待ってから再読み込み
+await new Promise(resolve => setTimeout(resolve, 100));
+await loadSchedules();
+
+// 視覚的フィードバック
+selectedCells.forEach(cellKey => {
         const cell = document.querySelector(`[data-cell-id="${cellKey}"]`);
         if (cell) {
           cell.classList.add('ring-2', 'ring-green-400');
