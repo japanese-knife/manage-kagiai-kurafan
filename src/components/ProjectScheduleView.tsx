@@ -261,21 +261,39 @@ const [selectionStart, setSelectionStart] = useState<{ projectId: string; date: 
 };
 
   const loadSchedules = async () => {
+  if (isPastingRef.current) return;
+
   try {
     const projectIds = projects.map(p => p.id);
     if (projectIds.length === 0) return;
 
     const tableName = viewType === 'monthly' ? 'annual_schedules' : 'project_schedules';
 
-    const { data, error } = await supabase
-      .from(tableName)
-      .select('*')
-      .in('project_id', projectIds);
+    let allData: any[] = [];
+    const batchSize = 1000;
+    let hasMore = true;
+    let offset = 0;
 
-    if (error) throw error;
+    while (hasMore) {
+      const { data, error } = await supabase
+        .from(tableName)
+        .select('*')
+        .in('project_id', projectIds)
+        .range(offset, offset + batchSize - 1);
+
+      if (error) throw error;
+
+      if (data && data.length > 0) {
+        allData = allData.concat(data);
+        offset += batchSize;
+        hasMore = data.length === batchSize;
+      } else {
+        hasMore = false;
+      }
+    }
 
     const scheduleMap = new Map<string, ScheduleCell>();
-    (data || []).forEach((schedule) => {
+    allData.forEach((schedule) => {
       const key = `${schedule.project_id}-${schedule.date}`;
       const bgColor = schedule.background_color || '#ffffff';
       const autoTextColor = getTextColorForBackground(bgColor);
@@ -739,6 +757,7 @@ const isCurrentMonth = (date: Date): boolean => {
       setSchedules(updatedSchedules);
 
       const batchSize = 100;
+      let hasError = false;
       for (let i = 0; i < updates.length; i += batchSize) {
         const batch = updates.slice(i, i + batchSize);
         const { error: batchUpsertError } = await supabase
@@ -748,11 +767,15 @@ const isCurrentMonth = (date: Date): boolean => {
 
         if (batchUpsertError) {
           console.error('ペースト保存エラー:', batchUpsertError);
-          alert(`ペーストに失敗しました: ${batchUpsertError.message}`);
-          await loadSchedules();
-          isPastingRef.current = false;
-          return;
+          hasError = true;
+          break;
         }
+      }
+
+      if (hasError) {
+        alert('一部のデータの保存に失敗しました。ページを再読み込みしてください。');
+        isPastingRef.current = false;
+        return;
       }
 
       selectedCells.forEach(cellKey => {
@@ -832,8 +855,7 @@ const isCurrentMonth = (date: Date): boolean => {
 
       if (rectUpsertError) {
         console.error('ペースト保存エラー:', rectUpsertError);
-        alert(`ペーストに失敗しました: ${rectUpsertError.message}`);
-        await loadSchedules();
+        alert('データの保存に失敗しました。ページを再読み込みしてください。');
         isPastingRef.current = false;
         return;
       }
@@ -936,8 +958,7 @@ const isCurrentMonth = (date: Date): boolean => {
 
       if (upsertError) {
         console.error('ペースト保存エラー:', upsertError);
-        alert(`ペーストに失敗しました: ${upsertError.message}`);
-        await loadSchedules();
+        alert('データの保存に失敗しました。ページを再読み込みしてください。');
       }
     } catch (error) {
       console.error('ペーストエラー:', error);
@@ -998,8 +1019,7 @@ const isCurrentMonth = (date: Date): boolean => {
 
     if (upsertError) {
       console.error('色変更保存エラー:', upsertError);
-      alert(`色の変更に失敗しました: ${upsertError.message}`);
-      await loadSchedules();
+      alert('色の変更に失敗しました。ページを再読み込みしてください。');
       return;
     }
     
