@@ -478,14 +478,13 @@ const isCurrentMonth = (date: Date): boolean => {
   const tableName = viewType === 'monthly' ? 'annual_schedules' : 'project_schedules';
 
   try {
-    // 削除前の修正: 空白の場合も白背景として保存（物理削除しない）
     const bgColor = existingCell?.backgroundColor || '#ffffff';
     const txtColor = existingCell?.textColor || getTextColorForBackground(bgColor);
     
     const updateData: any = {
       project_id: editingCell.projectId,
       date: editingCell.date,
-      content: editValue.trim(), // 空白でも保存
+      content: editValue.trim(),
       background_color: bgColor,
       text_color: txtColor,
       user_id: user.id,
@@ -501,12 +500,12 @@ const isCurrentMonth = (date: Date): boolean => {
 
     if (error) {
       console.error('❌ セル保存エラー:', error);
-      console.error('エラー詳細:', JSON.stringify(error, null, 2));
       throw error;
     }
 
     console.log('✅ セル保存成功:', upsertData);
     
+    // DB保存成功後、即座に状態を更新
     const updatedSchedules = new Map(schedules);
     updatedSchedules.set(key, {
       projectId: editingCell.projectId,
@@ -516,6 +515,10 @@ const isCurrentMonth = (date: Date): boolean => {
       textColor: txtColor,
     });
     setSchedules(updatedSchedules);
+    
+    // さらに確実にするため、DBから再読み込み
+    await loadSchedules();
+    
   } catch (error) {
     console.error('スケジュール保存エラー:', error);
     alert('スケジュールの保存に失敗しました');
