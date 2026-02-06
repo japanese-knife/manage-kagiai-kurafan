@@ -1137,97 +1137,93 @@ console.log('✅ ペースト保存成功:', upsertData);
   };
 
   const handleColorChange = async (projectId: string, date: Date, color: string, textColor: string) => {
-    const dateStr = date.toISOString().split('T')[0];
-    const clickedCellKey = `${projectId}-${dateStr}`;
+  const dateStr = date.toISOString().split('T')[0];
+  const clickedCellKey = `${projectId}-${dateStr}`;
+  
+  const targetCells = selectedCells.size > 0 && selectedCells.has(clickedCellKey) 
+    ? Array.from(selectedCells) 
+    : [clickedCellKey];
+
+  const tableName = viewType === 'monthly' ? 'annual_schedules' : 'project_schedules';
+
+  try {
+    const updatedSchedules = new Map(schedules);
+    const updates: any[] = [];
     
-    const targetCells = selectedCells.size > 0 && selectedCells.has(clickedCellKey) 
-      ? Array.from(selectedCells) 
-      : [clickedCellKey];
-
-    const tableName = viewType === 'monthly' ? 'annual_schedules' : 'project_schedules';
-
-    try {
-      const updatedSchedules = new Map(schedules);
-      const updates: any[] = [];
+    // 更新データを準備
+    for (const cellKey of targetCells) {
+      const parts = cellKey.split('-');
+      const targetDateStr = parts.slice(-3).join('-');
+      const targetProjectId = parts.slice(0, -3).join('-');
       
-      // 更新データを準備
-      for (const cellKey of targetCells) {
-        const parts = cellKey.split('-');
-        const targetDateStr = parts.slice(-3).join('-');
-        const targetProjectId = parts.slice(0, -3).join('-');
-        
-        const existingCell = schedules.get(cellKey);
-        
-        const updateData: any = {
-          project_id: targetProjectId,
-          date: targetDateStr,
-          content: existingCell?.content || '',
-          background_color: color,
-          text_color: textColor,
-          user_id: user.id,
-        };
-        
-        updates.push(updateData);
-        
-        updatedSchedules.set(cellKey, {
-          projectId: targetProjectId,
-          date: targetDateStr,
-          content: existingCell?.content || '',
-          backgroundColor: color,
-          textColor: textColor,
-        });
-      }
+      const existingCell = schedules.get(cellKey);
       
-      // 先に状態を更新
-      setSchedules(updatedSchedules);
-      setShowColorPicker(null);
+      const updateData: any = {
+        project_id: targetProjectId,
+        date: targetDateStr,
+        content: existingCell?.content || '',
+        background_color: color,
+        text_color: textColor,
+        user_id: user.id,
+      };
       
-      // データベースに保存
-      // データベースに保存 - 一括処理に変更
-console.log(`🎨 色変更Upsert開始: ${updates.length}件`);
-const { data: upsertData, error: upsertError } = await supabase
-  .from(tableName)
-  .upsert(updates, {
-    onConflict: 'project_id,date'
-  })
-  .select();
-
-if (upsertError) {
-  console.error('❌ 色変更Upsertエラー:', upsertError);
-  console.error('エラーコード:', upsertError.code);
-  console.error('エラーメッセージ:', upsertError.message);
-  console.error('エラー詳細:', JSON.stringify(upsertError, null, 2));
-  console.error('失敗したデータ:', updates);
-  // エラーの場合は再読み込みして正しい状態に戻す
-  await loadSchedules();
-  alert(`色の変更に失敗しました: ${upsertError.message}`);
-  return;
-}
-
-console.log('✅ 色変更Upsert成功:', upsertData);
-console.log(`✅ ${updates.length}件の色変更完了`);
-
-// DBから再読み込みして確実に反映
-await loadSchedules();
+      updates.push(updateData);
       
-// 視覚的フィードバック
-targetCells.forEach(cellKey => {
-      
-      // 視覚的フィードバック
-      targetCells.forEach(cellKey => {
-        const cell = document.querySelector(`[data-cell-id="${cellKey}"]`);
-        if (cell) {
-          cell.classList.add('ring-2', 'ring-green-400');
-          setTimeout(() => {
-            cell.classList.remove('ring-2', 'ring-green-400');
-          }, 500);
-        }
+      updatedSchedules.set(cellKey, {
+        projectId: targetProjectId,
+        date: targetDateStr,
+        content: existingCell?.content || '',
+        backgroundColor: color,
+        textColor: textColor,
       });
-    } catch (error) {
-      console.error('色変更エラー:', error);
-      alert(`色の変更に失敗しました: ${error instanceof Error ? error.message : '不明なエラー'}`);
     }
-  };
+    
+    // 先に状態を更新
+    setSchedules(updatedSchedules);
+    setShowColorPicker(null);
+    
+    // データベースに保存 - 一括処理
+    console.log(`🎨 色変更Upsert開始: ${updates.length}件`);
+    const { data: upsertData, error: upsertError } = await supabase
+      .from(tableName)
+      .upsert(updates, {
+        onConflict: 'project_id,date'
+      })
+      .select();
+
+    if (upsertError) {
+      console.error('❌ 色変更Upsertエラー:', upsertError);
+      console.error('エラーコード:', upsertError.code);
+      console.error('エラーメッセージ:', upsertError.message);
+      console.error('エラー詳細:', JSON.stringify(upsertError, null, 2));
+      console.error('失敗したデータ:', updates);
+      // エラーの場合は再読み込みして正しい状態に戻す
+      await loadSchedules();
+      alert(`色の変更に失敗しました: ${upsertError.message}`);
+      return;
+    }
+
+    console.log('✅ 色変更Upsert成功:', upsertData);
+    console.log(`✅ ${updates.length}件の色変更完了`);
+    
+    // DBから再読み込みして確実に反映
+    await loadSchedules();
+    
+    // 視覚的フィードバック
+    targetCells.forEach(cellKey => {
+      const cell = document.querySelector(`[data-cell-id="${cellKey}"]`);
+      if (cell) {
+        cell.classList.add('ring-2', 'ring-green-400');
+        setTimeout(() => {
+          cell.classList.remove('ring-2', 'ring-green-400');
+        }, 500);
+      }
+    });
+  } catch (error) {
+    console.error('色変更エラー:', error);
+    alert(`色の変更に失敗しました: ${error instanceof Error ? error.message : '不明なエラー'}`);
+  }
+};
 
   const predefinedColors = [
     { name: '白', color: '#ffffff', textColor: '#000000' },
