@@ -863,6 +863,9 @@ const isCurrentMonth = (date: Date): boolean => {
       
       console.log('✅ ペースト完了');
       
+      // DBから再読み込みして確実に反映
+      await loadSchedules();
+      
       // 視覚的フィードバック
       selectedCells.forEach(cellKey => {
         const cell = document.querySelector(`[data-cell-id="${cellKey}"]`);
