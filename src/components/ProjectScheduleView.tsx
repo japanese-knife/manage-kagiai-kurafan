@@ -1111,7 +1111,8 @@ if (upsertError) {
 console.log('✅ ペースト保存成功:', upsertData);
       }
 
-      // この部分は既に正しく実装されています
+      // DB保存完了後、少し待ってから再読み込み
+      await new Promise(resolve => setTimeout(resolve, 100));
       await loadSchedules();
       
       // 視覚的フィードバック
