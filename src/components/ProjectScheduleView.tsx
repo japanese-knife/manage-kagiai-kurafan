@@ -267,13 +267,20 @@ const [selectionStart, setSelectionStart] = useState<{ projectId: string; date: 
     console.log('📥 スケジュール読み込み開始:', { 
       tableName, 
       projectCount: projectIds.length,
-      projectIds: projectIds.slice(0, 5) // 最初の5件のみ表示
+      projectIds: projectIds.slice(0, 5),
+      dateRange: dates.length > 0 ? {
+        start: dates[0].toISOString().split('T')[0],
+        end: dates[dates.length - 1].toISOString().split('T')[0]
+      } : null
     });
     
+    // ★★★ ここが重要: 日付範囲でフィルタリングしていないか確認 ★★★
     const { data, error } = await supabase
       .from(tableName)
       .select('*')
       .in('project_id', projectIds);
+      // .gte('date', someStartDate) ← このような日付フィルタがあると問題
+      // .lte('date', someEndDate) ← このような日付フィルタがあると問題
 
     if (error) {
       console.error('📥 スケジュール読み込みエラー:', error);
@@ -282,16 +289,22 @@ const [selectionStart, setSelectionStart] = useState<{ projectId: string; date: 
 
     console.log('📥 取得したスケジュールデータ:', data?.length, '件');
     
-    // 1/28〜2/3のデータを特定
-    const targetPeriodData = data?.filter(s => {
-      const date = s.date; // YYYY-MM-DD形式の文字列
-      return date >= '2026-01-28' && date <= '2026-02-03';
+    // 当日〜5日前のデータを特定
+    const today = new Date();
+    const fiveDaysAgo = new Date(today);
+    fiveDaysAgo.setDate(today.getDate() - 5);
+    const todayStr = today.toISOString().split('T')[0];
+    const fiveDaysAgoStr = fiveDaysAgo.toISOString().split('T')[0];
+    
+    const recentData = data?.filter(s => {
+      const date = s.date;
+      return date >= fiveDaysAgoStr && date <= todayStr;
     });
-    console.log('📅 【重要】1/28〜2/3のデータ:', targetPeriodData?.length, '件');
-    if (targetPeriodData && targetPeriodData.length > 0) {
-      console.log('📅 データサンプル:', targetPeriodData.slice(0, 3));
+    console.log(`📅 【重要】当日〜5日前のデータ (${fiveDaysAgoStr} ~ ${todayStr}):`, recentData?.length, '件');
+    if (recentData && recentData.length > 0) {
+      console.log('📅 データサンプル:', recentData.slice(0, 5));
     } else {
-      console.warn('⚠️ 1/28〜2/3のデータが取得できていません！');
+      console.warn('⚠️ 当日〜5日前のデータが取得できていません！');
     }
 
     const scheduleMap = new Map<string, ScheduleCell>();
@@ -308,8 +321,8 @@ const [selectionStart, setSelectionStart] = useState<{ projectId: string; date: 
         textColor: schedule.text_color || autoTextColor,
       });
       
-      // 1/28〜2/3のデータをログ出力
-      if (schedule.date >= '2026-01-28' && schedule.date <= '2026-02-03') {
+      // 当日〜5日前のデータをログ出力
+      if (schedule.date >= fiveDaysAgoStr && schedule.date <= todayStr) {
         console.log('📅 Map追加:', { 
           key, 
           date: schedule.date,
@@ -321,14 +334,16 @@ const [selectionStart, setSelectionStart] = useState<{ projectId: string; date: 
 
     console.log('📥 scheduleMap作成完了:', scheduleMap.size, '件');
     
-    // 1/28〜2/3のキーが含まれているか確認
-    const targetKeys = Array.from(scheduleMap.keys()).filter(key => {
+    // 当日〜5日前のキーが含まれているか確認
+    const recentKeys = Array.from(scheduleMap.keys()).filter(key => {
       const date = key.split('-').slice(-3).join('-');
-      return date >= '2026-01-28' && date <= '2026-02-03';
+      return date >= fiveDaysAgoStr && date <= todayStr;
     });
-    console.log('📅 【重要】Map内の1/28〜2/3キー数:', targetKeys.length);
-    if (targetKeys.length > 0) {
-      console.log('📅 キーサンプル:', targetKeys.slice(0, 3));
+    console.log(`📅 【重要】Map内の当日〜5日前キー数 (${fiveDaysAgoStr} ~ ${todayStr}):`, recentKeys.length);
+    if (recentKeys.length > 0) {
+      console.log('📅 キーサンプル:', recentKeys.slice(0, 5));
+    } else {
+      console.warn('⚠️ Map内に当日〜5日前のキーがありません！データベースに存在しない可能性があります。');
     }
     
     setSchedules(scheduleMap);
